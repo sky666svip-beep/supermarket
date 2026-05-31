@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // 模块：管理员工作台
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAdminFeedbacks, updateAdminFeedbackStatus, replyAdminFeedback } from '../api'
+import { getAdminFeedbacks, updateAdminFeedbackStatus, replyAdminFeedback, deleteAdminFeedback } from '../api'
 import { showToast } from 'vant'
 
 const router = useRouter()
@@ -94,6 +94,23 @@ const getImages = (imagesStr: string | null) => {
   if (!imagesStr) return []
   try { return JSON.parse(imagesStr) } catch { return [] }
 }
+
+const onDelete = (id: number) => {
+  import('vant').then(({ showConfirmDialog }) => {
+    showConfirmDialog({
+      title: '确认删除',
+      message: '确定要删除此工单吗？删除后不可恢复。'
+    }).then(async () => {
+      try {
+        await deleteAdminFeedback(id)
+        showToast('删除成功')
+        fetchFeedbacks()
+      } catch (e: any) {
+        showToast(e.response?.data?.error || '删除失败')
+      }
+    }).catch(() => {})
+  })
+}
 </script>
 
 <template>
@@ -111,6 +128,9 @@ const getImages = (imagesStr: string | null) => {
           <div>
             <h3 class="font-bold text-gray-800 text-base">{{ item.facilityType }}</h3>
             <p class="text-xs text-gray-400 mt-1">报告人: {{ item.nickname || item.username }}</p>
+            <p v-if="item.storeName" class="text-xs text-blue-500 mt-1 flex items-center">
+              <van-icon name="shop-o" class="mr-1" /> {{ item.storeName }}
+            </p>
           </div>
           <van-tag :type="getStatusTag(item.status).type" size="medium" @click="openAction(item)">
             {{ getStatusTag(item.status).text }} <van-icon name="edit" class="ml-1" />
@@ -142,9 +162,14 @@ const getImages = (imagesStr: string | null) => {
 
         <div class="flex justify-between items-center mt-3">
           <p class="text-xs text-gray-400">{{ new Date(item.createdAt).toLocaleString() }}</p>
-          <van-button size="mini" plain type="primary" icon="chat-o" @click="openReply(item)">
-            {{ item.adminReply ? '修改回复' : '回复' }}
-          </van-button>
+          <div class="flex gap-2">
+            <van-button v-if="item.status === 'resolved'" size="mini" plain type="danger" icon="delete-o" @click="onDelete(item.id)">
+              删除
+            </van-button>
+            <van-button size="mini" plain type="primary" icon="chat-o" @click="openReply(item)">
+              {{ item.adminReply ? '修改回复' : '回复' }}
+            </van-button>
+          </div>
         </div>
       </div>
       

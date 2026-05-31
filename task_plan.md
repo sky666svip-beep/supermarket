@@ -1,40 +1,30 @@
-# Task Plan: 增加前台碎片化信息公告栏及对应后台管理
+# Task Plan: 社区发帖与管理功能开发
 
 ## Goal
-在 `Home.vue` 增加面向顾客的公告栏功能，并在后台增加公告发布管理系统，实现碎片化信息（快闪、检修等）的发布与展示。
-
-## Current Phase
-Phase 5
+实现用户可以发布图文帖子、评论互动，以及管理员进行审核管理的完整社区论坛功能。
 
 ## Phases
 
-### Phase 1: Requirements & Discovery
-- [x] 理解用户意图并分析现有前后端架构
-- [x] 提出架构设计及 Socratic Questions
-- [x] 获得用户确认和详细需求
-- **Status:** complete
+### Phase 1: 数据库与后端路由支持
+- [x] 在 `backend/src/db/schema.ts` 新增 `posts`, `comments`, `postLikes`, `commentLikes`, `postCollections` 表。
+- [x] 编写帖子相关路由 (`posts.ts`)：列表、详情、发帖、点赞、收藏。
+- [x] 编写评论相关路由 (`comments.ts`)：发表评论、删除、点赞。
+- [x] 编写管理员帖子审核及管理接口。
+- [x] 更新主路由并在后端应用中挂载。
+- **Status**: complete
 
-### Phase 2: Planning & Structure
-- [x] 确定组件设计和数据结构
-- [x] 规划后端 API 接口
-- [x] 文档化技术决策
-- **Status:** complete
+### Phase 2: 前端用户功能开发
+- [x] 社区首页/帖子列表页：分页加载、多Tab（最新/最热/精华）。
+- [x] 帖子详情页：帖子内容展示、评论树形展示、点赞与收藏。
+- [x] 发帖页：复用现有 `upload.ts` 上传图片、填写标题/正文/标签。
+- [x] 个人中心相关页：我的帖子、我的评论、我的收藏、收到的回复。
+- **Status**: complete
 
-### Phase 3: Implementation
-- [x] 开发后端公告接口 (CRUD)
-- [x] 开发前端管理页面 (公告管理)
-- [x] 开发前台展示组件 (`Home.vue` 集成)
-- **Status:** complete
+### Phase 3: 前端后台管理功能开发
+- [x] 后台帖子审核页面：列表展示待审核/已审核帖子。
+- [x] 举报管理页面与自动下架逻辑。
+- **Status**: complete
 
-### Phase 4: Testing & Verification
-- [x] 验证前后端数据联调
-- [x] 测试管理员发布及顾客查看体验
-- **Status:** complete
-
-### Phase 5: Migrate old admin logic
-- [x] Create Admin Home page with grid navigation
-- [x] Migrate Feedback Dashboard to admin-frontend
-- [x] Remove old admin logic from frontend
-- **Status:** complete
-
-
+## Errors Encountered
+| Error | Attempt | Resolution |
+|-------|---------|------------|

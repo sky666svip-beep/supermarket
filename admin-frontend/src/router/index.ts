@@ -17,6 +17,16 @@ const router = createRouter({
       path: '/feedbacks',
       name: 'FeedbackDashboard',
       component: () => import('../views/FeedbackDashboard.vue')
+    },
+    {
+      path: '/community/posts',
+      name: 'CommunityPosts',
+      component: () => import('../views/CommunityPosts.vue')
+    },
+    {
+      path: '/community/reports',
+      name: 'CommunityReports',
+      component: () => import('../views/CommunityReports.vue')
     }
   ]
 })

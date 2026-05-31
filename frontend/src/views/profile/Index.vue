@@ -98,6 +98,13 @@ const onSavePassword = async () => {
       <van-cell title="我的反馈记录" icon="comment-o" is-link @click="router.push('/customer/feedback')" />
     </van-cell-group>
     
+    <van-cell-group inset class="!mx-0 shadow-sm mt-4" title="社区互动">
+      <van-cell title="我的帖子" icon="notes-o" is-link @click="router.push('/profile/posts')" />
+      <van-cell title="我的评论" icon="chat-o" is-link @click="router.push('/profile/comments')" />
+      <van-cell title="我的收藏" icon="star-o" is-link @click="router.push('/profile/collections')" />
+      <van-cell title="收到的回复" icon="bell" is-link @click="router.push('/profile/messages')" />
+    </van-cell-group>
+    
     <van-cell-group inset class="!mx-0 shadow-sm mt-4" title="账号管理">
       <template v-if="user">
         <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />

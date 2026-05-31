@@ -31,12 +31,15 @@ export const stores = sqliteTable('stores', {
   time: text('time').notNull(),
   phone: text('phone').notNull(),
   category: text('category'),
+  latitude: text('latitude'), // Store as text or real, sqlite handles both. But better use real
+  longitude: text('longitude'),
 })
 
 // Customer: Feedback
 export const feedbacks = sqliteTable('feedbacks', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id),
+  storeId: integer('store_id').references(() => stores.id),
   facilityType: text('facility_type').notNull(),
   message: text('message').notNull(),
   images: text('images'),
@@ -85,11 +88,78 @@ export const itemMemos = sqliteTable('item_memos', {
 // Notices for fragmented info
 export const notices = sqliteTable('notices', {
   id: integer('id').primaryKey({ autoIncrement: true }),
+  storeId: integer('store_id').references(() => stores.id), // Added storeId
   title: text('title').notNull(),
   content: text('content').notNull(),
   images: text('images'), // JSON string array of URLs
   isUrgent: integer('is_urgent', { mode: 'boolean' }).default(false), // To display in NoticeBar
   expiresAt: integer('expires_at', { mode: 'timestamp' }), // Automatically hide after this date
   isActive: integer('is_active', { mode: 'boolean' }).default(true), // For manual deletion/hiding
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Posts
+export const posts = sqliteTable('posts', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  storeId: integer('store_id').references(() => stores.id), // Added storeId
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  images: text('images'), // JSON array string
+  category: text('category', { enum: ['商品评价', '购物分享'] }).notNull(),
+  status: text('status', { enum: ['pending', 'approved', 'rejected'] }).default('pending').notNull(),
+  isTop: integer('is_top', { mode: 'boolean' }).default(false),
+  isElite: integer('is_elite', { mode: 'boolean' }).default(false),
+  viewCount: integer('view_count').default(0),
+  likeCount: integer('like_count').default(0),
+  commentCount: integer('comment_count').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Comments
+export const comments = sqliteTable('comments', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  postId: integer('post_id').references(() => posts.id).notNull(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  parentId: integer('parent_id'), // Self-referencing for replies
+  content: text('content').notNull(),
+  images: text('images'), // JSON array string
+  likeCount: integer('like_count').default(0),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Post Likes
+export const postLikes = sqliteTable('post_likes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  postId: integer('post_id').references(() => posts.id).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Comment Likes
+export const commentLikes = sqliteTable('comment_likes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  commentId: integer('comment_id').references(() => comments.id).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Post Collections
+export const postCollections = sqliteTable('post_collections', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  postId: integer('post_id').references(() => posts.id).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+})
+
+// Community: Reports
+export const reports = sqliteTable('reports', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  targetType: text('target_type', { enum: ['post', 'comment'] }).notNull(),
+  targetId: integer('target_id').notNull(),
+  reason: text('reason').notNull(),
+  status: text('status', { enum: ['pending', 'resolved'] }).default('pending').notNull(),
   createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
 })

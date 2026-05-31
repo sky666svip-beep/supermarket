@@ -143,7 +143,7 @@ const getFullUrl = (url: string) => {
           </div>
           
           <div class="flex flex-wrap gap-2 mb-4 pl-1" v-if="memo.tags && parseTags(memo.tags).length > 0">
-            <van-tag v-for="tag in parseTags(memo.tags)" :key="tag" type="primary" plain size="small">
+            <van-tag v-for="tag in parseTags(memo.tags)" :key="tag" type="primary" plain>
               {{ tag }}
             </van-tag>
           </div>

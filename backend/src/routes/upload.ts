@@ -29,6 +29,5 @@ upload.post('/', async (c) => {
   
   const filePath = path.join(uploadDir, filename)
   fs.writeFileSync(filePath, buffer)
-  
-  return c.json({ url: `/uploads/${filename}` })
+  return c.json({ success: true, url: `/api/uploads/${filename}` })
 })

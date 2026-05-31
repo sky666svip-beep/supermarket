@@ -2,10 +2,13 @@
 
 ## 已有架构
 - 前台主页 `d:\Projects\supermarket\frontend\src\views\Home.vue` 使用了 Vue 3 + Vant UI。
-- 管理后台 `d:\Projects\supermarket\frontend\src\views\admin\Dashboard.vue` 目前作为前端项目中的一个路由存在，主要处理工单。
-- 后端 `d:\Projects\supermarket\backend\src\routes\` 目前有 admin.ts 等路由，提供后台管理接口。
+- 管理后台位于 `d:\Projects\supermarket\frontend\src\views\admin\` 下。
+- 后端使用了 Express + Drizzle ORM (SQLite)，在 `d:\Projects\supermarket\backend\src\db\schema.ts`。
+- 图片上传已经存在 `upload.ts`，可复用。
+- 响应格式统一为 `{ success: boolean, data: any, message: string }`。
 
-## 发现
-- 用户需要发布临时、碎片化信息（快闪店、路演、电梯检修、寻物启事等）。
-- 这类信息与"热门活动"不同，它们更具临时性，可能需要明显的提示（比如跑马灯 NoticeBar 或独立板块）。
-- 需要在现有管理系统中补充公告的发布、下线管理。
+## 当前任务发现
+- 需要新增社区发帖功能，涉及新表：`posts`, `comments`, `post_likes`, `comment_likes`, `post_collections`。
+- 帖子需经过管理员后台审核。这涉及到帖子的状态设计（例如 `status: 'pending' | 'approved' | 'rejected'`）。
+- 需要实现帖子加精、置顶。可在 `posts` 表中增加 `isTop`、`isElite` 字段。
+- 举报功能需要一张 `reports` 表记录违规举报。

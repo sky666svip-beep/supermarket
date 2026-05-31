@@ -15,7 +15,9 @@ import { auth } from './routes/auth.js'
 import { admin } from './routes/admin.js'
 import { upload } from './routes/upload.js'
 import { notice } from './routes/notice.js'
-
+import { postRouter } from './routes/posts.js'
+import { commentRouter } from './routes/comments.js'
+import { communityAdminRouter } from './routes/community-admin.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -55,7 +57,9 @@ app.route('/api/auth', auth)
 app.route('/api/admin', admin)
 app.route('/api/upload', upload)
 app.route('/api/notice', notice)
-
+app.route('/api/posts', postRouter)
+app.route('/api/comments', commentRouter)
+app.route('/api/community-admin', communityAdminRouter)
 app.get('/', (c) => {
   return c.json({ message: 'Welcome to Supermarket API' })
 })

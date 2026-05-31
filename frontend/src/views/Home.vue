@@ -1,7 +1,9 @@
 <script setup lang="ts">
+// 模块：首页与公告动态
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getNotices } from '../api'
+import { getCachedLocation, setCachedLocation } from '../utils/location'
 
 const router = useRouter()
 
@@ -13,6 +15,32 @@ export interface Notice {
   isUrgent: boolean
   expiresAt: string | null
   createdAt: string
+  storeId?: number
+  latitude?: string | number
+  longitude?: string | number
+  storeName?: string
+}
+
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const R = 6371 // km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
+  return R * c
+}
+
+const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) return resolve(null)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => resolve(null),
+      { timeout: 5000, maximumAge: 60000 }
+    )
+  })
 }
 
 const urgentNotices = ref<Notice[]>([])
@@ -20,7 +48,42 @@ const normalNotices = ref<Notice[]>([])
 
 onMounted(async () => {
   try {
-    const res = await getNotices()
+    let loc = getCachedLocation()
+    let userLat = loc?.lat
+    let userLng = loc?.lng
+
+    if (!userLat || !userLng) {
+      const coords = await tryBrowserGeolocation()
+      if (coords) {
+        userLat = coords.lat
+        userLng = coords.lng
+        setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng })
+      }
+    }
+
+    let res = await getNotices()
+    
+    // 找出最近的店铺
+    if (userLat && userLng && res.length > 0) {
+      let closestStoreId: number | null = null
+      let minDistance = Infinity
+      
+      for (const n of res) {
+        if (n.storeId && n.latitude && n.longitude) {
+          const d = calculateDistance(userLat, userLng, parseFloat(String(n.latitude)), parseFloat(String(n.longitude)))
+          if (d < minDistance) {
+            minDistance = d
+            closestStoreId = n.storeId
+          }
+        }
+      }
+      
+      if (closestStoreId !== null) {
+        // 只保留最近店铺的公告
+        res = res.filter((n: Notice) => n.storeId === closestStoreId)
+      }
+    }
+
     urgentNotices.value = res.filter((n: Notice) => n.isUrgent)
     normalNotices.value = res.filter((n: Notice) => !n.isUrgent)
   } catch (e) {
@@ -48,7 +111,7 @@ const getImages = (imagesStr: string | null) => {
     <van-notice-bar
       v-if="urgentNotices && urgentNotices.length > 0"
       left-icon="volume-o"
-      :text="urgentNotices.map((n) => n.title + ': ' + n.content).join('  |  ')"
+      :text="urgentNotices.map((n) => (n.storeName ? `[${n.storeName}] ` : '') + n.title + ': ' + n.content).join('  |  ')"
       mode="link"
       @click="openNotice(urgentNotices[0])"
       class="mb-2"
@@ -68,6 +131,14 @@ const getImages = (imagesStr: string | null) => {
 
     <!-- 最新动态 (普通公告) -->
     <van-cell-group inset title="最新动态" class="!mx-0 !mt-6" v-if="normalNotices.length > 0">
+      <template #title>
+        <div class="flex justify-between items-center">
+          <span>最新动态</span>
+          <span v-if="normalNotices[0].storeName" class="text-xs text-blue-500 font-normal">
+            📍 当前: {{ normalNotices[0].storeName }}
+          </span>
+        </div>
+      </template>
       <van-cell 
         v-for="notice in normalNotices" 
         :key="notice.id"

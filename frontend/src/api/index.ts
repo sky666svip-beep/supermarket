@@ -49,8 +49,9 @@ export const getChecklist = () => api.get('/customer/checklist').then(res => res
 export const addChecklist = (title: string) => api.post('/customer/checklist', { title }).then(res => res.data)
 export const updateChecklist = (id: number, isCompleted: boolean) => api.put(`/customer/checklist/${id}`, { isCompleted }).then(res => res.data)
 export const deleteChecklist = (id: number) => api.delete(`/customer/checklist/${id}`).then(res => res.data)
-export const submitFeedback = (facilityType: string, message: string, images?: string[]) => api.post('/customer/feedback', { facilityType, message, images }).then(res => res.data)
+export const submitFeedback = (storeId: number, facilityType: string, message: string, images?: string[]) => api.post('/customer/feedback', { storeId, facilityType, message, images }).then(res => res.data)
 export const getFeedbackHistory = () => api.get('/customer/feedback').then(res => res.data)
+export const deleteFeedback = (id: number) => api.delete(`/customer/feedback/${id}`).then(res => res.data)
 
 // Staff APIs
 export const getTodos = () => api.get('/staff/todos').then(res => res.data)
@@ -72,3 +73,21 @@ export const uploadImage = (file: File) => {
 
 // Notice APIs
 export const getNotices = (params?: { urgent?: boolean }) => api.get('/notice', { params }).then(res => res.data)
+
+// Community APIs
+export const getPosts = (params?: { category?: string, tab?: string, page?: number, limit?: number }) => api.get('/posts', { params }).then(res => res.data)
+export const getPostDetail = (id: number) => api.get(`/posts/${id}`).then(res => res.data)
+export const publishPost = (data: any) => api.post('/posts', data).then(res => res.data)
+export const updatePost = (id: number, data: any) => api.put(`/posts/${id}`, data).then(res => res.data)
+export const deletePost = (id: number) => api.delete(`/posts/${id}`).then(res => res.data)
+export const likePost = (id: number) => api.post(`/posts/${id}/like`).then(res => res.data)
+export const collectPost = (id: number) => api.post(`/posts/${id}/collect`).then(res => res.data)
+export const getPostInteraction = (id: number) => api.get(`/posts/${id}/interaction`).then(res => res.data)
+
+export const getComments = (postId: number) => api.get(`/comments/post/${postId}`).then(res => res.data)
+export const publishComment = (data: any) => api.post('/comments', data).then(res => res.data)
+export const likeComment = (id: number) => api.post(`/comments/${id}/like`).then(res => res.data)
+
+export const getMyPosts = () => api.get('/posts/my').then(res => res.data)
+export const getMyCollections = () => api.get('/posts/collections').then(res => res.data)
+export const getMyReceivedComments = () => api.get('/comments/my/received').then(res => res.data)

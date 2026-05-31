@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 模块：公告与资讯管理
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
@@ -19,6 +20,7 @@ interface Notice {
 }
 
 const notices = ref<Notice[]>([])
+const stores = ref<any[]>([])
 const loading = ref(false)
 
 const fetchNotices = async () => {
@@ -33,12 +35,26 @@ const fetchNotices = async () => {
   }
 }
 
-onMounted(fetchNotices)
+const fetchStores = async () => {
+  try {
+    const res = await api.get('/admin/stores')
+    stores.value = res.data
+  } catch (e) {
+    console.error('Failed to load stores', e)
+  }
+}
+
+onMounted(() => {
+  fetchNotices()
+  fetchStores()
+})
 
 const showDialog = ref(false)
 const isEditing = ref(false)
 const formData = ref({
   id: 0,
+  storeId: null as number | null,
+  storeName: '',
   title: '',
   content: '',
   images: [] as any[], // Using van-uploader format
@@ -47,10 +63,19 @@ const formData = ref({
   isActive: true
 })
 
+const showStorePicker = ref(false)
+const onStoreConfirm = ({ selectedOptions }: any) => {
+  formData.value.storeId = selectedOptions[0].value
+  formData.value.storeName = selectedOptions[0].text
+  showStorePicker.value = false
+}
+
 const openCreate = () => {
   isEditing.value = false
   formData.value = {
     id: 0,
+    storeId: null,
+    storeName: '',
     title: '',
     content: '',
     images: [],
@@ -84,6 +109,8 @@ const openEdit = (notice: Notice) => {
 
   formData.value = {
     ...notice,
+    storeId: (notice as any).storeId || null,
+    storeName: (notice as any).storeName || '',
     images: parsedImages,
     expiresAt: formattedDate
   }
@@ -109,8 +136,8 @@ const afterRead = async (file: any) => {
 }
 
 const saveNotice = async () => {
-  if (!formData.value.title || !formData.value.content) {
-    showToast('标题和内容不能为空')
+  if (!formData.value.title || !formData.value.content || !formData.value.storeId) {
+    showToast('标题、内容和店铺为必填项')
     return false
   }
 
@@ -119,6 +146,7 @@ const saveNotice = async () => {
   const payload = {
     title: formData.value.title,
     content: formData.value.content,
+    storeId: formData.value.storeId,
     images: imageUrls.length ? imageUrls : null,
     isUrgent: formData.value.isUrgent,
     expiresAt: formData.value.expiresAt ? new Date(formData.value.expiresAt).toISOString() : null,
@@ -198,6 +226,9 @@ const toggleActive = async (notice: Notice) => {
               <van-tag v-if="notice.isUrgent" type="danger">紧急/横幅</van-tag>
               <van-tag v-if="!notice.isActive" type="warning">已下线</van-tag>
             </h3>
+            <div style="font-size: 12px; color: #1989fa; margin-top: 4px;" v-if="(notice as any).storeName">
+              📍 {{(notice as any).storeName}}
+            </div>
             <p style="margin: 8px 0; font-size: 14px; color: #666; white-space: pre-wrap;">{{ notice.content }}</p>
             
             <div v-if="notice.expiresAt" style="font-size: 12px; color: #999; margin-bottom: 8px;">
@@ -224,6 +255,22 @@ const toggleActive = async (notice: Notice) => {
       :before-close="(action) => action === 'confirm' ? saveNotice() : true"
     >
       <van-form style="padding: 16px;">
+        <van-field
+          v-model="formData.storeName"
+          is-link
+          readonly
+          label="选择店铺"
+          placeholder="请选择"
+          required
+          @click="showStorePicker = true"
+        />
+        <van-popup v-model:show="showStorePicker" position="bottom">
+          <van-picker
+            :columns="stores.map(s => ({ text: s.name, value: s.id }))"
+            @confirm="onStoreConfirm"
+            @cancel="showStorePicker = false"
+          />
+        </van-popup>
         <van-field
           v-model="formData.title"
           label="标题"

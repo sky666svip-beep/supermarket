@@ -36,6 +36,29 @@ const detailImages = computed(() => {
   if (!detailItem.value?.images) return []
   try { return JSON.parse(detailItem.value.images) } catch { return [] }
 })
+
+const onDelete = async (id: number) => {
+  import('vant').then(({ showConfirmDialog }) => {
+    showConfirmDialog({
+      title: '确认删除',
+      message: '您确定要删除这条反馈工单吗？删除后无法恢复。',
+    })
+      .then(async () => {
+        try {
+          const { deleteFeedback } = await import('../../api/index')
+          await deleteFeedback(id)
+          showToast('删除成功')
+          showDetail.value = false
+          records.value = records.value.filter(r => r.id !== id)
+        } catch (e: any) {
+          showToast(e.response?.data?.error || '删除失败')
+        }
+      })
+      .catch(() => {
+        // Cancelled
+      })
+  })
+}
 </script>
 
 <template>
@@ -61,7 +84,10 @@ const detailImages = computed(() => {
         @click="openDetail(item)"
       >
         <div class="flex justify-between items-center mb-2">
-          <h3 class="font-bold text-gray-800 text-sm">{{ item.facilityType }}</h3>
+          <h3 class="font-bold text-gray-800 text-sm">
+            {{ item.facilityType }}
+            <span v-if="item.storeName" class="text-xs text-blue-500 font-normal ml-2 bg-blue-50 px-1 rounded">{{ item.storeName }}</span>
+          </h3>
           <van-tag :type="getStatusTag(item.status).type" size="medium">
             {{ getStatusTag(item.status).text }}
           </van-tag>
@@ -111,7 +137,18 @@ const detailImages = computed(() => {
         </div>
         <p v-else class="text-sm text-gray-400">暂无回复</p>
 
-        <p class="text-xs text-gray-400 mt-4 text-right">提交时间: {{ new Date(detailItem.createdAt).toLocaleString() }}</p>
+        <div class="flex justify-between items-center mt-4">
+          <van-button 
+            v-if="detailItem.status === 'resolved'" 
+            type="danger" 
+            plain 
+            size="small" 
+            @click="onDelete(detailItem.id)"
+          >
+            删除工单
+          </van-button>
+          <p class="text-xs text-gray-400 text-right flex-1">提交时间: {{ new Date(detailItem.createdAt).toLocaleString() }}</p>
+        </div>
       </div>
     </van-popup>
   </div>

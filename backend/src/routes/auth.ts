@@ -133,3 +133,29 @@ auth.put('/profile', async (c) => {
     return handleError(c, err)
   }
 })
+
+export type AuthContext = {
+  Variables: {
+    user: { id: number; username: string; role: string; nickname: string | null; avatar: string | null }
+  }
+}
+
+import { Context, Next } from 'hono'
+export const authMiddleware = async (c: Context<AuthContext>, next: Next) => {
+  const userIdStr = c.req.header('x-user-id')
+  if (!userIdStr) {
+    return c.json({ success: false, data: null, message: '未登录' }, 401)
+  }
+  const userId = parseInt(userIdStr)
+  if (isNaN(userId)) {
+    return c.json({ success: false, data: null, message: '无效的用户ID' }, 401)
+  }
+  
+  const userList = await db.select().from(users).where(eq(users.id, userId)).limit(1)
+  if (userList.length === 0) {
+    return c.json({ success: false, data: null, message: '用户不存在' }, 401)
+  }
+  
+  c.set('user', userList[0])
+  await next()
+}

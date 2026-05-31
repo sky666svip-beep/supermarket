@@ -1,7 +1,7 @@
 // 模块：管理员后台 API
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
-import { users, feedbacks } from '../db/schema.js'
+import { users, feedbacks, stores } from '../db/schema.js'
 import { eq, desc, sql } from 'drizzle-orm'
 
 export const admin = new Hono()
@@ -43,10 +43,12 @@ admin.get('/feedbacks', requireAdmin, async (c) => {
       resolvedAt: feedbacks.resolvedAt,
       createdAt: feedbacks.createdAt,
       username: users.username,
-      nickname: users.nickname
+      nickname: users.nickname,
+      storeName: stores.name
     })
     .from(feedbacks)
     .leftJoin(users, eq(feedbacks.userId, users.id))
+    .leftJoin(stores, eq(feedbacks.storeId, stores.id))
     .orderBy(desc(feedbacks.createdAt))
     
   return c.json(result)
@@ -83,4 +85,22 @@ admin.put('/feedbacks/:id/reply', requireAdmin, async (c) => {
   
   await db.update(feedbacks).set({ adminReply: reply.trim() }).where(eq(feedbacks.id, id))
   return c.json({ success: true })
+})
+
+// Admin delete feedback
+admin.delete('/feedbacks/:id', requireAdmin, async (c) => {
+  const id = Number(c.req.param('id'))
+  
+  const target = await db.select().from(feedbacks).where(eq(feedbacks.id, id))
+  if (target.length === 0) return c.json({ error: '工单不存在' }, 404)
+  if (target[0].status !== 'resolved') return c.json({ error: '仅能删除已解决的工单' }, 400)
+  
+  await db.delete(feedbacks).where(eq(feedbacks.id, id))
+  return c.json({ success: true })
+})
+
+// Admin: Get all stores for dropdowns
+admin.get('/stores', requireAdmin, async (c) => {
+  const result = await db.select({ id: stores.id, name: stores.name }).from(stores)
+  return c.json(result)
 })
