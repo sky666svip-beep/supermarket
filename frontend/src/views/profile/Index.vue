@@ -1,0 +1,128 @@
+<script setup lang="ts">
+// 模块：个人中心与账号管理
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { showConfirmDialog, showToast } from 'vant'
+import { updateProfile, updatePassword } from '../../api/index'
+
+const router = useRouter()
+
+const user = ref<any>(null)
+const showProfileDialog = ref(false)
+const showPasswordDialog = ref(false)
+
+const profileForm = ref({ nickname: '' })
+const pwdForm = ref({ oldPassword: '', newPassword: '' })
+
+onMounted(() => {
+  const stored = localStorage.getItem('user')
+  if (stored) {
+    user.value = JSON.parse(stored)
+  }
+})
+
+const onLogout = () => {
+  showConfirmDialog({
+    title: '退出登录',
+    message: '确定要退出当前账号吗？',
+  }).then(() => {
+    localStorage.removeItem('user')
+    user.value = null
+    showToast('已退出')
+  }).catch(() => {})
+}
+
+const onSaveProfile = async () => {
+  try {
+    const res = await updateProfile({ userId: user.value.id, nickname: profileForm.value.nickname })
+    if (res.success) {
+      user.value.nickname = res.user.nickname
+      localStorage.setItem('user', JSON.stringify(user.value))
+      showToast('资料已更新')
+      showProfileDialog.value = false
+    }
+  } catch (e: any) {
+    showToast(e.response?.data?.error || '更新失败')
+  }
+}
+
+const validateNewPassword = (val: string) => {
+  const hasLetter = /[a-zA-Z]/.test(val)
+  const hasNumber = /[0-9]/.test(val)
+  if (val.length < 6 || !hasLetter || !hasNumber) return '密码至少6位，且包含字母和数字'
+  return true
+}
+
+const onSavePassword = async () => {
+  try {
+    const res = await updatePassword({ 
+      userId: user.value.id, 
+      oldPassword: pwdForm.value.oldPassword, 
+      newPassword: pwdForm.value.newPassword 
+    })
+    if (res.success) {
+      showToast('密码已修改，请重新登录')
+      localStorage.removeItem('user')
+      user.value = null
+      showPasswordDialog.value = false
+      router.push('/login')
+    }
+  } catch (e: any) {
+    showToast(e.response?.data?.error || '修改失败')
+  }
+}
+</script>
+
+<template>
+  <div class="space-y-4">
+    <!-- Logged in state -->
+    <div v-if="user" class="bg-white p-6 rounded-lg shadow-sm flex items-center space-x-4">
+      <van-image round width="64" height="64" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
+      <div>
+        <h2 class="text-xl font-bold mb-1">{{ user.nickname || user.username }}</h2>
+        <van-tag type="primary" plain>顾客用户</van-tag>
+      </div>
+    </div>
+    
+    <!-- Not logged in state -->
+    <div v-else class="bg-white p-6 rounded-lg shadow-sm flex items-center space-x-4" @click="router.push('/login')">
+      <van-image round width="64" height="64" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" class="opacity-50" />
+      <div>
+        <h2 class="text-xl font-bold mb-1 text-gray-800">未登录</h2>
+        <p class="text-sm text-gray-500">点击此处进行登录或注册</p>
+      </div>
+    </div>
+    
+    <van-cell-group inset class="!mx-0 shadow-sm" title="购物服务">
+      <van-cell title="我的购物清单" icon="orders-o" is-link @click="router.push('/customer/checklist')" />
+      <van-cell title="我的反馈记录" icon="comment-o" is-link @click="router.push('/customer/feedback')" />
+    </van-cell-group>
+    
+    <van-cell-group inset class="!mx-0 shadow-sm mt-4" title="账号管理">
+      <template v-if="user">
+        <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />
+        <van-cell title="修改个人资料" icon="edit" is-link @click="profileForm.nickname = user.nickname || ''; showProfileDialog = true" />
+        <van-cell title="修改密码" icon="shield-o" is-link @click="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true" />
+        <van-cell title="退出登录" icon="revoke" is-link @click="onLogout" />
+      </template>
+      <van-cell title="关于商场助手" icon="info-o" is-link value="v1.3.0" />
+    </van-cell-group>
+
+    <!-- Profile Dialog -->
+    <van-dialog v-model:show="showProfileDialog" title="修改个人资料" show-cancel-button :before-close="() => true">
+      <van-form @submit="onSaveProfile" class="mt-4">
+        <van-field v-model="profileForm.nickname" label="昵称" placeholder="请输入新昵称" :rules="[{ required: true, message: '请填写昵称' }]" />
+        <div class="p-4"><van-button round block type="primary" native-type="submit">保存</van-button></div>
+      </van-form>
+    </van-dialog>
+
+    <!-- Password Dialog -->
+    <van-dialog v-model:show="showPasswordDialog" title="修改密码" show-cancel-button :before-close="() => true">
+      <van-form @submit="onSavePassword" class="mt-4">
+        <van-field v-model="pwdForm.oldPassword" type="password" label="原密码" placeholder="请输入原密码" :rules="[{ required: true, message: '请填写原密码' }]" />
+        <van-field v-model="pwdForm.newPassword" type="password" label="新密码" placeholder="请输入新密码" :rules="[{ required: true, message: '请填写新密码' }, { validator: validateNewPassword }]" />
+        <div class="p-4"><van-button round block type="primary" native-type="submit">确认修改</van-button></div>
+      </van-form>
+    </van-dialog>
+  </div>
+</template>
