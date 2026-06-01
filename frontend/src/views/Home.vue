@@ -2,7 +2,8 @@
 // 模块：首页与公告动态
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getNotices } from '../api'
+import { showImagePreview } from 'vant'
+import { getNotices, getActivities } from '../api'
 import { getCachedLocation, setCachedLocation } from '../utils/location'
 
 const router = useRouter()
@@ -19,6 +20,19 @@ export interface Notice {
   latitude?: string | number
   longitude?: string | number
   storeName?: string
+}
+
+export interface Activity {
+  id: number
+  title: string
+  content: string
+  images: string | null
+  startTime: string | null
+  endTime: string | null
+  isAllStores: boolean
+  isActive: boolean
+  createdAt: string
+  storeNames?: string[]
 }
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -45,6 +59,9 @@ const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> =
 
 const urgentNotices = ref<Notice[]>([])
 const normalNotices = ref<Notice[]>([])
+const activities = ref<Activity[]>([])
+const currentStoreName = ref('')
+const closestStoreId = ref<number | null>(null)
 
 onMounted(async () => {
   try {
@@ -57,7 +74,7 @@ onMounted(async () => {
       if (coords) {
         userLat = coords.lat
         userLng = coords.lng
-        setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng })
+        setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng } as any)
       }
     }
 
@@ -65,7 +82,6 @@ onMounted(async () => {
     
     // 找出最近的店铺
     if (userLat && userLng && res.length > 0) {
-      let closestStoreId: number | null = null
       let minDistance = Infinity
       
       for (const n of res) {
@@ -73,21 +89,26 @@ onMounted(async () => {
           const d = calculateDistance(userLat, userLng, parseFloat(String(n.latitude)), parseFloat(String(n.longitude)))
           if (d < minDistance) {
             minDistance = d
-            closestStoreId = n.storeId
+            closestStoreId.value = n.storeId || null
+            currentStoreName.value = n.storeName || ''
           }
         }
       }
       
-      if (closestStoreId !== null) {
+      if (closestStoreId.value !== null) {
         // 只保留最近店铺的公告
-        res = res.filter((n: Notice) => n.storeId === closestStoreId)
+        res = res.filter((n: Notice) => n.storeId === closestStoreId.value)
       }
     }
 
     urgentNotices.value = res.filter((n: Notice) => n.isUrgent)
     normalNotices.value = res.filter((n: Notice) => !n.isUrgent)
+
+    // Load activities
+    const actRes = await getActivities(closestStoreId.value ? { storeId: closestStoreId.value } : undefined)
+    activities.value = actRes
   } catch (e) {
-    console.error('Failed to load notices', e)
+    console.error('Failed to load notices/activities', e)
   }
 })
 
@@ -103,10 +124,20 @@ const getImages = (imagesStr: string | null) => {
   if (!imagesStr) return []
   try { return JSON.parse(imagesStr) } catch { return [] }
 }
+
+const openActivityImages = (activity: Activity) => {
+  const imgs = getImages(activity.images)
+  if (imgs.length > 0) {
+    showImagePreview({
+      images: imgs,
+      startPosition: 0,
+    })
+  }
+}
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 pb-4">
     <!-- 紧急横幅通知 -->
     <van-notice-bar
       v-if="urgentNotices && urgentNotices.length > 0"
@@ -127,15 +158,17 @@ const getImages = (imagesStr: string | null) => {
       <van-grid-item icon="orders-o" text="购物清单" @click="router.push('/customer/checklist')" />
       <van-grid-item icon="goods-collect-o" text="商品备忘" @click="router.push('/customer/memos')" />
       <van-grid-item icon="warning-o" text="问题上报" @click="router.push('/customer/feedback')" />
+      <van-grid-item icon="friends-o" text="客流分析" @click="router.push('/customer/traffic')" />
+      <van-grid-item icon="logistics" text="停车计费" @click="router.push('/customer/parking')" />
     </van-grid>
 
     <!-- 最新动态 (普通公告) -->
-    <van-cell-group inset title="最新动态" class="!mx-0 !mt-6" v-if="normalNotices.length > 0">
+    <van-cell-group inset class="!mx-0 !mt-6" v-if="normalNotices.length > 0">
       <template #title>
         <div class="flex justify-between items-center">
           <span>最新动态</span>
-          <span v-if="normalNotices[0].storeName" class="text-xs text-blue-500 font-normal">
-            📍 当前: {{ normalNotices[0].storeName }}
+          <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
+            📍 当前: {{ currentStoreName }}
           </span>
         </div>
       </template>
@@ -149,9 +182,50 @@ const getImages = (imagesStr: string | null) => {
       />
     </van-cell-group>
     
-    <van-cell-group inset title="热门活动" class="!mx-0 !mt-6">
-      <van-cell title="周末特惠" label="一楼中庭，全场8折" value="查看详情" is-link />
-      <van-cell title="新店开业" label="负一楼B102，星巴克臻选" value="查看详情" is-link />
+    <!-- 热门活动 -->
+    <van-cell-group inset class="!mx-0 !mt-6" v-if="activities.length > 0">
+      <template #title>
+        <div class="flex justify-between items-center">
+          <span>热门活动</span>
+          <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
+            📍 当前: {{ currentStoreName }}
+          </span>
+        </div>
+      </template>
+      <div 
+        v-for="act in activities" 
+        :key="act.id"
+        class="bg-white p-4 border-b border-gray-100 last:border-0"
+      >
+        <h3 class="text-base font-bold mb-1 flex items-center justify-between">
+          <span>{{ act.title }}</span>
+          <span v-if="act.storeNames && act.storeNames.length > 0" class="text-xs text-blue-500 font-normal bg-blue-50 px-2 py-0.5 rounded ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">
+            📍 {{ act.storeNames.join('、') }}
+          </span>
+        </h3>
+        <p class="text-gray-500 text-sm mb-3 whitespace-pre-wrap">{{ act.content }}</p>
+        
+        <div 
+          class="relative w-full h-40 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer"
+          @click="openActivityImages(act)"
+        >
+          <template v-if="getImages(act.images).length > 0">
+            <van-image
+              lazy-load
+              fit="cover"
+              class="w-full h-full"
+              :src="getImages(act.images)[0]"
+            />
+            <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+              共 {{ getImages(act.images).length }} 张
+            </div>
+          </template>
+          <template v-else>
+            <van-icon name="photo-o" size="32" color="#dcdee0" />
+            <span class="text-gray-400 text-sm ml-2">暂无图片</span>
+          </template>
+        </div>
+      </div>
     </van-cell-group>
 
     <!-- 公告详情弹窗 -->
@@ -173,3 +247,4 @@ const getImages = (imagesStr: string | null) => {
     </van-dialog>
   </div>
 </template>
+

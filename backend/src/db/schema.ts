@@ -1,14 +1,27 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core'
+// 模块：数据库 Schema 定义 (Drizzle ORM)
+import { sqliteTable, text, integer, real, index, uniqueIndex, check } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 
 // Existing Users table
 export const users = sqliteTable('users', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   username: text('username').notNull().unique(),
   password: text('password').notNull(),
+  email: text('email'),
   nickname: text('nickname'),
   avatar: text('avatar'),
   role: text('role', { enum: ['customer', 'staff', 'admin'] }).notNull().default('customer'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  nicknameUpdatedAt: integer('nickname_updated_at', { mode: 'timestamp' }),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+})
+
+export const verificationCodes = sqliteTable('verification_codes', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  email: text('email').notNull(),
+  code: text('code').notNull(),
+  type: text('type', { enum: ['register', 'forgot_password', 'bind_email'] }).notNull(),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Customer: Shopping Checklist
@@ -17,7 +30,7 @@ export const checklists = sqliteTable('checklists', {
   userId: integer('user_id').references(() => users.id),
   title: text('title').notNull(),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Stores
@@ -31,8 +44,8 @@ export const stores = sqliteTable('stores', {
   time: text('time').notNull(),
   phone: text('phone').notNull(),
   category: text('category'),
-  latitude: text('latitude'), // Store as text or real, sqlite handles both. But better use real
-  longitude: text('longitude'),
+  latitude: real('latitude'),
+  longitude: real('longitude'),
 })
 
 // Customer: Feedback
@@ -46,7 +59,7 @@ export const feedbacks = sqliteTable('feedbacks', {
   status: text('status', { enum: ['pending', 'processing', 'resolved'] }).default('pending'),
   adminReply: text('admin_reply'),
   resolvedAt: integer('resolved_at', { mode: 'timestamp' }),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Staff: Maintenance
@@ -56,7 +69,7 @@ export const maintenance = sqliteTable('maintenance', {
   location: text('location').notNull(),
   message: text('message').notNull(),
   status: text('status', { enum: ['pending', 'in_progress', 'completed'] }).default('pending'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Staff: Patrol
@@ -66,7 +79,7 @@ export const patrols = sqliteTable('patrols', {
   area: text('area').notNull(),
   status: text('status', { enum: ['normal', 'abnormal'] }).notNull(),
   message: text('message'),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Customer: Item Memos
@@ -82,27 +95,27 @@ export const itemMemos = sqliteTable('item_memos', {
   tags: text('tags'), // Stored as JSON string
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
   completedAt: integer('completed_at', { mode: 'timestamp' }),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Notices for fragmented info
 export const notices = sqliteTable('notices', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  storeId: integer('store_id').references(() => stores.id), // Added storeId
+  storeId: integer('store_id').references(() => stores.id),
   title: text('title').notNull(),
   content: text('content').notNull(),
   images: text('images'), // JSON string array of URLs
-  isUrgent: integer('is_urgent', { mode: 'boolean' }).default(false), // To display in NoticeBar
-  expiresAt: integer('expires_at', { mode: 'timestamp' }), // Automatically hide after this date
-  isActive: integer('is_active', { mode: 'boolean' }).default(true), // For manual deletion/hiding
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  isUrgent: integer('is_urgent', { mode: 'boolean' }).default(false),
+  expiresAt: integer('expires_at', { mode: 'timestamp' }),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })
 
 // Community: Posts
 export const posts = sqliteTable('posts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id).notNull(),
-  storeId: integer('store_id').references(() => stores.id), // Added storeId
+  storeId: integer('store_id').references(() => stores.id),
   title: text('title').notNull(),
   content: text('content').notNull(),
   images: text('images'), // JSON array string
@@ -113,9 +126,11 @@ export const posts = sqliteTable('posts', {
   viewCount: integer('view_count').default(0),
   likeCount: integer('like_count').default(0),
   commentCount: integer('comment_count').default(0),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-  updatedAt: integer('updated_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-})
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  userCatStatusIdx: index('posts_user_category_status_idx').on(table.userId, table.category, table.status)
+}))
 
 // Community: Comments
 export const comments = sqliteTable('comments', {
@@ -126,40 +141,108 @@ export const comments = sqliteTable('comments', {
   content: text('content').notNull(),
   images: text('images'), // JSON array string
   likeCount: integer('like_count').default(0),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-})
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  postIdx: index('comments_post_idx').on(table.postId)
+}))
 
 // Community: Post Likes
 export const postLikes = sqliteTable('post_likes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id).notNull(),
   postId: integer('post_id').references(() => posts.id).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-})
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uidPidIdx: uniqueIndex('post_likes_uid_pid_idx').on(table.userId, table.postId)
+}))
 
 // Community: Comment Likes
 export const commentLikes = sqliteTable('comment_likes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id).notNull(),
   commentId: integer('comment_id').references(() => comments.id).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-})
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uidCidIdx: uniqueIndex('comment_likes_uid_cid_idx').on(table.userId, table.commentId)
+}))
 
 // Community: Post Collections
 export const postCollections = sqliteTable('post_collections', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id).notNull(),
   postId: integer('post_id').references(() => posts.id).notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
-})
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uidPidIdx: uniqueIndex('post_collections_uid_pid_idx').on(table.userId, table.postId)
+}))
 
 // Community: Reports
 export const reports = sqliteTable('reports', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   userId: integer('user_id').references(() => users.id).notNull(),
-  targetType: text('target_type', { enum: ['post', 'comment'] }).notNull(),
+  targetType: text('target_type', { enum: ['post', 'comment'] }).notNull(), // post / comment
   targetId: integer('target_id').notNull(),
   reason: text('reason').notNull(),
+  description: text('description'), // Optional detailed reason
   status: text('status', { enum: ['pending', 'resolved'] }).default('pending').notNull(),
-  createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+})
+
+// Temporary Activities
+export const activities = sqliteTable('activities', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  title: text('title').notNull(),
+  content: text('content').notNull(),
+  images: text('images'), // JSON string array of URLs
+  startTime: integer('start_time', { mode: 'timestamp' }),
+  endTime: integer('end_time', { mode: 'timestamp' }),
+  isAllStores: integer('is_all_stores', { mode: 'boolean' }).default(false),
+  isActive: integer('is_active', { mode: 'boolean' }).default(true),
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  timeCheck: check('activities_time_check', sql`${table.endTime} > ${table.startTime}`)
+}))
+
+export const activityStores = sqliteTable('activity_stores', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  activityId: integer('activity_id').references(() => activities.id, { onDelete: 'cascade' }).notNull(),
+  storeId: integer('store_id').references(() => stores.id, { onDelete: 'cascade' }).notNull(),
+})
+
+// Customer Traffic
+export const storeTraffic = sqliteTable('store_traffic', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  storeId: integer('store_id').references(() => stores.id, { onDelete: 'cascade' }).notNull(),
+  floor: integer('floor'), // -3 to 8
+  level: integer('level').notNull(), // 1: green, 2: yellow, 3: orange, 4: red
+  userId: integer('user_id').references(() => users.id).notNull(), // To restrict 1 submission per hour
+  dateHour: text('date_hour').notNull(), // format YYYY-MM-DD-HH
+  createdAt: integer('created_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
+}, (table) => ({
+  uniqueStoreFloorUserHour: uniqueIndex('store_traffic_unique_idx').on(table.storeId, table.floor, table.userId, table.dateHour)
+}))
+
+// Store Parking Rules
+export const storeParking = sqliteTable('store_parking', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  storeId: integer('store_id').references(() => stores.id, { onDelete: 'cascade' }).notNull().unique(),
+  capacity: integer('capacity').notNull(),
+  openingHours: text('opening_hours').notNull(),
+  freeDurationMinutes: integer('free_duration_minutes').notNull(),
+  dayTimeRange: text('day_time_range'), // e.g. "07:00-23:00"
+  billingMethod: text('billing_method', { enum: ['per_time', 'per_hour'] }).notNull(), // per_time, per_hour
+  dayRateSmall: real('day_rate_small'),
+  nightRateSmall: real('night_rate_small'),
+  dayRateMedium: real('day_rate_medium'),
+  nightRateMedium: real('night_rate_medium'),
+  dayRateLarge: real('day_rate_large'),
+  nightRateLarge: real('night_rate_large'),
+  baseHourlyRate: real('base_hourly_rate'), // e.g., 3 for first 2 hours
+  baseHourlyDuration: integer('base_hourly_duration'), // e.g., 120 (mins)
+  extraHourlyRate: real('extra_hourly_rate'), // e.g., 1 for each extra hour
+  max24hRate: real('max_24h_rate'), // e.g., 20
+  newEnergyDiscount: real('new_energy_discount'), // e.g., 0.5
+  specialRules: text('special_rules'), // JSON string array e.g. '["military_free", "cross_day_night"]'
+  rawText: text('raw_text').notNull(),
+  updatedAt: integer('updated_at', { mode: 'timestamp' }).default(sql`CURRENT_TIMESTAMP`),
 })

@@ -2,6 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { db } from '../src/db/index.js'
 import { stores } from '../src/db/schema.js'
+import { sql } from 'drizzle-orm'
 
 async function importCsv(filePath: string, filename: string) {
   const content = fs.readFileSync(filePath, 'utf-8')
@@ -60,7 +61,14 @@ async function main() {
   const dataDir = path.join(process.cwd(), 'data', '店铺信息')
   
   // Clear existing stores to avoid duplication if run multiple times
-  await db.delete(stores)
+  db.run(sql`PRAGMA foreign_keys = OFF;`);
+  await db.delete(stores);
+  try {
+    db.run(sql`DELETE FROM sqlite_sequence WHERE name='stores';`);
+  } catch (e) {
+    // Catch in case table doesn't have sequence yet
+  }
+  db.run(sql`PRAGMA foreign_keys = ON;`);
   console.log('Cleared existing stores.')
   
   if (fs.existsSync(dataDir)) {

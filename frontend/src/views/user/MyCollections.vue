@@ -4,26 +4,52 @@ import { useRouter } from 'vue-router'
 import { getMyCollections } from '../../api/index'
 import { showToast } from 'vant'
 
-const router = useRouter()
-const posts = ref<any[]>([])
-const loading = ref(true)
+interface CollectionItem {
+  id: number
+  postId: number
+  createdAt: string
+  post?: {
+    id: number
+    title: string
+    content: string
+  }
+  author?: {
+    id: number
+    nickname: string
+    avatar: string | null
+  }
+}
 
-onMounted(async () => {
+const router = useRouter()
+const posts = ref<CollectionItem[]>([])
+const loading = ref(true)
+const isError = ref(false)
+
+const fetchCollections = async () => {
+  loading.value = true
+  isError.value = false
   try {
     const res = await getMyCollections()
     if (res.success) {
       posts.value = res.data
     } else {
+      isError.value = true
       showToast(res.message || '获取失败')
     }
   } catch (error) {
+    isError.value = true
     showToast('获取异常')
   } finally {
     loading.value = false
   }
+}
+
+onMounted(() => {
+  fetchCollections()
 })
 
-const goDetail = (id: number) => {
+const goDetail = (id?: number) => {
+  if (!id) return showToast('无效的帖子ID')
   router.push(`/community/post/${id}`)
 }
 </script>
@@ -34,18 +60,23 @@ const goDetail = (id: number) => {
     
     <van-loading v-if="loading" class="mt-10 text-center" />
     
+    <div v-else-if="isError" class="mt-20 text-center text-gray-400">
+      <van-empty description="加载失败" />
+      <van-button size="small" type="primary" class="mt-4" @click="fetchCollections">重试</van-button>
+    </div>
+    
     <div v-else-if="posts.length === 0" class="mt-20 text-center text-gray-400">
       <van-empty description="还没有收藏任何帖子哦" />
     </div>
     
     <div v-else class="p-3">
-      <div v-for="item in posts" :key="item.post.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(item.post.id)">
+      <div v-for="item in posts" :key="item.post?.id || item.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(item.post?.id)">
         <div class="flex items-center mb-2">
-          <van-image round width="24" height="24" :src="item.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
-          <span class="ml-2 text-xs text-gray-600">{{ item.author.nickname }}</span>
+          <van-image round width="24" height="24" :src="item.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
+          <span class="ml-2 text-xs text-gray-600">{{ item.author?.nickname || '未知用户' }}</span>
         </div>
-        <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1">{{ item.post.title }}</h3>
-        <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ item.post.content }}</p>
+        <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1">{{ item.post?.title || '已删除帖子' }}</h3>
+        <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ item.post?.content || '' }}</p>
       </div>
     </div>
   </div>

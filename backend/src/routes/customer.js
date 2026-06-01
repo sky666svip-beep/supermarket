@@ -86,7 +86,21 @@ customer.delete('/checklist/:id', requireUser, async (c) => {
 // ---- Feedback ----
 customer.get('/feedback', requireUser, async (c) => {
     const userId = Number(c.req.header('X-User-Id'));
-    const result = await db.select().from(feedbacks).where(eq(feedbacks.userId, userId)).orderBy(desc(feedbacks.createdAt));
+    const result = await db.select({
+        id: feedbacks.id,
+        facilityType: feedbacks.facilityType,
+        message: feedbacks.message,
+        images: feedbacks.images,
+        status: feedbacks.status,
+        adminReply: feedbacks.adminReply,
+        resolvedAt: feedbacks.resolvedAt,
+        createdAt: feedbacks.createdAt,
+        storeName: stores.name
+    })
+        .from(feedbacks)
+        .leftJoin(stores, eq(feedbacks.storeId, stores.id))
+        .where(eq(feedbacks.userId, userId))
+        .orderBy(desc(feedbacks.createdAt));
     return c.json(result);
 });
 customer.post('/feedback', requireUser, async (c) => {
@@ -95,6 +109,17 @@ customer.post('/feedback', requireUser, async (c) => {
     const imagesJson = images && images.length > 0 ? JSON.stringify(images) : null;
     const result = await db.insert(feedbacks).values({ storeId, facilityType, message, images: imagesJson, userId }).returning();
     return c.json(result[0]);
+});
+customer.delete('/feedback/:id', requireUser, async (c) => {
+    const userId = Number(c.req.header('X-User-Id'));
+    const id = Number(c.req.param('id'));
+    const target = await db.select().from(feedbacks).where(and(eq(feedbacks.id, id), eq(feedbacks.userId, userId)));
+    if (target.length === 0)
+        return c.json({ error: '工单不存在' }, 404);
+    if (target[0].status !== 'resolved')
+        return c.json({ error: '仅能删除已解决的工单' }, 400);
+    await db.delete(feedbacks).where(eq(feedbacks.id, id));
+    return c.json({ success: true });
 });
 // ---- Item Memos ----
 customer.get('/memos', requireUser, async (c) => {

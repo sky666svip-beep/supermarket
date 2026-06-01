@@ -1,14 +1,17 @@
-# Findings
+# Findings: Parking Fee Calculator
 
-## 已有架构
-- 前台主页 `d:\Projects\supermarket\frontend\src\views\Home.vue` 使用了 Vue 3 + Vant UI。
-- 管理后台位于 `d:\Projects\supermarket\frontend\src\views\admin\` 下。
-- 后端使用了 Express + Drizzle ORM (SQLite)，在 `d:\Projects\supermarket\backend\src\db\schema.ts`。
-- 图片上传已经存在 `upload.ts`，可复用。
-- 响应格式统一为 `{ success: boolean, data: any, message: string }`。
+## Requirements from plan2.md
+- **Feature**: Parking Fee Calculator.
+- **Rules provided for 6 stores**:
+  1. 长申国际
+  2. 盛德美新区店
+  3. 景华店
+  4. 金纱店
+  5. 盛德美折扣店
+  6. 大张会员超市
 
-## 当前任务发现
-- 需要新增社区发帖功能，涉及新表：`posts`, `comments`, `post_likes`, `comment_likes`, `post_collections`。
-- 帖子需经过管理员后台审核。这涉及到帖子的状态设计（例如 `status: 'pending' | 'approved' | 'rejected'`）。
-- 需要实现帖子加精、置顶。可在 `posts` 表中增加 `isTop`、`isElite` 字段。
-- 举报功能需要一张 `reports` 表记录违规举报。
+## Implementation Notes
+- Store names map exactly to the `stores` table records imported earlier.
+- The calculation logic involves free time thresholds, hourly rates, day/night differences, and maximum caps (usually 20元 for 24h).
+- The calculator must allow switching stores and automatically select the nearest store initially.
+- The UI should be available to unauthenticated users, which matches the Home page since `Home.vue` is usually accessible.

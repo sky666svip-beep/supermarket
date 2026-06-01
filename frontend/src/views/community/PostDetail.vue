@@ -2,7 +2,7 @@
 // 模块：社区帖子详情
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPostDetail, getComments, publishComment, likePost, collectPost, getPostInteraction, likeComment } from '../../api/index'
+import { getPostDetail, getComments, publishComment, likePost, collectPost, getPostInteraction, likeComment, reportPost, reportComment } from '../../api/index'
 import { showToast, showImagePreview } from 'vant'
 
 const route = useRoute()
@@ -17,6 +17,12 @@ const interaction = ref({ liked: false, collected: false })
 const commentContent = ref('')
 const showCommentPopup = ref(false)
 const replyTo = ref<any>(null)
+
+const showReportPopup = ref(false)
+const reportTarget = ref<'post' | 'comment'>('post')
+const reportTargetId = ref<number>(0)
+const reportReason = ref('')
+const reportDesc = ref('')
 
 onMounted(async () => {
   await fetchPost()
@@ -142,6 +148,38 @@ const previewImage = (images: string[], startPosition: number) => {
   })
 }
 
+const openReport = (type: 'post' | 'comment', id: number) => {
+  reportTarget.value = type
+  reportTargetId.value = id
+  reportReason.value = ''
+  reportDesc.value = ''
+  showReportPopup.value = true
+}
+
+const submitReport = async () => {
+  if (!reportReason.value) {
+    showToast('请选择举报原因')
+    return
+  }
+  
+  try {
+    const apiCall = reportTarget.value === 'post' ? reportPost : reportComment
+    const res = await apiCall(reportTargetId.value, {
+      reason: reportReason.value,
+      description: reportDesc.value
+    })
+    
+    if (res.success) {
+      showToast('举报成功，我们将尽快核实处理')
+      showReportPopup.value = false
+    } else {
+      showToast(res.message || '举报失败')
+    }
+  } catch (error) {
+    showToast('操作异常')
+  }
+}
+
 // 简单的平铺转树形
 const getCommentTree = () => {
   const map = new Map()
@@ -187,7 +225,12 @@ const formatTime = (timeStr: string) => {
               <div class="text-xs text-gray-400">{{ formatTime(post.post.createdAt) }}</div>
             </div>
           </div>
-          <van-tag type="primary" plain>{{ post.post.category }}</van-tag>
+          <div class="flex items-center gap-3">
+            <van-tag type="primary" plain>{{ post.post.category }}</van-tag>
+            <div @click="openReport('post', post.post.id)" class="text-gray-400 flex flex-col items-center justify-center">
+              <van-icon name="warning-o" size="18" />
+            </div>
+          </div>
         </div>
         
         <h1 class="text-lg font-bold mb-3 text-gray-900">{{ post.post.title }}</h1>
@@ -234,7 +277,8 @@ const formatTime = (timeStr: string) => {
                 <div class="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{{ node.comment.content }}</div>
                 <div class="flex items-center mt-2 text-xs text-gray-400">
                   <span class="mr-4">{{ formatTime(node.comment.createdAt) }}</span>
-                  <span class="text-blue-500" @click="openComment(node)">回复</span>
+                  <span class="text-blue-500 mr-4" @click="openComment(node)">回复</span>
+                  <span class="text-red-400" @click="openReport('comment', node.comment.id)">举报</span>
                 </div>
                 
                 <!-- 二级评论展示区 -->
@@ -244,6 +288,7 @@ const formatTime = (timeStr: string) => {
                     <span class="text-gray-800 text-sm">: {{ child.comment.content }}</span>
                     <div class="flex items-center mt-1 text-xs text-gray-400">
                       <span class="mr-4">{{ formatTime(child.comment.createdAt) }}</span>
+                      <span class="text-red-400" @click="openReport('comment', child.comment.id)">举报</span>
                     </div>
                   </div>
                 </div>
@@ -291,6 +336,43 @@ const formatTime = (timeStr: string) => {
           show-word-limit
           class="bg-gray-50 rounded-lg"
         />
+      </div>
+    </van-popup>
+
+    <!-- 举报弹窗 -->
+    <van-popup v-model:show="showReportPopup" position="bottom" round safe-area-inset-bottom>
+      <div class="p-4">
+        <div class="flex justify-between items-center mb-4">
+          <span class="text-base font-bold text-gray-800">举报{{ reportTarget === 'post' ? '帖子' : '评论' }}</span>
+          <van-icon name="cross" size="20" class="text-gray-400" @click="showReportPopup = false" />
+        </div>
+        
+        <div class="mb-4">
+          <div class="text-sm text-gray-500 mb-2">举报原因 (必选)</div>
+          <van-radio-group v-model="reportReason" class="grid grid-cols-2 gap-3">
+            <van-radio name="垃圾广告" shape="square">垃圾广告</van-radio>
+            <van-radio name="低俗色情" shape="square">低俗色情</van-radio>
+            <van-radio name="违法违规" shape="square">违法违规</van-radio>
+            <van-radio name="恶意攻击" shape="square">恶意攻击</van-radio>
+            <van-radio name="其他违规" shape="square">其他违规</van-radio>
+          </van-radio-group>
+        </div>
+        
+        <div class="mb-5">
+          <div class="text-sm text-gray-500 mb-2">详细说明 (选填)</div>
+          <van-field
+            v-model="reportDesc"
+            rows="3"
+            autosize
+            type="textarea"
+            maxlength="200"
+            show-word-limit
+            placeholder="请详细描述违规情况..."
+            class="bg-gray-50 rounded border border-gray-100 p-2"
+          />
+        </div>
+        
+        <van-button type="danger" block round @click="submitReport">提交举报</van-button>
       </div>
     </van-popup>
   </div>

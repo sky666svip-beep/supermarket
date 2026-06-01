@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { db } from '../db/index.js';
-import { comments, commentLikes, users, posts } from '../db/schema.js';
+import { posts, users, comments, commentLikes, reports } from '../db/schema.js';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { authMiddleware } from './auth.js';
 export const commentRouter = new Hono();
@@ -74,6 +74,10 @@ commentRouter.post('/', authMiddleware, async (c) => {
     if (!postId || !content) {
         return c.json({ success: false, data: null, message: '参数不完整' }, 400);
     }
+    const linkRegex = /(http[s]?:\/\/|www\.)|([a-zA-Z0-9\-\_]+\.(com|cn|net|org|io|me|cc|co))/i;
+    if (linkRegex.test(content)) {
+        return c.json({ success: false, data: null, message: '评论内容禁止包含链接' }, 400);
+    }
     try {
         const newComment = await db.insert(comments).values({
             userId: user.id,
@@ -127,5 +131,31 @@ commentRouter.post('/:id/like', authMiddleware, async (c) => {
     }
     catch (error) {
         return c.json({ success: false, data: null, message: '操作失败' }, 500);
+    }
+});
+// 举报评论
+commentRouter.post('/:id/report', authMiddleware, async (c) => {
+    const user = c.get('user');
+    const id = parseInt(c.req.param('id') || '');
+    const { reason, description } = await c.req.json();
+    if (!reason) {
+        return c.json({ success: false, data: null, message: '举报原因不能为空' }, 400);
+    }
+    try {
+        const comment = await db.select().from(comments).where(eq(comments.id, id)).limit(1);
+        if (comment.length === 0) {
+            return c.json({ success: false, data: null, message: '评论不存在' }, 404);
+        }
+        await db.insert(reports).values({
+            userId: user.id,
+            targetType: 'comment',
+            targetId: id,
+            reason,
+            description
+        });
+        return c.json({ success: true, data: null, message: '举报成功' });
+    }
+    catch (error) {
+        return c.json({ success: false, data: null, message: '举报失败' }, 500);
     }
 });

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -17,6 +18,10 @@ import { notice } from './routes/notice.js';
 import { postRouter } from './routes/posts.js';
 import { commentRouter } from './routes/comments.js';
 import { communityAdminRouter } from './routes/community-admin.js';
+import { activityRouter } from './routes/activities.js';
+import { adminActivityRouter } from './routes/admin-activities.js';
+import { trafficRouter } from './routes/traffic.js';
+import { parkingRouter } from './routes/parking.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = new Hono();
@@ -51,6 +56,10 @@ app.route('/api/notice', notice);
 app.route('/api/posts', postRouter);
 app.route('/api/comments', commentRouter);
 app.route('/api/community-admin', communityAdminRouter);
+app.route('/api/activities', activityRouter);
+app.route('/api/admin/activities', adminActivityRouter);
+app.route('/api/traffic', trafficRouter);
+app.route('/api/parking', parkingRouter);
 app.get('/', (c) => {
     return c.json({ message: 'Welcome to Supermarket API' });
 });

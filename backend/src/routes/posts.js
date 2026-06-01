@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { db } from '../db/index.js';
-import { posts, postLikes, postCollections, users } from '../db/schema.js';
+import { posts, postLikes, postCollections, users, comments, commentLikes, stores, reports } from '../db/schema.js';
 import { eq, desc, and, sql } from 'drizzle-orm';
 import { authMiddleware } from './auth.js';
 export const postRouter = new Hono();
@@ -37,6 +37,8 @@ postRouter.get('/', async (c) => {
             likeCount: posts.likeCount,
             commentCount: posts.commentCount,
             createdAt: posts.createdAt,
+            storeId: posts.storeId,
+            storeName: stores.name,
             author: {
                 id: users.id,
                 username: users.username,
@@ -46,6 +48,7 @@ postRouter.get('/', async (c) => {
         })
             .from(posts)
             .innerJoin(users, eq(posts.userId, users.id))
+            .leftJoin(stores, eq(posts.storeId, stores.id))
             .where(queryConditions)
             .orderBy(desc(posts.isTop), orderFn)
             .limit(limit)
@@ -101,6 +104,7 @@ postRouter.get('/:id', async (c) => {
         const postDetails = await db
             .select({
             post: posts,
+            storeName: stores.name,
             author: {
                 id: users.id,
                 nickname: users.nickname,
@@ -109,6 +113,7 @@ postRouter.get('/:id', async (c) => {
         })
             .from(posts)
             .innerJoin(users, eq(posts.userId, users.id))
+            .leftJoin(stores, eq(posts.storeId, stores.id))
             .where(eq(posts.id, id))
             .limit(1);
         if (postDetails.length === 0) {
@@ -124,13 +129,18 @@ postRouter.get('/:id', async (c) => {
 postRouter.post('/', authMiddleware, async (c) => {
     const user = c.get('user');
     const body = await c.req.json();
-    const { title, content, images, category } = body;
-    if (!title || !content || !category) {
-        return c.json({ success: false, data: null, message: '参数不完整' }, 400);
+    const { title, content, images, category, storeId } = body;
+    if (!title || !content || !category || !storeId) {
+        return c.json({ success: false, data: null, message: '参数不完整，必须选择门店' }, 400);
+    }
+    const linkRegex = /(http[s]?:\/\/|www\.)|([a-zA-Z0-9\-\_]+\.(com|cn|net|org|io|me|cc|co))/i;
+    if (linkRegex.test(title) || linkRegex.test(content)) {
+        return c.json({ success: false, data: null, message: '内容中禁止包含链接' }, 400);
     }
     try {
         const newPost = await db.insert(posts).values({
             userId: user.id,
+            storeId,
             title,
             content,
             images: JSON.stringify(images || []),
@@ -149,19 +159,26 @@ postRouter.put('/:id', authMiddleware, async (c) => {
     const id = parseInt(c.req.param('id') || '');
     const body = await c.req.json();
     const { title, content, images, category } = body;
+    const linkRegex = /(http[s]?:\/\/|www\.)|([a-zA-Z0-9\-\_]+\.(com|cn|net|org|io|me|cc|co))/i;
+    if (linkRegex.test(title) || linkRegex.test(content)) {
+        return c.json({ success: false, data: null, message: '内容中禁止包含链接' }, 400);
+    }
     try {
         const post = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
         if (post.length === 0 || post[0].userId !== user.id) {
             return c.json({ success: false, data: null, message: '无权操作或帖子不存在' }, 403);
         }
         // 根据 user 意见，修改后不需要重新审核
-        await db.update(posts).set({
+        const updateData = {
             title,
             content,
             images: JSON.stringify(images || []),
             category,
             updatedAt: new Date()
-        }).where(eq(posts.id, id));
+        };
+        if (body.storeId)
+            updateData.storeId = body.storeId;
+        await db.update(posts).set(updateData).where(eq(posts.id, id));
         return c.json({ success: true, data: null, message: '修改成功' });
     }
     catch (error) {
@@ -177,6 +194,14 @@ postRouter.delete('/:id', authMiddleware, async (c) => {
         if (post.length === 0 || (post[0].userId !== user.id && user.role !== 'admin')) {
             return c.json({ success: false, data: null, message: '无权操作' }, 403);
         }
+        // 手动级联删除关联数据，避免外键约束报错
+        await db.delete(postLikes).where(eq(postLikes.postId, id));
+        await db.delete(postCollections).where(eq(postCollections.postId, id));
+        const postComments = await db.select({ id: comments.id }).from(comments).where(eq(comments.postId, id));
+        for (const comment of postComments) {
+            await db.delete(commentLikes).where(eq(commentLikes.commentId, comment.id));
+        }
+        await db.delete(comments).where(eq(comments.postId, id));
         await db.delete(posts).where(eq(posts.id, id));
         return c.json({ success: true, data: null, message: '删除成功' });
     }
@@ -235,5 +260,31 @@ postRouter.get('/:id/interaction', authMiddleware, async (c) => {
     }
     catch (error) {
         return c.json({ success: false, data: null, message: '获取失败' }, 500);
+    }
+});
+// 举报帖子
+postRouter.post('/:id/report', authMiddleware, async (c) => {
+    const user = c.get('user');
+    const id = parseInt(c.req.param('id') || '');
+    const { reason, description } = await c.req.json();
+    if (!reason) {
+        return c.json({ success: false, data: null, message: '举报原因不能为空' }, 400);
+    }
+    try {
+        const post = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
+        if (post.length === 0) {
+            return c.json({ success: false, data: null, message: '帖子不存在' }, 404);
+        }
+        await db.insert(reports).values({
+            userId: user.id,
+            targetType: 'post',
+            targetId: id,
+            reason,
+            description
+        });
+        return c.json({ success: true, data: null, message: '举报成功' });
+    }
+    catch (error) {
+        return c.json({ success: false, data: null, message: '举报失败' }, 500);
     }
 });

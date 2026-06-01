@@ -17,14 +17,18 @@
   "license": "ISC",
   "dependencies": {
     "@hono/node-server": "^2.0.4",
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
-    "hono": "^4.12.23"
+    "hono": "^4.12.23",
+    "nodemailer": "^8.0.10"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.1",
+    "@types/nodemailer": "^8.0.0",
     "drizzle-kit": "^0.31.10",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"

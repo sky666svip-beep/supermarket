@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
-import { posts, reports, users } from '../db/schema.js'
-import { eq, desc } from 'drizzle-orm'
+import { posts, reports, users, comments, commentLikes, postLikes, postCollections } from '../db/schema.js'
+import { eq, desc, sql } from 'drizzle-orm'
 import { authMiddleware, AuthContext } from './auth.js'
 
 export const communityAdminRouter = new Hono<AuthContext>()
@@ -69,9 +69,31 @@ communityAdminRouter.put('/posts/:id/attributes', async (c) => {
 // 获取举报列表
 communityAdminRouter.get('/reports', async (c) => {
   try {
-    const list = await db.select().from(reports).orderBy(desc(reports.createdAt))
-    return c.json({ success: true, data: list, message: '获取成功' })
+    const rawReports = await db.select().from(reports).orderBy(desc(reports.createdAt))
+    
+    const result = []
+    for (const report of rawReports) {
+      let targetPost = null
+      let targetComment = null
+      
+      if (report.targetType === 'post') {
+        const p = await db.select().from(posts).where(eq(posts.id, report.targetId)).limit(1)
+        targetPost = p[0] || null
+      } else if (report.targetType === 'comment') {
+        const com = await db.select().from(comments).where(eq(comments.id, report.targetId)).limit(1)
+        targetComment = com[0] || null
+      }
+      
+      result.push({
+        report,
+        targetPost,
+        targetComment
+      })
+    }
+
+    return c.json({ success: true, data: result, message: '获取成功' })
   } catch (error) {
+    console.error('Fetch reports error:', error)
     return c.json({ success: false, data: null, message: '获取失败' }, 500)
   }
 })
@@ -81,9 +103,56 @@ communityAdminRouter.put('/reports/:id/status', async (c) => {
   const id = parseInt(c.req.param('id') || '')
   const { status } = await c.req.json()
   try {
+    const reportList = await db.select().from(reports).where(eq(reports.id, id)).limit(1)
+    if (reportList.length === 0) {
+      return c.json({ success: false, data: null, message: '举报不存在' }, 404)
+    }
+    const report = reportList[0]
+
+    // 如果举报属实 (resolved)，隐藏/删除被举报的内容
+    if (status === 'resolved') {
+      if (report.targetType === 'post') {
+        // 直接删除违规帖子及关联数据
+        const post = await db.select().from(posts).where(eq(posts.id, report.targetId)).limit(1)
+        if (post.length > 0) {
+          await db.delete(postLikes).where(eq(postLikes.postId, report.targetId))
+          await db.delete(postCollections).where(eq(postCollections.postId, report.targetId))
+          
+          const postComments = await db.select({ id: comments.id }).from(comments).where(eq(comments.postId, report.targetId))
+          for (const comment of postComments) {
+            await db.delete(commentLikes).where(eq(commentLikes.commentId, comment.id))
+          }
+          await db.delete(comments).where(eq(comments.postId, report.targetId))
+          
+          await db.delete(posts).where(eq(posts.id, report.targetId))
+        }
+      } else if (report.targetType === 'comment') {
+        // 直接删除违规评论
+        const comment = await db.select().from(comments).where(eq(comments.id, report.targetId)).limit(1)
+        if (comment.length > 0) {
+          await db.delete(commentLikes).where(eq(commentLikes.commentId, report.targetId))
+          await db.delete(comments).where(eq(comments.id, report.targetId))
+          // 更新帖子评论数
+          await db.update(posts).set({ commentCount: sql`${posts.commentCount} - 1` }).where(eq(posts.id, comment[0].postId))
+        }
+      }
+    }
+
     await db.update(reports).set({ status }).where(eq(reports.id, id))
-    return c.json({ success: true, data: null, message: '更新举报状态成功' })
+    return c.json({ success: true, data: null, message: '处理成功' })
   } catch (error) {
+    console.error('Update report status error:', error)
     return c.json({ success: false, data: null, message: '操作失败' }, 500)
+  }
+})
+
+// 删除举报记录
+communityAdminRouter.delete('/reports/:id', async (c) => {
+  const id = parseInt(c.req.param('id') || '')
+  try {
+    await db.delete(reports).where(eq(reports.id, id))
+    return c.json({ success: true, data: null, message: '删除成功' })
+  } catch (error) {
+    return c.json({ success: false, data: null, message: '删除失败' }, 500)
   }
 })

@@ -27,13 +27,14 @@ const onSubmit = async () => {
   <div class="h-full bg-white p-6 pt-12">
     <h1 class="text-2xl font-bold mb-8 text-center">用户登录</h1>
     <van-form @submit="onSubmit">
-      <van-cell-group inset class="!mx-0 shadow-sm border border-gray-100 mb-6">
+      <div class="mb-8 space-y-4">
         <van-field
           v-model="username"
           name="username"
           label="用户名"
           placeholder="请输入用户名"
           :rules="[{ required: true, message: '请填写用户名' }]"
+          class="rounded-lg shadow-sm border border-gray-100 py-3"
         />
         <van-field
           v-model="password"
@@ -42,14 +43,16 @@ const onSubmit = async () => {
           label="密码"
           placeholder="请输入密码"
           :rules="[{ required: true, message: '请填写密码' }]"
+          class="rounded-lg shadow-sm border border-gray-100 py-3"
         />
-      </van-cell-group>
-      <div class="space-y-4">
-        <van-button round block type="primary" native-type="submit">
+      </div>
+      <div class="space-y-6">
+        <van-button round block type="primary" native-type="submit" class="!h-12 text-lg">
           登录
         </van-button>
-        <div class="text-center text-sm text-blue-500" @click="router.push('/register')">
-          没有账号？去注册
+        <div class="flex justify-between px-2 mt-6 text-sm text-blue-500">
+          <span @click="router.push('/register')">没有账号？去注册</span>
+          <span @click="router.push('/forgot-password')">忘记密码？</span>
         </div>
       </div>
     </van-form>

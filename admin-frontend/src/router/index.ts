@@ -27,6 +27,11 @@ const router = createRouter({
       path: '/community/reports',
       name: 'CommunityReports',
       component: () => import('../views/CommunityReports.vue')
+    },
+    {
+      path: '/activities',
+      name: 'ActivityManager',
+      component: () => import('../views/ActivityManager.vue')
     }
   ]
 })

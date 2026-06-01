@@ -32,7 +32,8 @@ yarn-error.log*
 # Database
 *.db
 *.sqlite
-
+uploads/
 # Temporary files
 tmp/
 temp/
+# git push origin master

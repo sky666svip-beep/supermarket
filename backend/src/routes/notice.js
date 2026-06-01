@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { db } from '../db/index.js';
-import { notices, users } from '../db/schema.js';
+import { notices, users, stores } from '../db/schema.js';
 import { eq, desc, and, or, sql } from 'drizzle-orm';
 export const notice = new Hono();
 // Auth middleware for admin
@@ -32,8 +32,22 @@ notice.get('/', async (c) => {
         conditions.push(eq(notices.isUrgent, false));
     }
     const result = await db
-        .select()
+        .select({
+        id: notices.id,
+        storeId: notices.storeId,
+        title: notices.title,
+        content: notices.content,
+        images: notices.images,
+        isUrgent: notices.isUrgent,
+        expiresAt: notices.expiresAt,
+        isActive: notices.isActive,
+        createdAt: notices.createdAt,
+        latitude: stores.latitude,
+        longitude: stores.longitude,
+        storeName: stores.name
+    })
         .from(notices)
+        .leftJoin(stores, eq(notices.storeId, stores.id))
         .where(and(...conditions))
         .orderBy(desc(notices.createdAt));
     return c.json(result);
@@ -41,20 +55,33 @@ notice.get('/', async (c) => {
 // Admin: Get all notices
 notice.get('/admin', requireAdmin, async (c) => {
     const result = await db
-        .select()
+        .select({
+        id: notices.id,
+        storeId: notices.storeId,
+        title: notices.title,
+        content: notices.content,
+        images: notices.images,
+        isUrgent: notices.isUrgent,
+        expiresAt: notices.expiresAt,
+        isActive: notices.isActive,
+        createdAt: notices.createdAt,
+        storeName: stores.name
+    })
         .from(notices)
+        .leftJoin(stores, eq(notices.storeId, stores.id))
         .orderBy(desc(notices.createdAt));
     return c.json(result);
 });
 // Admin: Create notice
 notice.post('/', requireAdmin, async (c) => {
-    const { title, content, images, isUrgent, expiresAt } = await c.req.json();
-    if (!title || !content) {
-        return c.json({ error: '标题和内容为必填项' }, 400);
+    const { title, content, images, isUrgent, expiresAt, storeId } = await c.req.json();
+    if (!title || !content || !storeId) {
+        return c.json({ error: '标题、内容和店铺为必填项' }, 400);
     }
     const result = await db.insert(notices).values({
         title,
         content,
+        storeId,
         images: images ? JSON.stringify(images) : null,
         isUrgent: isUrgent ?? false,
         expiresAt: expiresAt ? new Date(expiresAt) : null,
@@ -65,12 +92,14 @@ notice.post('/', requireAdmin, async (c) => {
 // Admin: Update notice
 notice.put('/:id', requireAdmin, async (c) => {
     const id = Number(c.req.param('id'));
-    const { title, content, images, isUrgent, expiresAt, isActive } = await c.req.json();
+    const { title, content, images, isUrgent, expiresAt, isActive, storeId } = await c.req.json();
     const updates = {};
     if (title !== undefined)
         updates.title = title;
     if (content !== undefined)
         updates.content = content;
+    if (storeId !== undefined)
+        updates.storeId = storeId;
     if (images !== undefined)
         updates.images = images === null ? null : JSON.stringify(images);
     if (isUrgent !== undefined)

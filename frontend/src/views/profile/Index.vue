@@ -1,24 +1,32 @@
 <script setup lang="ts">
 // 模块：个人中心与账号管理
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { showConfirmDialog, showToast } from 'vant'
-import { updateProfile, updatePassword } from '../../api/index'
+import { showConfirmDialog, showToast, showDialog } from 'vant'
+import { updateProfile, updatePassword, bindEmail, sendVerificationCode } from '../../api/index'
 
 const router = useRouter()
 
 const user = ref<any>(null)
 const showProfileDialog = ref(false)
 const showPasswordDialog = ref(false)
+const showEmailDialog = ref(false)
 
 const profileForm = ref({ nickname: '' })
 const pwdForm = ref({ oldPassword: '', newPassword: '' })
+const emailForm = ref({ email: '', code: '' })
+const emailCountdown = ref(0)
+let emailTimer: any = null
 
 onMounted(() => {
   const stored = localStorage.getItem('user')
   if (stored) {
     user.value = JSON.parse(stored)
   }
+})
+
+onUnmounted(() => {
+  if (emailTimer) clearInterval(emailTimer)
 })
 
 const onLogout = () => {
@@ -46,6 +54,12 @@ const onSaveProfile = async () => {
   }
 }
 
+const validateUsername = (val: string) => {
+  const len = val.trim().length
+  if (len < 3 || len > 10) return '昵称必须在3-10个字符之间'
+  return true
+}
+
 const validateNewPassword = (val: string) => {
   const hasLetter = /[a-zA-Z]/.test(val)
   const hasNumber = /[0-9]/.test(val)
@@ -70,6 +84,58 @@ const onSavePassword = async () => {
   } catch (e: any) {
     showToast(e.response?.data?.error || '修改失败')
   }
+}
+
+const validateEmail = (val: string) => {
+  if (!val) return true // Let required rule handle empty
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) return '邮箱格式不正确'
+  return true
+}
+
+const onSendEmailCode = async () => {
+  if (!emailForm.value.email) return showToast('请填写邮箱')
+  if (validateEmail(emailForm.value.email) !== true) {
+    return showToast('请输入正确的邮箱')
+  }
+  try {
+    const res = await sendVerificationCode({ email: emailForm.value.email, type: 'bind_email' })
+    if (res.success) {
+      showToast('验证码已发送')
+      emailCountdown.value = 60
+      emailTimer = setInterval(() => {
+        emailCountdown.value--
+        if (emailCountdown.value <= 0) clearInterval(emailTimer)
+      }, 1000)
+    }
+  } catch (error: any) {
+    showToast(error.response?.data?.error || '发送失败')
+  }
+}
+
+const onBindEmail = async () => {
+  try {
+    const res = await bindEmail({ 
+      userId: user.value.id, 
+      email: emailForm.value.email,
+      code: emailForm.value.code
+    })
+    if (res.success) {
+      user.value.email = emailForm.value.email
+      localStorage.setItem('user', JSON.stringify(user.value))
+      showToast('邮箱绑定成功')
+      showEmailDialog.value = false
+    }
+  } catch (e: any) {
+    showToast(e.response?.data?.error || '绑定失败')
+  }
+}
+
+const onShowAbout = () => {
+  showDialog({
+    title: '关于商场助手',
+    message: '版本：v1.3.0\n\n联系方式：19937141560\n\n如有任何问题或建议，欢迎联系我们。',
+    confirmButtonText: '知道了',
+  }).catch(() => {})
 }
 </script>
 
@@ -110,15 +176,16 @@ const onSavePassword = async () => {
         <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />
         <van-cell title="修改个人资料" icon="edit" is-link @click="profileForm.nickname = user.nickname || ''; showProfileDialog = true" />
         <van-cell title="修改密码" icon="shield-o" is-link @click="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true" />
+        <van-cell v-if="!user.email" title="绑定邮箱" icon="envelop-o" is-link @click="emailForm.email = ''; emailForm.code = ''; showEmailDialog = true" />
         <van-cell title="退出登录" icon="revoke" is-link @click="onLogout" />
       </template>
-      <van-cell title="关于商场助手" icon="info-o" is-link value="v1.3.0" />
+      <van-cell title="关于商场助手" icon="info-o" is-link @click="onShowAbout" value="v1.3.0" />
     </van-cell-group>
 
     <!-- Profile Dialog -->
     <van-dialog v-model:show="showProfileDialog" title="修改个人资料" show-cancel-button :before-close="() => true">
       <van-form @submit="onSaveProfile" class="mt-4">
-        <van-field v-model="profileForm.nickname" label="昵称" placeholder="请输入新昵称" :rules="[{ required: true, message: '请填写昵称' }]" />
+        <van-field v-model="profileForm.nickname" label="昵称" placeholder="请输入新昵称 (3-20个字符)" :rules="[{ required: true, message: '请填写昵称' }, { validator: validateUsername }]" />
         <div class="p-4"><van-button round block type="primary" native-type="submit">保存</van-button></div>
       </van-form>
     </van-dialog>
@@ -129,6 +196,21 @@ const onSavePassword = async () => {
         <van-field v-model="pwdForm.oldPassword" type="password" label="原密码" placeholder="请输入原密码" :rules="[{ required: true, message: '请填写原密码' }]" />
         <van-field v-model="pwdForm.newPassword" type="password" label="新密码" placeholder="请输入新密码" :rules="[{ required: true, message: '请填写新密码' }, { validator: validateNewPassword }]" />
         <div class="p-4"><van-button round block type="primary" native-type="submit">确认修改</van-button></div>
+      </van-form>
+    </van-dialog>
+
+    <!-- Email Bind Dialog -->
+    <van-dialog v-model:show="showEmailDialog" title="绑定邮箱" show-cancel-button :before-close="() => true">
+      <van-form @submit="onBindEmail" class="mt-4">
+        <van-field v-model="emailForm.email" type="email" label="邮箱" placeholder="请输入您的邮箱" :rules="[{ required: true, message: '请填写邮箱' }, { validator: validateEmail }]" />
+        <van-field v-model="emailForm.code" label="验证码" placeholder="请输入邮箱验证码" :rules="[{ required: true, message: '请填写验证码' }]">
+          <template #button>
+            <van-button size="small" type="primary" :disabled="emailCountdown > 0" @click.prevent="onSendEmailCode">
+              {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
+            </van-button>
+          </template>
+        </van-field>
+        <div class="p-4"><van-button round block type="primary" native-type="submit">绑定</van-button></div>
       </van-form>
     </van-dialog>
   </div>

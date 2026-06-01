@@ -40,6 +40,9 @@ export const login = (data: any) => api.post('/auth/login', data).then(res => re
 export const register = (data: any) => api.post('/auth/register', data).then(res => res.data)
 export const updatePassword = (data: any) => api.put('/auth/password', data).then(res => res.data)
 export const updateProfile = (data: any) => api.put('/auth/profile', data).then(res => res.data)
+export const bindEmail = (data: any) => api.put('/auth/email', data).then(res => res.data)
+export const forgotPassword = (data: any) => api.post('/auth/forgot-password', data).then(res => res.data)
+export const sendVerificationCode = (data: { email: string, type: string }) => api.post('/auth/send-code', data).then(res => res.data)
 
 
 // Customer APIs
@@ -71,8 +74,9 @@ export const uploadImage = (file: File) => {
   }).then(res => res.data)
 }
 
-// Notice APIs
+// Notice & Activity APIs
 export const getNotices = (params?: { urgent?: boolean }) => api.get('/notice', { params }).then(res => res.data)
+export const getActivities = (params?: { storeId?: number }) => api.get('/activities', { params }).then(res => res.data.data || [])
 
 // Community APIs
 export const getPosts = (params?: { category?: string, tab?: string, page?: number, limit?: number }) => api.get('/posts', { params }).then(res => res.data)
@@ -82,12 +86,21 @@ export const updatePost = (id: number, data: any) => api.put(`/posts/${id}`, dat
 export const deletePost = (id: number) => api.delete(`/posts/${id}`).then(res => res.data)
 export const likePost = (id: number) => api.post(`/posts/${id}/like`).then(res => res.data)
 export const collectPost = (id: number) => api.post(`/posts/${id}/collect`).then(res => res.data)
+export const reportPost = (id: number, data: { reason: string, description: string }) => api.post(`/posts/${id}/report`, data).then(res => res.data)
 export const getPostInteraction = (id: number) => api.get(`/posts/${id}/interaction`).then(res => res.data)
 
 export const getComments = (postId: number) => api.get(`/comments/post/${postId}`).then(res => res.data)
 export const publishComment = (data: any) => api.post('/comments', data).then(res => res.data)
 export const likeComment = (id: number) => api.post(`/comments/${id}/like`).then(res => res.data)
+export const reportComment = (id: number, data: { reason: string, description: string }) => api.post(`/comments/${id}/report`, data).then(res => res.data)
 
 export const getMyPosts = () => api.get('/posts/my').then(res => res.data)
 export const getMyCollections = () => api.get('/posts/collections').then(res => res.data)
 export const getMyReceivedComments = () => api.get('/comments/my/received').then(res => res.data)
+
+// Traffic APIs
+export const getStoreTraffic = (storeId: number) => api.get(`/traffic/${storeId}`).then(res => res.data)
+export const submitStoreTraffic = (storeId: number, floor: number, level: number) => api.post('/traffic', { storeId, floor, level }).then(res => res.data)
+
+// Parking APIs
+export const getParkingRules = () => api.get('/parking').then(res => res.data)

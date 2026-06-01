@@ -32,5 +32,6 @@ export const updatePostStatus = (id: number, status: string) => api.put(`/commun
 export const updatePostAttributes = (id: number, attributes: { isTop?: boolean, isElite?: boolean }) => api.put(`/community-admin/posts/${id}/attributes`, attributes).then(res => res.data)
 export const getAdminReports = () => api.get('/community-admin/reports').then(res => res.data)
 export const updateReportStatus = (id: number, status: string) => api.put(`/community-admin/reports/${id}/status`, { status }).then(res => res.data)
+export const deleteAdminReport = (id: number) => api.delete(`/community-admin/reports/${id}`).then(res => res.data)
 
 export default api

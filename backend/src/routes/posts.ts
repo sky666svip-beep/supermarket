@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
-import { posts, postLikes, postCollections, users, comments, commentLikes, stores } from '../db/schema.js'
+import { posts, postLikes, postCollections, users, comments, commentLikes, stores, reports } from '../db/schema.js'
 import { eq, desc, and, or, sql } from 'drizzle-orm'
 import { authMiddleware, AuthContext } from './auth.js'
 
@@ -284,5 +284,34 @@ postRouter.get('/:id/interaction', authMiddleware, async (c) => {
     return c.json({ success: true, data: { liked: like.length > 0, collected: collect.length > 0 }, message: '获取成功' })
   } catch (error) {
     return c.json({ success: false, data: null, message: '获取失败' }, 500)
+  }
+})
+
+// 举报帖子
+postRouter.post('/:id/report', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const id = parseInt(c.req.param('id') || '')
+  const { reason, description } = await c.req.json()
+  
+  if (!reason) {
+    return c.json({ success: false, data: null, message: '举报原因不能为空' }, 400)
+  }
+
+  try {
+    const post = await db.select().from(posts).where(eq(posts.id, id)).limit(1)
+    if (post.length === 0) {
+      return c.json({ success: false, data: null, message: '帖子不存在' }, 404)
+    }
+
+    await db.insert(reports).values({
+      userId: user.id,
+      targetType: 'post',
+      targetId: id,
+      reason,
+      description
+    })
+    return c.json({ success: true, data: null, message: '举报成功' })
+  } catch (error) {
+    return c.json({ success: false, data: null, message: '举报失败' }, 500)
   }
 })

@@ -2,7 +2,7 @@
 // 模块：社区举报处理
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAdminReports, updateReportStatus } from '../api'
+import { getAdminReports, updateReportStatus, deleteAdminReport } from '../api'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()
@@ -54,6 +54,23 @@ const handleProcess = (id: number, status: string, actionDesc: string) => {
     }
   }).catch(() => {})
 }
+
+const handleDelete = (id: number) => {
+  showConfirmDialog({
+    title: '删除举报',
+    message: '确定要删除这条举报记录吗？此操作不可恢复。',
+  }).then(async () => {
+    try {
+      const res = await deleteAdminReport(id)
+      if (res.success) {
+        showToast('删除成功')
+        loadReports()
+      }
+    } catch (error) {
+      showToast('删除失败')
+    }
+  }).catch(() => {})
+}
 </script>
 
 <template>
@@ -95,9 +112,13 @@ const handleProcess = (id: number, status: string, actionDesc: string) => {
         <div class="flex justify-end gap-2" v-if="item.report.status === 'pending'">
           <van-button size="small" type="primary" plain @click="handleProcess(item.report.id, 'rejected', '无效举报')">无效举报</van-button>
           <van-button size="small" type="danger" @click="handleProcess(item.report.id, 'resolved', '举报属实')">举报属实</van-button>
+          <van-button size="small" type="default" @click="handleDelete(item.report.id)">删除</van-button>
         </div>
-        <div v-else class="text-right text-sm text-gray-500">
-          状态: {{ item.report.status === 'resolved' ? '举报属实' : '无效举报' }}
+        <div v-else class="flex justify-between items-center mt-2">
+          <span class="text-sm text-gray-500">
+            状态: <span :class="item.report.status === 'resolved' ? 'text-red-500' : 'text-green-500'">{{ item.report.status === 'resolved' ? '已按属实处理 (内容已隐藏/删除)' : '已标记为无效' }}</span>
+          </span>
+          <van-button size="small" type="default" @click="handleDelete(item.report.id)">删除记录</van-button>
         </div>
       </div>
     </div>
