@@ -1,3 +1,4 @@
+<!-- 模块：客流分析 -->
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'

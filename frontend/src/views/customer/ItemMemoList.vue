@@ -1,3 +1,4 @@
+<!-- 模块：商品备忘列表 -->
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'

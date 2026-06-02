@@ -17,6 +17,7 @@ interface CachedLocation {
 }
 
 const amapKey = import.meta.env.VITE_AMAP_KEY
+const amapWebKey = import.meta.env.VITE_AMAP_WEB_KEY || amapKey
 const tencentKey = import.meta.env.VITE_TENCENT_MAP_KEY
 const baiduKey = import.meta.env.VITE_BAIDU_MAP_KEY
 
@@ -74,7 +75,7 @@ const bd09togcj02 = (bd_lat: number, bd_lon: number) => {
 }
 
 const getAmapIpLocation = async (): Promise<LocationInfo> => {
-  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${amapKey}`)
+  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${amapWebKey}`)
   const data = await res.json()
   if (data.status === '1' && data.city && typeof data.city === 'string') {
     // 高德 IP 定位不返回坐标，尝试用腾讯补充经纬度
@@ -143,7 +144,7 @@ const getBaiduIpLocation = async (): Promise<LocationInfo> => {
 
 // lat, lng are expected to be GCJ02
 const getAmapRegeo = async (lat: number, lng: number): Promise<LocationInfo> => {
-  const res = await fetch(`https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=${amapKey}`)
+  const res = await fetch(`https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=${amapWebKey}`)
   const data = await res.json()
   if (data.status === '1' && data.regeocode) {
     const component = data.regeocode.addressComponent

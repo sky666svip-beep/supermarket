@@ -4,10 +4,10 @@ const api = axios.create({
   baseURL: 'http://localhost:3000/api',
 })
 
-// Hardcode admin userId = 1 for demo purposes
+// Hardcode admin userId = 3 for demo purposes (matching actual seeded admin id)
 // In a real app, this would be retrieved from a login session
 api.interceptors.request.use(config => {
-  config.headers['X-User-Id'] = '2'
+  config.headers['X-User-Id'] = '3'
   return config
 })
 

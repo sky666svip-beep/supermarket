@@ -1,13 +1,15 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { activities, activityStores, stores } from '../db/schema.js'
-import { and, eq, lte, gte, or } from 'drizzle-orm'
+import { and, eq, lte, gte, or, isNull } from 'drizzle-orm'
 
 export const activityRouter = new Hono()
 
 // Get active activities for customer frontend
 activityRouter.get('/', async (c) => {
   const storeId = c.req.query('storeId')
+  const storeIdsStr = c.req.query('storeIds')
+  const storeIds = storeIdsStr ? storeIdsStr.split(',').map(Number) : (storeId ? [parseInt(storeId)] : [])
   const now = new Date()
 
   try {
@@ -17,11 +19,11 @@ activityRouter.get('/', async (c) => {
           eq(activities.isActive, true),
           or(
             // No start/end time
-            and(eq(activities.startTime, null as any), eq(activities.endTime, null as any)),
+            and(isNull(activities.startTime), isNull(activities.endTime)),
             // Only start time
-            and(lte(activities.startTime, now), eq(activities.endTime, null as any)),
+            and(lte(activities.startTime, now), isNull(activities.endTime)),
             // Only end time
-            and(eq(activities.startTime, null as any), gte(activities.endTime, now)),
+            and(isNull(activities.startTime), gte(activities.endTime, now)),
             // Both start and end time
             and(lte(activities.startTime, now), gte(activities.endTime, now))
           )
@@ -33,14 +35,21 @@ activityRouter.get('/', async (c) => {
     for (const activity of allActivities) {
       if (activity.isAllStores) {
         result.push({ ...activity, storeNames: ['全门店通用'] })
-      } else if (storeId) {
+      } else {
         // Check if this activity is linked to the store
         const linkedStores = await db.select({ id: stores.id, name: stores.name }).from(activityStores)
           .innerJoin(stores, eq(activityStores.storeId, stores.id))
           .where(eq(activityStores.activityId, activity.id))
 
-        if (linkedStores.some(s => s.id === parseInt(storeId))) {
-          result.push({ ...activity, storeNames: linkedStores.map(s => s.name) })
+        if (storeIds.length > 0) {
+          if (linkedStores.some(s => storeIds.includes(s.id))) {
+            result.push({ ...activity, storeNames: linkedStores.map(s => s.name) })
+          }
+        } else {
+          // If no specific storeId requested, return it with its linked stores
+          if (linkedStores.length > 0) {
+            result.push({ ...activity, storeNames: linkedStores.map(s => s.name) })
+          }
         }
       }
     }

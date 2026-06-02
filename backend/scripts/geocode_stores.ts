@@ -22,8 +22,8 @@ async function geocodeAddress(address: string, city: string, retries = 3): Promi
         return { lat: location.lat.toString(), lng: location.lng.toString() }
       } else if (data.status === 120 || data.status === 121) {
         // 限流（并发量超限/日配额超限）
-        console.warn(`[限流] 状态码 ${data.status}，将在 ${(i + 1) * 1000} 毫秒后重试...`)
-        await sleep((i + 1) * 1000)
+        console.warn(`[限流] 状态码 ${data.status}，将在 ${(i + 1) * 8000} 毫秒后重试...`)
+        await sleep((i + 1) * 8000)
         continue
       } else {
         console.warn(`[API 错误] 状态码 ${data.status}，信息：${data.message}`)
@@ -32,7 +32,7 @@ async function geocodeAddress(address: string, city: string, retries = 3): Promi
     } catch (error) {
       console.error(`请求失败 ${address} (重试 ${i + 1}/${retries}):`, error)
       if (i < retries - 1) {
-        await sleep((i + 1) * 1000)
+        await sleep((i + 1) * 8000)
       }
     }
   }
@@ -44,8 +44,8 @@ async function main() {
   let updatedCount = 0
 
   for (const store of allStores) {
-    const hasLat = store.latitude && store.latitude.trim() !== '' && store.latitude !== 'null'
-    const hasLng = store.longitude && store.longitude.trim() !== '' && store.longitude !== 'null'
+    const hasLat = store.latitude !== null && store.latitude !== undefined
+    const hasLng = store.longitude !== null && store.longitude !== undefined
     if (hasLat && hasLng) continue // skip if already geocoded
 
     const address = store.location
@@ -60,7 +60,7 @@ async function main() {
     
     if (coords) {
       await db.update(stores)
-        .set({ latitude: coords.lat, longitude: coords.lng })
+        .set({ latitude: Number(coords.lat), longitude: Number(coords.lng) })
         .where(eq(stores.id, store.id))
       console.log(` -> Success: ${coords.lng}, ${coords.lat}`)
       updatedCount++

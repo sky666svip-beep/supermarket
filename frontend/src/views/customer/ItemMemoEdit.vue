@@ -1,3 +1,4 @@
+<!-- 模块：商品备忘编辑 -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'

@@ -76,10 +76,10 @@ export const uploadImage = (file: File) => {
 
 // Notice & Activity APIs
 export const getNotices = (params?: { urgent?: boolean }) => api.get('/notice', { params }).then(res => res.data)
-export const getActivities = (params?: { storeId?: number }) => api.get('/activities', { params }).then(res => res.data.data || [])
+export const getActivities = (params?: { storeId?: number, storeIds?: string }) => api.get('/activities', { params }).then(res => res.data.data || [])
 
 // Community APIs
-export const getPosts = (params?: { category?: string, tab?: string, page?: number, limit?: number }) => api.get('/posts', { params }).then(res => res.data)
+export const getPosts = (params?: { category?: string, tab?: string, page?: number, limit?: number, storeId?: number }) => api.get('/posts', { params }).then(res => res.data)
 export const getPostDetail = (id: number) => api.get(`/posts/${id}`).then(res => res.data)
 export const publishPost = (data: any) => api.post('/posts', data).then(res => res.data)
 export const updatePost = (id: number, data: any) => api.put(`/posts/${id}`, data).then(res => res.data)

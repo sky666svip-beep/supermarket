@@ -1,9 +1,10 @@
+<!-- 模块：社区帖子详情 -->
 <script setup lang="ts">
 // 模块：社区帖子详情
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getPostDetail, getComments, publishComment, likePost, collectPost, getPostInteraction, likeComment, reportPost, reportComment } from '../../api/index'
-import { showToast, showImagePreview } from 'vant'
+import { getPostDetail, getComments, publishComment, likePost, collectPost, getPostInteraction, likeComment, reportPost, reportComment, deletePost } from '../../api/index'
+import { showToast, showImagePreview, showConfirmDialog } from 'vant'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +14,7 @@ const post = ref<any>(null)
 const comments = ref<any[]>([])
 const loading = ref(true)
 const interaction = ref({ liked: false, collected: false })
+const currentUserId = ref<number | null>(null)
 
 const commentContent = ref('')
 const showCommentPopup = ref(false)
@@ -24,10 +26,33 @@ const reportTargetId = ref<number>(0)
 const reportReason = ref('')
 const reportDesc = ref('')
 
+const isMutualHelpPost = computed(() => {
+  if (!post.value) return false
+  const cat = post.value.post.category
+  return cat === '寻物问答' || cat === '拼车互助'
+})
+
+const isAuthor = computed(() => {
+  if (!post.value || !currentUserId.value) return false
+  return post.value.post.userId === currentUserId.value
+})
+
 onMounted(async () => {
   await fetchPost()
   await fetchComments()
-  await fetchInteraction()
+  
+  const userStr = localStorage.getItem('user')
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr)
+      currentUserId.value = user.id
+    } catch (e) {}
+  }
+  
+  // 互助贴不需要点赞收藏状态查询，也防止了未登录用户的 401 报错
+  if (userStr && !isMutualHelpPost.value) {
+    await fetchInteraction()
+  }
 })
 
 const fetchPost = async () => {
@@ -118,7 +143,7 @@ const onSubmitComment = async () => {
 
   const linkRegex = /(http[s]?:\/\/|www\.)|([a-zA-Z0-9\-\_]+\.(com|cn|net|org|io|me|cc|co))/i
   if (linkRegex.test(commentContent.value)) {
-    showToast('根据社区规范，评论禁止包含网页链接')
+    showToast('根据社区规范，禁止发布危害信息')
     return
   }
   try {
@@ -146,6 +171,27 @@ const previewImage = (images: string[], startPosition: number) => {
     images,
     startPosition,
   })
+}
+
+const handleMarkSolved = () => {
+  showConfirmDialog({
+    title: '标记已解决并删除',
+    message: '确认此互助问题已得到解决吗？确认后帖子将自动删除，不可恢复。',
+  }).then(async () => {
+    try {
+      const res = await deletePost(postId)
+      if (res.success) {
+        showToast('问题已解决，互助贴已成功删除！')
+        setTimeout(() => {
+          router.back()
+        }, 1500)
+      } else {
+        showToast(res.message || '操作失败')
+      }
+    } catch (e) {
+      showToast('操作异常')
+    }
+  }).catch(() => {})
 }
 
 const openReport = (type: 'post' | 'comment', id: number) => {
@@ -305,7 +351,24 @@ const formatTime = (timeStr: string) => {
       <div class="flex-1 bg-gray-100 rounded-full py-2 px-4 text-gray-400 text-sm flex items-center" @click="openComment()">
         <van-icon name="edit" class="mr-1" /> 说点什么...
       </div>
-      <div class="flex items-center gap-6 ml-6 text-gray-600">
+      
+      <!-- 互助板块底部：不显示点赞收藏。如果是发帖作者本人，展示已解决标注并下线按钮 -->
+      <div v-if="isMutualHelpPost" class="ml-4 flex items-center">
+        <van-button 
+          v-if="isAuthor" 
+          type="success" 
+          size="small" 
+          round 
+          icon="success"
+          @click="handleMarkSolved"
+          class="shadow-sm font-bold bg-green-500 border-none px-4"
+        >
+          已解决
+        </van-button>
+      </div>
+
+      <!-- 传统社区板块底部：展示常规点赞收藏 -->
+      <div v-else class="flex items-center gap-6 ml-6 text-gray-600">
         <div class="flex flex-col items-center justify-center relative" @click="toggleLike">
           <van-icon :name="interaction.liked ? 'good-job' : 'good-job-o'" :color="interaction.liked ? '#ef4444' : ''" size="22" />
           <span class="text-xs mt-0.5">{{ post.post.likeCount || '点赞' }}</span>

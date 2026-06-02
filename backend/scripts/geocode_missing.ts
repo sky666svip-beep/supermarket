@@ -40,16 +40,16 @@ async function main() {
     const loc = await geocode(fullAddress)
     if (loc) {
       await db.update(stores).set({
-        latitude: loc.lat.toString(),
-        longitude: loc.lng.toString(),
+        latitude: loc.lat,
+        longitude: loc.lng,
       }).where(isNull(stores.latitude))
         .execute()
       
       // 更精确的更新 - 用 id
       const { eq } = await import('drizzle-orm')
       await db.update(stores).set({
-        latitude: loc.lat.toString(),
-        longitude: loc.lng.toString(),
+        latitude: loc.lat,
+        longitude: loc.lng,
       }).where(eq(stores.id, store.id))
       
       console.log(`  ✓ ${loc.lat}, ${loc.lng}`)

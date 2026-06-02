@@ -3,8 +3,9 @@ import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { stores, checklists, feedbacks, itemMemos } from '../db/schema.js'
 import { eq, and, desc } from 'drizzle-orm'
+import { authMiddleware, AuthContext } from './auth.js'
 
-const customer = new Hono()
+const customer = new Hono<AuthContext>()
 
 // ---- Stores ----
 customer.get('/stores', async (c) => {
@@ -34,15 +35,15 @@ customer.get('/regions', async (c) => {
     tree[s.province!][s.city!].add(s.district!)
   })
   
-  const columns = Object.keys(tree).sort((a, b) => a.localeCompare(b, 'zh-CN')).map(prov => {
+  const columns = Object.keys(tree).sort((a, b) => (a || '').localeCompare(b || '', 'zh-CN')).map(prov => {
     return {
       text: prov,
       value: prov,
-      children: Object.keys(tree[prov]).sort((a, b) => a.localeCompare(b, 'zh-CN')).map(city => {
+      children: Object.keys(tree[prov]).sort((a, b) => (a || '').localeCompare(b || '', 'zh-CN')).map(city => {
         return {
           text: city,
           value: city,
-          children: Array.from(tree[prov][city] as Set<string>).sort((a, b) => a.localeCompare(b, 'zh-CN')).map(dist => ({
+          children: Array.from(tree[prov][city] as Set<string>).sort((a, b) => (a || '').localeCompare(b || '', 'zh-CN')).map(dist => ({
             text: dist,
             value: dist
           }))
@@ -54,31 +55,27 @@ customer.get('/regions', async (c) => {
   return c.json(columns)
 })
 
-// Auth middleware for customer endpoints
-const requireUser = async (c: any, next: any) => {
-  const userIdStr = c.req.header('X-User-Id')
-  if (!userIdStr) {
-    return c.json({ error: '请先登录' }, 401)
-  }
-  await next()
-}
+// Auth middleware replaced by authMiddleware from auth.js
 
 // ---- Checklist ----
-customer.get('/checklist', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.get('/checklist', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const result = await db.select().from(checklists).where(eq(checklists.userId, userId))
   return c.json(result)
 })
 
-customer.post('/checklist', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.post('/checklist', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const { title } = await c.req.json()
   const result = await db.insert(checklists).values({ title, userId }).returning()
   return c.json(result[0])
 })
 
-customer.put('/checklist/:id', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.put('/checklist/:id', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const id = Number(c.req.param('id'))
   const { isCompleted } = await c.req.json()
   await db.update(checklists)
@@ -87,16 +84,18 @@ customer.put('/checklist/:id', requireUser, async (c) => {
   return c.json({ success: true })
 })
 
-customer.delete('/checklist/:id', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.delete('/checklist/:id', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const id = Number(c.req.param('id'))
   await db.delete(checklists).where(and(eq(checklists.id, id), eq(checklists.userId, userId)))
   return c.json({ success: true })
 })
 
 // ---- Feedback ----
-customer.get('/feedback', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.get('/feedback', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const result = await db.select({
     id: feedbacks.id,
     facilityType: feedbacks.facilityType,
@@ -115,36 +114,42 @@ customer.get('/feedback', requireUser, async (c) => {
   return c.json(result)
 })
 
-customer.post('/feedback', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.post('/feedback', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const { storeId, facilityType, message, images } = await c.req.json()
   const imagesJson = images && images.length > 0 ? JSON.stringify(images) : null
   const result = await db.insert(feedbacks).values({ storeId, facilityType, message, images: imagesJson, userId }).returning()
   return c.json(result[0])
 })
 
-customer.delete('/feedback/:id', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.delete('/feedback/:id', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const id = Number(c.req.param('id'))
   
   const target = await db.select().from(feedbacks).where(and(eq(feedbacks.id, id), eq(feedbacks.userId, userId)))
   if (target.length === 0) return c.json({ error: '工单不存在' }, 404)
   if (target[0].status !== 'resolved') return c.json({ error: '仅能删除已解决的工单' }, 400)
   
-  await db.delete(feedbacks).where(eq(feedbacks.id, id))
+  await db.delete(feedbacks).where(and(eq(feedbacks.id, id), eq(feedbacks.userId, userId)))
   return c.json({ success: true })
 })
 
 // ---- Item Memos ----
-customer.get('/memos', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.get('/memos', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const result = await db.select().from(itemMemos).where(eq(itemMemos.userId, userId)).orderBy(desc(itemMemos.createdAt))
   return c.json(result)
 })
 
-customer.post('/memos', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.post('/memos', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const data = await c.req.json()
+  delete data.id
+  delete data.userId
   const result = await db.insert(itemMemos).values({
     ...data,
     userId
@@ -152,10 +157,13 @@ customer.post('/memos', requireUser, async (c) => {
   return c.json(result[0])
 })
 
-customer.put('/memos/:id', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.put('/memos/:id', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const id = Number(c.req.param('id'))
   const data = await c.req.json()
+  delete data.id
+  delete data.userId
   
   if (data.isCompleted) {
     data.completedAt = new Date()
@@ -169,8 +177,9 @@ customer.put('/memos/:id', requireUser, async (c) => {
   return c.json(result[0] || { success: true })
 })
 
-customer.delete('/memos/:id', requireUser, async (c) => {
-  const userId = Number(c.req.header('X-User-Id'))
+customer.delete('/memos/:id', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const userId = user.id
   const id = Number(c.req.param('id'))
   await db.delete(itemMemos).where(and(eq(itemMemos.id, id), eq(itemMemos.userId, userId)))
   return c.json({ success: true })

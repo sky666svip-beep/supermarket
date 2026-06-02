@@ -9,6 +9,7 @@ export const postRouter = new Hono<AuthContext>()
 // 获取帖子列表 (支持分页和分类、tab)
 postRouter.get('/', async (c) => {
   const category = c.req.query('category')
+  const storeId = c.req.query('storeId')
   const tab = c.req.query('tab') || 'latest' // latest, hot, elite
   const page = parseInt(c.req.query('page') || '1')
   const limit = parseInt(c.req.query('limit') || '10')
@@ -17,6 +18,12 @@ postRouter.get('/', async (c) => {
   let conditions = [eq(posts.status, 'approved')]
   if (category) {
     conditions.push(eq(posts.category, category as any))
+  } else if (!storeId) {
+    // 社区主列表在未指定分类且非同店查询时，严格过滤只展示“商品评价”与“购物分享”分类，排除同店互助帖
+    conditions.push(or(eq(posts.category, '商品评价'), eq(posts.category, '购物分享')) as any)
+  }
+  if (storeId) {
+    conditions.push(eq(posts.storeId, parseInt(storeId)))
   }
   if (tab === 'elite') {
     conditions.push(eq(posts.isElite, true))
@@ -152,6 +159,7 @@ postRouter.post('/', authMiddleware, async (c) => {
   }
 
   try {
+    const targetStatus = (category === '寻物问答' || category === '拼车互助') ? 'approved' : 'pending'
     const newPost = await db.insert(posts).values({
       userId: user.id,
       storeId,
@@ -159,9 +167,13 @@ postRouter.post('/', authMiddleware, async (c) => {
       content,
       images: JSON.stringify(images || []),
       category,
-      status: 'pending' // 按照需求，新增需审核
+      status: targetStatus
     }).returning()
-    return c.json({ success: true, data: newPost[0], message: '发布成功，等待审核' })
+    return c.json({ 
+      success: true, 
+      data: newPost[0], 
+      message: targetStatus === 'approved' ? '发布成功' : '发布成功，等待审核' 
+    })
   } catch (error) {
     return c.json({ success: false, data: null, message: '发布失败' }, 500)
   }

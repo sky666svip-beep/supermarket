@@ -119,7 +119,7 @@ export const posts = sqliteTable('posts', {
   title: text('title').notNull(),
   content: text('content').notNull(),
   images: text('images'), // JSON array string
-  category: text('category', { enum: ['商品评价', '购物分享'] }).notNull(),
+  category: text('category', { enum: ['商品评价', '购物分享', '寻物问答', '拼车互助'] }).notNull(),
   status: text('status', { enum: ['pending', 'approved', 'rejected'] }).default('pending').notNull(),
   isTop: integer('is_top', { mode: 'boolean' }).default(false),
   isElite: integer('is_elite', { mode: 'boolean' }).default(false),

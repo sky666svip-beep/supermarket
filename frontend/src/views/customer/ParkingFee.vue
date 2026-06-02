@@ -1,3 +1,4 @@
+<!-- 模块：停车计费 -->
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import ParkingCalculator from '../../components/ParkingCalculator.vue'

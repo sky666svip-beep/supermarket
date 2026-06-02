@@ -1,3 +1,4 @@
+<!-- 模块：社区帖子列表 -->
 <script setup lang="ts">
 // 模块：社区帖子列表
 import { ref } from 'vue'

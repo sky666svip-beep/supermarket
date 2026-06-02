@@ -1,3 +1,4 @@
+<!-- 模块：发布帖子 -->
 <script setup lang="ts">
 // 模块：社区发帖与编辑
 import { ref, onMounted } from 'vue'

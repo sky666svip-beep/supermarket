@@ -33,7 +33,12 @@ yarn-error.log*
 *.db
 *.sqlite
 uploads/
+video/
+image/
 # Temporary files
 tmp/
 temp/
 # git push origin master
+# Prevent accidental JS generated files in TS source directories
+backend/src/**/*.js
+frontend/src/**/*.js

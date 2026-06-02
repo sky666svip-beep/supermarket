@@ -1,12 +1,9 @@
 <script setup lang="ts">
 // 模块：首页与公告动态
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { showImagePreview } from 'vant'
-import { getNotices, getActivities } from '../api'
+import { getNotices, getActivities, getStores } from '../api'
 import { getCachedLocation, setCachedLocation } from '../utils/location'
-
-const router = useRouter()
 
 export interface Notice {
   id: number
@@ -78,34 +75,39 @@ onMounted(async () => {
       }
     }
 
-    let res = await getNotices()
-    
-    // 找出最近的店铺
-    if (userLat && userLng && res.length > 0) {
-      let minDistance = Infinity
-      
-      for (const n of res) {
-        if (n.storeId && n.latitude && n.longitude) {
-          const d = calculateDistance(userLat, userLng, parseFloat(String(n.latitude)), parseFloat(String(n.longitude)))
-          if (d < minDistance) {
-            minDistance = d
-            closestStoreId.value = n.storeId || null
-            currentStoreName.value = n.storeName || ''
+    // 1. 获取所有门店并找出最近的门店（作为"当前"门店），以及距离最近的3家门店（用于加载活动）
+    const storesRes = await getStores()
+    let nearest3StoreIds: number[] = []
+
+    if (userLat && userLng && storesRes.length > 0) {
+      const storesWithDist = storesRes.map((s: any) => {
+        if (s.latitude && s.longitude) {
+          return {
+            ...s,
+            d: calculateDistance(userLat!, userLng!, parseFloat(String(s.latitude)), parseFloat(String(s.longitude)))
           }
         }
-      }
-      
-      if (closestStoreId.value !== null) {
-        // 只保留最近店铺的公告
-        res = res.filter((n: Notice) => n.storeId === closestStoreId.value)
+        return { ...s, d: Infinity }
+      }).sort((a: any, b: any) => a.d - b.d)
+
+      if (storesWithDist.length > 0 && storesWithDist[0].d !== Infinity) {
+        closestStoreId.value = storesWithDist[0].id
+        currentStoreName.value = storesWithDist[0].name
+        nearest3StoreIds = storesWithDist.slice(0, 3).map((s: any) => s.id)
       }
     }
 
-    urgentNotices.value = res.filter((n: Notice) => n.isUrgent)
-    normalNotices.value = res.filter((n: Notice) => !n.isUrgent)
+    // 2. 获取并过滤公告 (只显示当前门店及全局公告)
+    let noticesRes = await getNotices()
+    if (closestStoreId.value !== null) {
+      noticesRes = noticesRes.filter((n: Notice) => !n.storeId || n.storeId === closestStoreId.value)
+    }
+    urgentNotices.value = noticesRes.filter((n: Notice) => n.isUrgent)
+    normalNotices.value = noticesRes.filter((n: Notice) => !n.isUrgent)
 
-    // Load activities
-    const actRes = await getActivities(closestStoreId.value ? { storeId: closestStoreId.value } : undefined)
+    // 3. 加载热门活动（只查最近的3个门店及全局活动，防止爆满）
+    const actParams = nearest3StoreIds.length > 0 ? { storeIds: nearest3StoreIds.join(',') } : undefined
+    const actRes = await getActivities(actParams)
     activities.value = actRes
   } catch (e) {
     console.error('Failed to load notices/activities', e)
@@ -154,12 +156,14 @@ const openActivityImages = (activity: Activity) => {
     </div>
     
     <van-grid :column-num="4" :border="false" class="bg-white rounded-lg overflow-hidden shadow-sm">
-      <van-grid-item icon="shop-o" text="门店查询" @click="router.push('/customer/stores')" />
-      <van-grid-item icon="orders-o" text="购物清单" @click="router.push('/customer/checklist')" />
-      <van-grid-item icon="goods-collect-o" text="商品备忘" @click="router.push('/customer/memos')" />
-      <van-grid-item icon="warning-o" text="问题上报" @click="router.push('/customer/feedback')" />
-      <van-grid-item icon="friends-o" text="客流分析" @click="router.push('/customer/traffic')" />
-      <van-grid-item icon="logistics" text="停车计费" @click="router.push('/customer/parking')" />
+      <van-grid-item icon="shop-o" text="门店查询" @click="$router.push('/customer/stores')" />
+      <van-grid-item icon="orders-o" text="购物清单" @click="$router.push('/customer/checklist')" />
+      <van-grid-item icon="goods-collect-o" text="商品备忘" @click="$router.push('/customer/memos')" />
+      <van-grid-item icon="warning-o" text="问题上报" @click="$router.push('/customer/feedback')" />
+      <van-grid-item icon="friends-o" text="客流分析" @click="$router.push('/customer/traffic')" />
+      <van-grid-item icon="logistics" text="停车计费" @click="$router.push('/customer/parking')" />
+      <van-grid-item icon="cluster-o" text="同店互助" @click="$router.push('/customer/mutual-help')" />
+      <van-grid-item icon="manager-o" text="加入我们" @click="$router.push('/customer/jobs')" />
     </van-grid>
 
     <!-- 最新动态 (普通公告) -->

@@ -1,9 +1,11 @@
+<!-- 模块：门店查询 -->
 <script setup lang="ts">
 // 模块：门店查询与展示（Leaflet 地图 + 多图源降级）
 import { ref, onMounted, nextTick, onUnmounted } from 'vue'
 import { getStores, getRegions } from '../../api/index'
 import { showToast, showDialog } from 'vant'
 import { getCachedLocation, setCachedLocation } from '../../utils/location'
+import { wgs84togcj02, gcj02towgs84 } from '../../utils/coordTransform'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -13,32 +15,41 @@ const stores = ref<any[]>([])
 const searchValue = ref('')
 const hasSearched = ref(false)
 
+const showNavSheet = ref(false)
+const currentNavActions = ref<any[]>([])
+const onSelectNav = (action: any) => {
+  window.open(action.url, '_blank')
+  showNavSheet.value = false
+}
+
 const columns = ref<any[]>([])
 
 const currentQuery = ref({ city: '', district: '' })
+const isExplicitRegion = ref(false)
 
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
 const viewMode = ref<'list' | 'map'>('list')
+const loading = ref(false)
 let mapInstance: L.Map | null = null
+let isDestroyed = false
+
+const redSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="52"><path fill="%23e74c3c" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>'
+const blueSvg = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="52"><path fill="%233498db" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/></svg>'
 
 // 红色图标（用户位置）
 const redIcon = L.icon({
-  iconUrl: 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-red.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  iconUrl: redSvg,
+  iconSize: [42, 62],
+  iconAnchor: [16, 52],
+  popupAnchor: [1, -44]
 })
 
 // 蓝色图标（门店位置）
 const blueIcon = L.icon({
-  iconUrl: 'https://cdn.jsdelivr.net/gh/pointhi/leaflet-color-markers@master/img/marker-icon-2x-blue.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
+  iconUrl: blueSvg,
+  iconSize: [42, 62],
+  iconAnchor: [16, 52],
+  popupAnchor: [1, -44]
 })
 
 // 尝试用浏览器 Geolocation 获取精确坐标
@@ -56,6 +67,7 @@ const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> =
 onMounted(async () => {
   try {
     columns.value = await getRegions()
+    if (isDestroyed) return
     
     const loc = getCachedLocation()
     if (loc) {
@@ -63,6 +75,7 @@ onMounted(async () => {
         userLocation.value = { lat: loc.lat, lng: loc.lng }
       } else {
         const coords = await tryBrowserGeolocation()
+        if (isDestroyed) return
         if (coords) {
           userLocation.value = coords
           setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng })
@@ -74,23 +87,25 @@ onMounted(async () => {
       }
     } else {
       const coords = await tryBrowserGeolocation()
+      if (isDestroyed) return
       if (coords) {
         userLocation.value = coords
       }
       showDialog({
-        title: '提示',
-        message: '未能获取到您的位置信息，暂不能使用附近门店推荐和地图打点。为了更好的体验，请开启定位权限。',
-        confirmButtonText: '我知道了'
+        title: "提示",
+        message: "未能获取到您的位置信息，暂不能查询门店信息。为了更好的体验，请开启定位权限。",
+        confirmButtonText: "我知道了"
       })
     }
     
     await fetchStores(!loc?.city)
-  } catch (error) {
-    showToast('加载失败')
+  } catch (error: any) {
+    if (!isDestroyed) showToast('加载失败: ' + (error?.message || '网络异常'))
   }
 })
 
 onUnmounted(() => {
+  isDestroyed = true
   if (mapInstance) {
     mapInstance.remove()
     mapInstance = null
@@ -104,6 +119,7 @@ const onConfirm = ({ selectedOptions }: any) => {
     const district = selectedOptions[2].text
     selectedRegion.value = `${city} ${district}`
     currentQuery.value = { city, district }
+    isExplicitRegion.value = true
     fetchStores(false)
   }
 }
@@ -120,11 +136,16 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 const fetchStores = async (isGlobalSearch = false) => {
-  hasSearched.value = true
   try {
-    // 忽略 district 进行查询，以便能查到同城其他区更近的店铺
-    const params = (isGlobalSearch || !currentQuery.value.city) ? {} : { city: currentQuery.value.city }
+    loading.value = true
+    const params: any = (isGlobalSearch || !currentQuery.value.city) ? {} : { city: currentQuery.value.city }
+    // 如果明确选择了具体的区，且非全局搜索，则传入 district 筛选
+    if (!isGlobalSearch && currentQuery.value.district && isExplicitRegion.value) {
+      params.district = currentQuery.value.district
+    }
+    
     let data = await getStores(params)
+    if (isDestroyed) return
     
     if (searchValue.value) {
       data = data.filter((s: any) => s.name.includes(searchValue.value) || s.location.includes(searchValue.value))
@@ -134,22 +155,32 @@ const fetchStores = async (isGlobalSearch = false) => {
       const { lat, lng } = userLocation.value
       data = data.map((s: any) => {
         if (s.latitude && s.longitude) {
-          const d = calculateDistance(lat, lng, parseFloat(s.latitude), parseFloat(s.longitude))
-          return { ...s, distance: parseFloat(d.toFixed(2)) }
+          const sLat = parseFloat(s.latitude)
+          const sLng = parseFloat(s.longitude)
+          if (!isNaN(sLat) && !isNaN(sLng)) {
+            const d = calculateDistance(lat, lng, sLat, sLng)
+            return { ...s, distance: parseFloat(d.toFixed(2)) }
+          }
         }
         return { ...s, distance: Infinity }
       }).sort((a: any, b: any) => a.distance - b.distance)
       
-      // 截取最近的 5 个店铺
-      data = data.slice(0, 5)
+      // 仅在无搜索词且未明确选定具体的区时，才截断推荐最近 5 家
+      if (!isGlobalSearch && !searchValue.value && !isExplicitRegion.value) {
+        data = data.slice(0, 5)
+      }
     }
     
     stores.value = data
+    hasSearched.value = true
     if (viewMode.value === 'map') {
       initOrUpdateMap()
     }
-  } catch (error) {
-    showToast('获取门店失败')
+  } catch (error: any) {
+    if (!isDestroyed) showToast('获取门店失败: ' + (error?.message || '请求异常'))
+    console.error('Fetch stores error:', error)
+  } finally {
+    if (!isDestroyed) loading.value = false
   }
 }
 
@@ -184,16 +215,45 @@ const tileLayers = [
   }
 ]
 
+const activeTileIndex = ref(0)
+
+const getMarkerCoords = (lat: number, lng: number, isStore: boolean): [number, number] => {
+  const isWgs84Map = activeTileIndex.value === 2 // OSM 是 WGS84，高德腾讯是 GCJ02
+  
+  if (isStore) {
+    // 门店坐标默认是 GCJ02 (后台存储)
+    if (isWgs84Map) {
+      const [wLng, wLat] = gcj02towgs84(lng, lat)
+      return [wLat, wLng]
+    }
+    return [lat, lng]
+  } else {
+    // 用户坐标默认是 WGS84 (浏览器定位)
+    if (isWgs84Map) {
+      return [lat, lng]
+    }
+    const [cLng, cLat] = wgs84togcj02(lng, lat)
+    return [cLat, cLng]
+  }
+}
+
 const createTileLayer = (index: number): L.TileLayer => {
   const cfg = tileLayers[index]
   const layer = L.tileLayer(cfg.url, cfg.options as any)
   
+  let hasSwitched = false
   layer.on('tileerror', () => {
     // 瓦片加载失败，尝试下一个图源
-    if (index + 1 < tileLayers.length && mapInstance) {
+    // 这里的 hasSwitched 在闭包中是每个图层实例独有的，
+    // 因此如果同一图层上同时出现多个瓦片失败事件，
+    // 只有第一个事件能进入这里执行，后续事件都会被拦截，不存在导致多次 init 的并发竞态条件。
+    if (!hasSwitched && index + 1 < tileLayers.length && mapInstance) {
+      hasSwitched = true
       console.warn(`${cfg.name}加载失败，切换到${tileLayers[index + 1].name}`)
       mapInstance.removeLayer(layer)
+      activeTileIndex.value = index + 1
       createTileLayer(index + 1).addTo(mapInstance)
+      initOrUpdateMap() // 重新渲染 marker 适配新坐标系
     }
   })
   
@@ -208,12 +268,13 @@ const initOrUpdateMap = async () => {
   const container = document.getElementById('map-container')
   if (!container) return
 
-  const defaultCenter: [number, number] = [34.746599, 113.625368] // 郑州
-  const center: [number, number] = userLocation.value
-    ? [userLocation.value.lat, userLocation.value.lng]
-    : defaultCenter
+  const defaultCenterWgs84: [number, number] = [34.746599, 113.625368] // 郑州
+  let centerLat = userLocation.value ? userLocation.value.lat : defaultCenterWgs84[0]
+  let centerLng = userLocation.value ? userLocation.value.lng : defaultCenterWgs84[1]
+  const center = getMarkerCoords(centerLat, centerLng, false)
 
   if (!mapInstance) {
+    activeTileIndex.value = 0
     mapInstance = L.map(container, {
       center,
       zoom: 12,
@@ -223,10 +284,11 @@ const initOrUpdateMap = async () => {
     createTileLayer(0).addTo(mapInstance)
   } else {
     mapInstance.invalidateSize()
+    mapInstance.setView(center, mapInstance.getZoom(), { animate: false })
   }
 
   // 清除旧标记
-  mapInstance.eachLayer((layer) => {
+  mapInstance.eachLayer((layer: L.Layer) => {
     if (layer instanceof L.Marker) {
       mapInstance!.removeLayer(layer)
     }
@@ -236,7 +298,8 @@ const initOrUpdateMap = async () => {
 
   // 用户位置标记（红色）
   if (userLocation.value) {
-    const myMarker = L.marker([userLocation.value.lat, userLocation.value.lng], { icon: redIcon, zIndexOffset: 1000 })
+    const userCoords = getMarkerCoords(userLocation.value.lat, userLocation.value.lng, false)
+    const myMarker = L.marker(userCoords, { icon: redIcon, zIndexOffset: 1000 })
       .addTo(mapInstance)
       .bindPopup('<div style="font-weight:bold;font-size:14px;">📍 我的位置</div>')
     bounds.extend(myMarker.getLatLng())
@@ -247,25 +310,40 @@ const initOrUpdateMap = async () => {
   storesWithCoords.forEach(s => {
     const lat = parseFloat(s.latitude)
     const lng = parseFloat(s.longitude)
+    const storeCoords = getMarkerCoords(lat, lng, true)
+    
     const distText = s.distance && s.distance !== Infinity
       ? `<div style="color:#1989fa;font-size:12px;margin:2px 0;">距离您 ${s.distance} 公里</div>`
       : ''
-    const navUrl = `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(s.name)}&mode=car&callnative=1`
-    const popupContent = `
+    const amapUrl = `https://uri.amap.com/navigation?to=${lng},${lat},${encodeURIComponent(s.name)}&mode=car&callnative=1`
+    const tencentUrl = `https://apis.map.qq.com/uri/v1/routeplan?type=drive&to=${encodeURIComponent(s.name)}&tocoord=${lat},${lng}&policy=1`
+    
+    const popupDiv = document.createElement('div')
+    popupDiv.innerHTML = `
       <div style="min-width:180px;">
         <div style="font-weight:bold;font-size:14px;margin-bottom:4px;">${s.name}</div>
         <div style="font-size:12px;color:#666;">${s.location}</div>
         <div style="font-size:12px;color:#666;">营业时间：${s.time}</div>
         ${distText}
-        <a href="${navUrl}" target="_blank"
-           style="display:inline-block;margin-top:6px;padding:4px 12px;background:#1989fa;color:#fff;border-radius:4px;font-size:12px;text-decoration:none;">
+        <button style="display:inline-block;margin-top:6px;padding:4px 12px;background:#1989fa;color:#fff;border-radius:4px;font-size:12px;border:none;cursor:pointer;">
           🧭 导航到这里
-        </a>
+        </button>
       </div>
     `
-    const marker = L.marker([lat, lng], { icon: blueIcon })
+    const navBtn = popupDiv.querySelector('button')
+    if (navBtn) {
+      navBtn.onclick = () => {
+        currentNavActions.value = [
+          { name: '高德地图', url: amapUrl },
+          { name: '腾讯地图', url: tencentUrl }
+        ]
+        showNavSheet.value = true
+      }
+    }
+
+    const marker = L.marker(storeCoords, { icon: blueIcon })
       .addTo(mapInstance!)
-      .bindPopup(popupContent)
+      .bindPopup(popupDiv)
     bounds.extend(marker.getLatLng())
   })
 
@@ -287,13 +365,23 @@ const initOrUpdateMap = async () => {
         placeholder="请选择省市区"
         @click="showPicker = true"
       />
-      <van-popup v-model:show="showPicker" position="bottom">
+      <van-popup v-model:show="showPicker" position="bottom" teleport="body">
         <van-picker
           :columns="columns"
           @confirm="onConfirm"
           @cancel="showPicker = false"
         />
       </van-popup>
+
+      <van-action-sheet
+        v-model:show="showNavSheet"
+        :actions="currentNavActions"
+        cancel-text="取消"
+        description="请选择导航应用"
+        close-on-click-action
+        @select="onSelectNav"
+        teleport="body"
+      />
 
       <van-search 
         v-model="searchValue" 
@@ -310,12 +398,16 @@ const initOrUpdateMap = async () => {
       </div>
     </div>
     
-    <div v-if="stores.length === 0" class="flex-1 flex items-center justify-center text-gray-400 text-sm py-12">
+    <div v-if="loading && viewMode === 'list'" class="flex-1 flex items-center justify-center py-12">
+      <van-loading type="spinner" color="#1989fa" vertical>加载门店中...</van-loading>
+    </div>
+
+    <div v-else-if="stores.length === 0 && hasSearched && viewMode === 'list'" class="flex-1 flex items-center justify-center text-gray-400 text-sm py-12">
       未找到相关门店数据
     </div>
 
     <!-- List View -->
-    <div v-show="viewMode === 'list'" class="flex-1 mt-4 space-y-3 overflow-y-auto pb-6 px-4">
+    <div v-else-if="viewMode === 'list'" class="flex-1 mt-4 space-y-3 overflow-y-auto pb-6 px-4">
       <div v-for="store in stores" :key="store.id" class="bg-white p-4 rounded-lg shadow-sm">
         <div class="flex justify-between items-center mb-2">
           <h3 class="font-bold text-base">{{ store.name }}</h3>
