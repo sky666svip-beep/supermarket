@@ -287,17 +287,17 @@ const formatTime = (timeStr: string) => {
   <div class="mutual-help-container bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white pb-20 flex flex-col">
     <!-- Top App Bar with Store Selector -->
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
-      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto relative">
         <button type="button" @click="router.push('/')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
           <span class="material-symbols-outlined">arrow_back_ios_new</span>
         </button>
-        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface truncate max-w-[50%] text-center">
-          同店互助广场
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap text-center">
+          互助广场
         </h1>
-        <div @click="showStorePicker = true" class="flex items-center gap-1 text-primary bg-primary/10 px-2.5 py-1.5 rounded-full cursor-pointer hover:bg-primary/20 transition-colors max-w-[120px]">
-          <span class="material-symbols-outlined text-[16px]">location_on</span>
+        <div @click="showStorePicker = true" class="flex items-center gap-1 text-primary bg-primary/10 px-2.5 py-1.5 rounded-full cursor-pointer hover:bg-primary/20 transition-colors max-w-[160px]">
+          <span class="material-symbols-outlined text-[16px] shrink-0">location_on</span>
           <span class="text-xs font-bold truncate">{{ currentStoreName }}</span>
-          <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
+          <span class="material-symbols-outlined text-[16px] shrink-0">arrow_drop_down</span>
         </div>
       </div>
     </header>
@@ -324,6 +324,7 @@ const formatTime = (timeStr: string) => {
         <button 
           @click="handleOpenPublish"
           class="bg-primary text-white px-6 py-2.5 rounded-full font-label-lg font-bold shadow-sm active:scale-95 transition-transform"
+          style="color: #ffffff !important;"
         >
           成为第一个发布的人
         </button>
@@ -388,10 +389,10 @@ const formatTime = (timeStr: string) => {
       </div>
     </main>
 
-    <!-- FAB -->
     <button 
       @click="handleOpenPublish"
       class="fixed bottom-20 right-6 w-14 h-14 rounded-2xl bg-primary text-white shadow-[0_4px_12px_rgba(0,92,108,0.3)] flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all z-40"
+      style="color: #ffffff !important;"
     >
       <span class="material-symbols-outlined text-[28px]">edit_square</span>
     </button>
@@ -430,6 +431,7 @@ const formatTime = (timeStr: string) => {
                 @click="newCategory = '寻物问答'"
                 class="flex-1 py-3 px-2 rounded-xl border flex items-center justify-center gap-1 transition-colors font-bold text-sm"
                 :class="newCategory === '寻物问答' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-primary/50'"
+                :style="newCategory === '寻物问答' ? 'color: #ffffff !important;' : ''"
               >
                 <span class="material-symbols-outlined text-[18px]">search</span> 寻物问答
               </button>
@@ -438,6 +440,7 @@ const formatTime = (timeStr: string) => {
                 @click="newCategory = '拼车互助'"
                 class="flex-1 py-3 px-2 rounded-xl border flex items-center justify-center gap-1 transition-colors font-bold text-sm"
                 :class="newCategory === '拼车互助' ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-[#10b981]/50'"
+                :style="newCategory === '拼车互助' ? 'color: #ffffff !important;' : ''"
               >
                 <span class="material-symbols-outlined text-[18px]">directions_car</span> 拼车互助
               </button>
@@ -477,9 +480,9 @@ const formatTime = (timeStr: string) => {
           <div class="flex flex-col gap-1.5 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
             <div class="flex items-center justify-between mb-2">
               <label class="font-label-md text-sm text-on-surface-variant">现场图片 (选填)</label>
-              <span class="text-xs text-on-surface-variant">上限9张</span>
+              <span class="text-xs text-on-surface-variant">最多3张</span>
             </div>
-            <van-uploader v-model="fileList" :after-read="afterRead" multiple :max-count="9" />
+            <van-uploader v-model="fileList" :after-read="afterRead" multiple :max-count="3" />
           </div>
 
           <!-- Submit Button -->

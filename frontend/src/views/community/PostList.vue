@@ -167,8 +167,10 @@ const formatTime = (timeStr: string) => {
     </main>
 
     <!-- Floating Action Button -->
-    <button @click="goPublish" class="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-container active:scale-95 transition-all duration-200 z-40">
-      <span class="material-symbols-outlined font-bold text-[28px]">add</span>
+    <button @click="goPublish" class="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-container active:scale-95 transition-all duration-200 z-40"
+    style="color: #ffffff !important;"
+    >
+      <span class="material-symbols-outlined font-bold text-[28px]">edit_square</span>
     </button>
   </div>
 </template>

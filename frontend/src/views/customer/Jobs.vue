@@ -369,7 +369,7 @@ const previewSingleImage = (url: string) => {
             <div class="bg-blue-50/50 rounded-xl p-3 flex items-start space-x-2">
               <van-icon name="info-o" color="#2563eb" size="14" class="mt-0.5" />
               <span class="text-[11px] text-blue-700 font-medium leading-relaxed">
-                提示：点击图片可大图预览，微信扫描二维码，即可一键投递简历。
+                点击图片可大图预览，微信扫描二维码，即可一键投递简历。
               </span>
             </div>
           </div>
@@ -407,7 +407,7 @@ const previewSingleImage = (url: string) => {
             <div class="bg-indigo-50/50 rounded-xl p-3 flex items-start space-x-2">
               <van-icon name="info-o" color="#4f46e5" size="14" class="mt-0.5" />
               <span class="text-[11px] text-indigo-700 font-medium leading-relaxed">
-                提示：点击图片可大图预览，助您全面了解我们的校园招聘政策。
+                点击图片可大图预览，助您全面了解我们的校园招聘政策。
               </span>
             </div>
           </div>

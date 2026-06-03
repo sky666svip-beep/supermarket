@@ -71,13 +71,13 @@ const onSubmit = async () => {
       </div>
     </header>
 
-    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile flex flex-col justify-center pb-20">
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile flex flex-col pt-5 pb-20">
       <div class="flex flex-col items-center mb-8">
         <div class="w-16 h-16 bg-primary-container text-white rounded-3xl flex items-center justify-center mb-4 shadow-sm -rotate-3">
           <span class="material-symbols-outlined text-[32px]">lock_reset</span>
         </div>
         <h1 class="font-headline-md text-2xl font-bold text-on-surface mb-2">找回密码</h1>
-        <p class="text-sm text-on-surface-variant">请验证您的邮箱并设置新密码</p>
+        <p class="text-base text-on-surface-variant">请验证您的邮箱并设置新密码</p>
       </div>
 
       <form @submit.prevent="onSubmit" class="flex flex-col gap-5">
@@ -153,7 +153,8 @@ const onSubmit = async () => {
         <div class="mt-4 flex flex-col gap-4">
           <button 
             type="submit" 
-            class="w-full bg-primary text-white py-4 rounded-full font-headline-sm text-base font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+            class="w-full bg-primary text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+            style="font-size: 19px !important; color: #ffffff !important;"
           >
             重置密码
           </button>

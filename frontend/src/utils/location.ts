@@ -88,6 +88,9 @@ const getAmapIpLocation = async (): Promise<LocationInfo> => {
         lng = tencentData.result.location.lng
       }
     } catch (_) {}
+    if (!lat || !lng) {
+      throw new Error(`Amap IP location lacks coordinates, triggering fallback.`)
+    }
     return {
       province: data.province,
       city: data.city,
@@ -245,7 +248,7 @@ export const autoLocate = async (): Promise<LocationInfo> => {
       showToast('您拒绝了位置权限，将使用IP大致定位')
       console.warn('Geolocation permission denied:', e)
     } else {
-      console.warn('HTML5 Geolocation failed:', e)
+      console.log('HTML5 Geolocation unavailable or timeout, falling back to IP location.')
     }
   }
 

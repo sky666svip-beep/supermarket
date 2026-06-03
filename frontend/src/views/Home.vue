@@ -3,7 +3,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { showImagePreview } from 'vant'
 import { getNotices, getActivities, getStores } from '../api'
-import { getCachedLocation, setCachedLocation } from '../utils/location'
+import { getCachedLocation, setCachedLocation, autoLocate, clearCachedLocation } from '../utils/location'
 
 export interface Notice {
   id: number
@@ -45,16 +45,6 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c
 }
 
-const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> => {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 5000, maximumAge: 60000 }
-    )
-  })
-}
 
 const urgentNotices = ref<Notice[]>([])
 const normalNotices = ref<Notice[]>([])
@@ -71,20 +61,25 @@ const loadData = async () => {
   isError.value = false
   try {
     let loc = getCachedLocation()
+
+    if (!loc) {
+      try {
+        loc = await autoLocate()
+        setCachedLocation(loc)
+      } catch (e) {
+        console.warn('Initial autoLocate failed:', e)
+      }
+    }
+
     let userLat = loc?.lat
     let userLng = loc?.lng
 
     if (loc) {
-      currentAreaName.value = `${loc.city || ''} ${loc.district || ''}`.trim()
-    }
-
-    if (!userLat || !userLng) {
-      const coords = await tryBrowserGeolocation()
-      if (coords) {
-        userLat = coords.lat
-        userLng = coords.lng
-        setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng } as any)
+      let area = `${loc.city || ''} ${loc.district || ''}`.trim()
+      if (area.length > 5 && loc.city) {
+        area = loc.city
       }
+      currentAreaName.value = area
     }
 
     // 1. 获取所有门店并找出最近的门店（作为"当前"门店），以及距离最近的3家门店（用于加载活动）
@@ -116,8 +111,19 @@ const loadData = async () => {
 
     // 2. 获取并过滤公告 (只显示当前门店及全局公告)
     let noticesRes = await getNotices()
+    noticesRes = noticesRes.map((n: Notice) => {
+      if (n.storeId) {
+        const s = storesRes.find((st: any) => st.id === n.storeId)
+        if (s) n.storeName = s.name
+      } else {
+        n.storeName = '全门店'
+      }
+      return n
+    })
     if (closestStoreId.value !== null) {
       noticesRes = noticesRes.filter((n: Notice) => !n.storeId || n.storeId === closestStoreId.value)
+    } else {
+      noticesRes = noticesRes.filter((n: Notice) => !n.storeId)
     }
     urgentNotices.value = noticesRes.filter((n: Notice) => n.isUrgent).map(parseImages)
     normalNotices.value = noticesRes.filter((n: Notice) => !n.isUrgent).map(parseImages)
@@ -143,6 +149,20 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('location-updated', loadData)
 })
+
+const manualRefreshLocation = async () => {
+  currentAreaName.value = '定位中...'
+  loading.value = true
+  clearCachedLocation()
+  try {
+    const loc = await autoLocate()
+    setCachedLocation(loc)
+    await loadData()
+  } catch (e) {
+    currentAreaName.value = '定位失败'
+    loading.value = false
+  }
+}
 
 const openAreaPopup = () => {
   window.dispatchEvent(new CustomEvent('open-area-popup'))
@@ -176,13 +196,16 @@ const openActivityImages = (activity: Activity) => {
   <div class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-lg">
     <!-- TopAppBar -->
     <header class="docked full-width top-0 bg-surface shadow-sm z-50 flex items-center px-margin-mobile h-14 w-full relative">
-      <div @click="openAreaPopup" class="flex items-center gap-1 text-primary cursor-pointer active:scale-95 transition-transform duration-200 z-10">
-        <span class="material-symbols-outlined">location_on</span>
-        <span class="font-body-md text-body-md font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
-        <span class="material-symbols-outlined text-sm">expand_more</span>
+      <div class="flex items-center gap-1 z-10">
+        <div @click="openAreaPopup" class="flex items-center gap-1 text-[#FF7070] cursor-pointer active:scale-95 transition-transform duration-200">
+          <span class="material-symbols-outlined">location_on</span>
+          <span class="font-body-md text-body-md font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
+          <span class="material-symbols-outlined text-sm">expand_more</span>
+        </div>
+        <span @click="manualRefreshLocation" class="material-symbols-outlined text-[#FF7070] text-[18px] cursor-pointer ml-1 active:scale-95 bg-surface-container-low rounded-full p-1 hover:bg-primary-container hover:text-white transition-colors" title="重新定位">my_location</span>
       </div>
-      <h1 class="font-headline-sm text-headline-sm font-semibold text-primary absolute left-1/2 -translate-x-1/2 w-full text-center pointer-events-none">
-        Mall Assistant
+      <h1 class="font-headline-sm text-headline-sm font-semibold text-[#EB4C4C] absolute left-1/2 -translate-x-1/2 w-full text-center pointer-events-none">
+        大张助手
       </h1>
     </header>
 
@@ -209,77 +232,69 @@ const openActivityImages = (activity: Activity) => {
 
         <!-- Hero/Greeting Card -->
         <section class="px-margin-mobile mt-4 md:mt-0">
-          <div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant relative overflow-hidden">
-            <div class="relative z-10">
-              <h2 class="font-headline-md text-headline-md text-primary mb-2">Welcome to Mall Assistant</h2>
-              <p class="font-body-md text-body-md text-secondary">
-                  Your comprehensive guide for Store Query, Shopping List, and Issue Reporting.
-              </p>
-            </div>
-            <!-- Decorative background elements -->
-            <div class="absolute -right-8 -top-8 w-32 h-32 bg-primary-container/20 rounded-full blur-2xl"></div>
-            <div class="absolute -bottom-12 right-12 w-24 h-24 bg-tertiary-container/10 rounded-full blur-xl"></div>
+          <div class="rounded-xl overflow-hidden shadow-sm border border-surface-variant">
+            <img src="../assets/image/Greeting.jpg" alt="Welcome to Mall Assistant" class="w-full h-auto block" />
           </div>
         </section>
 
         <!-- Quick Action Grid -->
-        <section class="px-margin-mobile mt-lg">
-          <div class="grid grid-cols-4 md:grid-cols-8 gap-y-lg gap-x-xs">
+        <section class="px-margin-mobile mt-4">
+          <div class="grid grid-cols-4 md:grid-cols-8 gap-y-3 gap-x-xs">
             <div @click="$router.push('/customer/stores')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">storefront</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">storefront</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">门店查询</span>
             </div>
             <div @click="$router.push('/customer/checklist')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">shopping_bag</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">shopping_bag</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">购物清单</span>
             </div>
             <div @click="$router.push('/customer/memos')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">edit_note</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">edit_note</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">商品备忘</span>
             </div>
             <div @click="$router.push('/customer/feedback')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">report_problem</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">report_problem</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">问题上报</span>
             </div>
             <div @click="$router.push('/customer/traffic')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">analytics</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">analytics</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">客流分析</span>
             </div>
             <div @click="$router.push('/customer/parking')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">local_parking</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">local_parking</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">停车计费</span>
             </div>
             <div @click="$router.push('/customer/mutual-help')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">diversity_3</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">diversity_3</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">同店互助</span>
             </div>
             <div @click="$router.push('/customer/jobs')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">handshake</span>
+                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">handshake</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">加入我们</span>
             </div>
           </div>
         </section>
 
-        <!-- Latest News -->
+        <!-- 活动快讯 -->
         <section v-if="normalNotices.length > 0" class="px-margin-mobile mt-lg">
           <div class="flex justify-between items-center mb-md">
-            <h3 class="font-headline-sm text-headline-sm text-on-background">Latest News</h3>
+            <h3 class="font-headline-sm text-headline-sm text-on-background">活动快讯</h3>
             <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
           </div>
           <div v-for="notice in normalNotices.slice(0, 3)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
@@ -298,7 +313,7 @@ const openActivityImages = (activity: Activity) => {
         <!-- Hot Activities -->
         <section v-if="activities.length > 0" class="px-margin-mobile mt-lg">
           <div class="flex justify-between items-center mb-md">
-            <h3 class="font-headline-sm text-headline-sm text-on-background">Hot Activities</h3>
+            <h3 class="font-headline-sm text-headline-sm text-on-background">热门活动</h3>
             <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
           </div>
           <div v-for="act in activities" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4">

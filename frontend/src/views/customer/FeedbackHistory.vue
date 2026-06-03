@@ -121,7 +121,7 @@ const onDelete = async (id: number) => {
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full text-surface-variant"><path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4ZM20 18H4V6H20V18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12C12 12 13 14 16 14C19 14 20 12 20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12C4 12 5 14 8 14C11 14 12 12 12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <p class="text-sm text-on-surface-variant mb-6 font-medium">暂无反馈记录</p>
-        <button @click="router.push('/customer/feedback/new')" class="bg-primary text-white px-6 py-2.5 rounded-full font-label-lg font-bold shadow-sm active:scale-95 transition-transform">
+        <button @click="router.push('/customer/feedback/new')" class="bg-primary text-white px-6 py-2.5 rounded-full font-label-lg font-bold shadow-sm active:scale-95 transition-transform" style="color: #ffffff !important;">
           去提交反馈
         </button>
       </div>

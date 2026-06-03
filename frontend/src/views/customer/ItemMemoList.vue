@@ -203,7 +203,8 @@ const getFullUrl = (url: string) => {
               <button 
                 @click="toggleComplete(memo)"
                 class="px-4 py-1.5 rounded-lg font-label-md text-sm transition-colors active:scale-95"
-                :class="memo.isCompleted ? 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' : 'bg-primary-container text-white hover:bg-primary/20'"
+                :class="memo.isCompleted ? 'bg-surface-container-high text-on-surface-variant hover:bg-surface-variant' : 'bg-primary text-white hover:bg-primary/80'"
+                :style="!memo.isCompleted ? 'color: #ffffff !important;' : ''"
               >
                 {{ memo.isCompleted ? '取消完成' : '标记完成' }}
               </button>

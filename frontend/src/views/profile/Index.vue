@@ -133,8 +133,8 @@ const onBindEmail = async () => {
 
 const onShowAbout = () => {
   showDialog({
-    title: '关于商场助手',
-    message: '版本：v1.3.0\n\n联系方式：19937141560\n\n如有任何问题或建议，欢迎联系我们。',
+    title: '关于大张助手',
+    message: '版本：v2.6.0\n\n联系方式：19937141560\n\n如有任何问题或建议，欢迎联系我们。',
     confirmButtonText: '知道了',
   }).catch(() => {})
 }
@@ -142,7 +142,7 @@ const onShowAbout = () => {
 
 <template>
   <div class="bg-surface text-on-surface font-body-md antialiased min-h-screen">
-    <main class="px-margin-mobile md:px-margin-desktop py-lg max-w-3xl mx-auto space-y-lg pb-24">
+    <main class="px-0 md:px-1 py-lg max-w-3xl mx-auto space-y-lg pb-24">
       
       <!-- User Profile Card (Logged In) -->
       <div v-if="user" class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md">
@@ -151,8 +151,8 @@ const onShowAbout = () => {
         </div>
         <div class="flex flex-col gap-xs">
           <h2 class="font-headline-md text-headline-md text-on-surface">{{ user.nickname || user.username }}</h2>
-          <span class="font-label-md text-label-md text-primary bg-primary-container/20 px-2 py-1 rounded-DEFAULT self-start border border-primary/30">
-            {{ user.role === 'admin' ? '管理员' : '顾客用户' }}
+          <span class="font-label-md text-label-md text-red-500 bg-white px-2 py-1 rounded-DEFAULT self-start border border-red-500">
+            {{ user.role === 'admin' ? '管理员' : '顾客' }}
           </span>
         </div>
       </div>
@@ -172,15 +172,15 @@ const onShowAbout = () => {
       <section class="space-y-sm">
         <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">购物服务</h3>
         <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/checklist')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/checklist')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">receipt_long</span>
               <span class="font-body-lg text-body-lg text-on-surface">我的购物清单</span>
             </div>
             <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
           </a>
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/feedback')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/feedback')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">rate_review</span>
               <span class="font-body-lg text-body-lg text-on-surface">我的反馈记录</span>
             </div>
@@ -193,29 +193,29 @@ const onShowAbout = () => {
       <section class="space-y-sm">
         <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">社区互动</h3>
         <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/posts')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/posts')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">post_add</span>
               <span class="font-body-lg text-body-lg text-on-surface">我的帖子</span>
             </div>
             <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
           </a>
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/comments')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/comments')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">chat_bubble_outline</span>
               <span class="font-body-lg text-body-lg text-on-surface">我的评论</span>
             </div>
             <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
           </a>
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/collections')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/collections')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">star_border</span>
               <span class="font-body-lg text-body-lg text-on-surface">我的收藏</span>
             </div>
             <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
           </a>
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/messages')">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/messages')">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">notifications_active</span>
               <span class="font-body-lg text-body-lg text-on-surface">收到的回复</span>
             </div>
@@ -231,7 +231,7 @@ const onShowAbout = () => {
           <template v-if="user">
             <!-- Admin Manage -->
             <a v-if="user.role === 'admin'" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/admin/feedbacks')">
-              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">admin_panel_settings</span>
                 <span class="font-body-lg text-body-lg text-on-surface">管理员后台管理</span>
               </div>
@@ -241,16 +241,16 @@ const onShowAbout = () => {
               </div>
             </a>
             <!-- Edit Profile -->
-            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="profileForm.nickname = user.nickname || ''; showProfileDialog = true">
-              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+            <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="profileForm.nickname = user.nickname || ''; showProfileDialog = true">
+              <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">edit_square</span>
                 <span class="font-body-lg text-body-lg text-on-surface">修改个人资料</span>
               </div>
               <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
             </a>
             <!-- Change Password -->
-            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true">
-              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+            <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true">
+              <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">lock</span>
                 <span class="font-body-lg text-body-lg text-on-surface">修改密码</span>
               </div>
@@ -258,14 +258,14 @@ const onShowAbout = () => {
             </a>
             <!-- Bind Email -->
             <a v-if="!user.email" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="emailForm.email = ''; emailForm.code = ''; emailForm.password = ''; showEmailDialog = true">
-              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">mail</span>
                 <span class="font-body-lg text-body-lg text-on-surface">绑定邮箱</span>
               </div>
               <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
             </a>
             <!-- Logout -->
-            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onLogout">
+            <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onLogout">
               <div class="flex items-center gap-md text-on-surface-variant group-hover:text-error transition-colors">
                 <span class="material-symbols-outlined">logout</span>
                 <span class="font-body-lg text-body-lg text-on-surface group-hover:text-error">退出登录</span>
@@ -275,10 +275,10 @@ const onShowAbout = () => {
           </template>
           
           <!-- About -->
-          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onShowAbout">
-            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+          <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onShowAbout">
+            <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
               <span class="material-symbols-outlined">info</span>
-              <span class="font-body-lg text-body-lg text-on-surface">关于商场助手</span>
+              <span class="font-body-lg text-body-lg text-on-surface">关于大张助手</span>
             </div>
             <div class="flex items-center gap-xs">
               <span class="font-body-md text-body-md text-outline">v1.3.0</span>

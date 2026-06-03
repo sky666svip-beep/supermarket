@@ -441,7 +441,7 @@ const formatTime = (timeStr: string) => {
           rows="4"
           autosize
           type="textarea"
-          maxlength="500"
+          maxlength="100"
           placeholder="写下你的评论..."
           show-word-limit
           class="bg-surface-container-low rounded-lg !p-3 font-body-md"

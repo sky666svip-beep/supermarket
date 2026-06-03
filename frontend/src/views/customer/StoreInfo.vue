@@ -395,36 +395,35 @@ const initOrUpdateMap = async () => {
         <!-- Search Bar -->
         <div class="flex gap-2">
           <div class="relative flex-grow">
-            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <span class="material-symbols-outlined text-outline text-sm">search</span>
-            </div>
+            
             <input 
               v-model="searchValue"
               @keyup.enter="onSearch"
-              class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-surface-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-outline-variant" 
-              placeholder="全局搜索: 输入门店名称或位置" 
+              class="w-full h-10 pl-2 pr-4 bg-surface-container-low border border-surface-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-outline-variant" 
+              placeholder="输入门店名称或位置" 
               type="text"
             />
             <div v-show="searchValue" @click="searchValue = ''; fetchStores(false)" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-outline hover:text-on-surface">
               <span class="material-symbols-outlined text-sm">close</span>
             </div>
           </div>
-          <button @click="onSearch" class="bg-primary text-white px-4 py-2 rounded-lg font-body-md font-medium hover:bg-primary-container hover:text-white transition-colors active:scale-95">搜索</button>
+          <button @click="onSearch" class="flex-shrink-0 text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-primary-container transition-colors active:scale-95">
+            <span class="material-symbols-outlined text-[30px]">search</span></button>
         </div>
 
         <!-- Mode Toggle -->
         <div class="flex rounded-lg overflow-hidden border border-primary mt-2">
           <button 
             @click="viewMode = 'list'; initOrUpdateMap()" 
-            class="flex-1 py-2 font-body-md font-medium text-center transition-colors"
-            :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-surface-container-lowest text-primary hover:bg-surface-container-low'"
+            class="flex-1 h-10 font-body-md font-medium text-center transition-colors flex items-center justify-center"
+            :class="viewMode === 'list' ? 'bg-primary !text-white' : 'bg-surface-container-lowest text-black hover:bg-surface-container-low'"
           >
             列表模式
           </button>
           <button 
             @click="viewMode = 'map'; initOrUpdateMap()" 
-            class="flex-1 py-2 font-body-md font-medium text-center transition-colors"
-            :class="viewMode === 'map' ? 'bg-primary text-white' : 'bg-surface-container-lowest text-primary hover:bg-surface-container-low'"
+            class="flex-1 h-10 font-body-md font-medium text-center transition-colors flex items-center justify-center"
+            :class="viewMode === 'map' ? 'bg-primary !text-white' : 'bg-surface-container-lowest text-black hover:bg-surface-container-low'"
           >
             地图模式
           </button>

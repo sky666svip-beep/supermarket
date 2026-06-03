@@ -112,12 +112,12 @@ watch(() => props.initialStoreId, (newId) => {
     </section>
 
     <!-- Parking Info Card -->
-    <div v-if="activeStore" class="bg-primary-container/10 rounded-lg p-md border border-primary/20 space-y-md">
-      <div class="flex justify-between items-center text-primary">
+    <div v-if="activeStore" class="bg-primary-container/10 rounded-lg p-md border border-[#165DFF]/20 space-y-md">
+      <div class="flex justify-between items-center text-[#165DFF]">
         <span class="font-headline-sm text-headline-sm font-bold">车位: {{ activeStore.capacity }}个</span>
         <span class="font-body-md text-body-md">开放时间: {{ activeStore.openingHours }}</span>
       </div>
-      <div class="font-body-md text-body-md text-primary/80 space-y-2 whitespace-pre-wrap leading-relaxed">
+      <div class="font-body-md text-body-md text-[#165DFF]/80 space-y-2 whitespace-pre-wrap leading-relaxed">
         {{ activeStore.rawText }}
       </div>
     </div>
@@ -126,11 +126,11 @@ watch(() => props.initialStoreId, (newId) => {
     <section class="space-y-sm">
       <label class="font-body-md text-body-md text-on-surface-variant">车辆类型</label>
       <div class="flex flex-wrap gap-2">
-        <button @click="vehicleType = 'small'" :class="vehicleType === 'small' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">小型汽车</button>
-        <button @click="vehicleType = 'medium'" :class="vehicleType === 'medium' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">中型汽车</button>
-        <button @click="vehicleType = 'large'" :class="vehicleType === 'large' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">大型汽车</button>
-        <button @click="vehicleType = 'new_energy'" :class="vehicleType === 'new_energy' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">新能源(减半)</button>
-        <button @click="vehicleType = 'military'" :class="vehicleType === 'military' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">军警救援(免费)</button>
+        <button @click="vehicleType = 'small'" :class="vehicleType === 'small' ? 'bg-[#165DFF] !text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">小型汽车</button>
+        <button @click="vehicleType = 'medium'" :class="vehicleType === 'medium' ? 'bg-[#165DFF] !text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">中型汽车</button>
+        <button @click="vehicleType = 'large'" :class="vehicleType === 'large' ? 'bg-[#165DFF] !text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">大型汽车</button>
+        <button @click="vehicleType = 'new_energy'" :class="vehicleType === 'new_energy' ? 'bg-[#165DFF] !text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">新能源(减半)</button>
+        <button @click="vehicleType = 'military'" :class="vehicleType === 'military' ? 'bg-[#165DFF] !text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">军警救援(免费)</button>
       </div>
     </section>
 

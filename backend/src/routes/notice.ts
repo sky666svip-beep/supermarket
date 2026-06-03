@@ -88,7 +88,7 @@ notice.get('/admin', requireAdmin, async (c) => {
 notice.post('/', requireAdmin, async (c) => {
   const { title, content, images, isUrgent, expiresAt, storeId } = await c.req.json()
   
-  if (!title || !content || !storeId) {
+  if (!title || !content || storeId === undefined) {
     return c.json({ error: '标题、内容和店铺为必填项' }, 400)
   }
 

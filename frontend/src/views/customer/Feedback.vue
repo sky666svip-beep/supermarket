@@ -212,6 +212,7 @@ const onSubmit = async () => {
           <button 
             type="submit" 
             class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
+            style="color: #ffffff !important;"
           >
             提交反馈
           </button>

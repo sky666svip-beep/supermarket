@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 模块：公告与资讯管理
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
 import api from '../api'
@@ -47,6 +47,13 @@ const fetchStores = async () => {
 onMounted(() => {
   fetchNotices()
   fetchStores()
+})
+
+const storeColumns = computed(() => {
+  return [
+    { text: '全门店', value: null },
+    ...stores.value.map(s => ({ text: s.name, value: s.id }))
+  ]
 })
 
 const showDialog = ref(false)
@@ -136,7 +143,7 @@ const afterRead = async (file: any) => {
 }
 
 const saveNotice = async () => {
-  if (!formData.value.title || !formData.value.content || !formData.value.storeId) {
+  if (!formData.value.title || !formData.value.content || formData.value.storeName === '') {
     showToast('标题、内容和店铺为必填项')
     return false
   }
@@ -266,7 +273,7 @@ const toggleActive = async (notice: Notice) => {
         />
         <van-popup v-model:show="showStorePicker" position="bottom">
           <van-picker
-            :columns="stores.map(s => ({ text: s.name, value: s.id }))"
+            :columns="storeColumns"
             @confirm="onStoreConfirm"
             @cancel="showStorePicker = false"
           />

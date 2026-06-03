@@ -125,7 +125,7 @@ const formatDate = (dateStr?: string) => {
           <span class="material-symbols-outlined text-[32px]">post_add</span>
         </div>
         <p class="text-on-surface-variant text-sm">还没发过帖子哦</p>
-        <button @click="router.push('/community/publish')" class="mt-2 bg-primary text-white font-bold text-sm px-6 py-2.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors">
+        <button @click="router.push('/community/publish')" class="mt-2 bg-primary text-white font-bold text-sm px-6 py-2.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors" style="color: #ffffff !important;">
           去发帖
         </button>
       </div>
@@ -186,6 +186,7 @@ const formatDate = (dateStr?: string) => {
               <button 
                 @click="onEdit(post.id)"
                 class="flex items-center justify-center gap-1.5 bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-primary-container/80"
+                style="color: #ffffff !important;"
               >
                 <span class="material-symbols-outlined text-[14px]">edit</span>
                 编辑

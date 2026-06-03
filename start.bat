@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo ==========================================
-echo        启动洛阳商场助手 (Supermarket)
+echo        启动洛阳大张助手 (Supermarket)
 echo ==========================================
 echo.
 echo 正在启动后端服务 (Hono API)...

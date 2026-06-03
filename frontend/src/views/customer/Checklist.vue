@@ -118,7 +118,7 @@ const groupedList = computed(() => {
           placeholder="添加想买的物品..." 
           type="text"
         />
-        <button @click="onAdd" class="bg-primary text-white px-lg py-sm rounded-lg font-label-md hover:bg-surface-tint transition-colors active:scale-95 shadow-sm">
+        <button @click="onAdd" class="bg-primary !text-white px-lg py-sm rounded-lg font-label-md hover:bg-surface-tint transition-colors active:scale-95 shadow-sm">
           添加
         </button>
       </div>
@@ -147,12 +147,12 @@ const groupedList = computed(() => {
                 >
                   {{ item.isCompleted ? 'check_circle' : 'radio_button_unchecked' }}
                 </span>
-                <span class="font-body-md transition-colors" :class="item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'">
+                <span class="font-body-md transition-colors text-lg" :class="item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'">
                   {{ item.title }}
                 </span>
               </div>
               <button @click="onDelete(item)" class="text-error/60 hover:text-error hover:bg-error-container/50 p-sm rounded-full transition-all active:scale-90">
-                <span class="material-symbols-outlined" style="font-size: 20px;">delete_outline</span>
+                <span class="material-symbols-outlined" style="font-size: 21px;">delete_outline</span>
               </button>
             </div>
           </div>

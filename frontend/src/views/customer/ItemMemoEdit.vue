@@ -194,11 +194,11 @@ const onSubmit = async () => {
           </div>
         </section>
 
-        <!-- Submit Button -->
         <div class="mt-2">
           <button 
             type="submit" 
             class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
+            style="color: #ffffff !important;"
           >
             保存备忘本
           </button>
