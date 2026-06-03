@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Community - Retail Nexus</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#bec8cc",
+                        "primary": "#005c6c",
+                        "surface-bright": "#f9f9fc",
+                        "on-background": "#1a1c1e",
+                        "secondary-fixed": "#dfe3e7",
+                        "on-surface": "#1a1c1e",
+                        "surface-container": "#eeeef0",
+                        "on-tertiary-fixed": "#3a0b00",
+                        "secondary-container": "#dce0e4",
+                        "on-secondary-fixed-variant": "#43474b",
+                        "primary-fixed": "#acedff",
+                        "secondary": "#5a5f62",
+                        "on-primary": "#ffffff",
+                        "on-tertiary-container": "#ffe9e4",
+                        "surface-container-high": "#e8e8ea",
+                        "on-secondary": "#ffffff",
+                        "surface-container-highest": "#e2e2e5",
+                        "primary-container": "#0e768a",
+                        "on-surface-variant": "#3f484b",
+                        "surface-dim": "#dadadc",
+                        "on-secondary-container": "#5e6367",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "surface-tint": "#00687a",
+                        "inverse-surface": "#2f3133",
+                        "on-error": "#ffffff",
+                        "on-secondary-fixed": "#171c1f",
+                        "on-primary-container": "#d1f4ff",
+                        "surface-container-low": "#f3f3f6",
+                        "error-container": "#ffdad6",
+                        "on-error-container": "#93000a",
+                        "tertiary-container": "#b04e2e",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-primary": "#80d2e8",
+                        "outline": "#6f797c",
+                        "surface-variant": "#e2e2e5",
+                        "on-tertiary-fixed-variant": "#7f2a0d",
+                        "on-tertiary": "#ffffff",
+                        "tertiary": "#903719",
+                        "secondary-fixed-dim": "#c3c7cb",
+                        "on-primary-fixed": "#001f26",
+                        "background": "#f9f9fc",
+                        "surface": "#f9f9fc",
+                        "inverse-on-surface": "#f0f0f3",
+                        "tertiary-fixed-dim": "#ffb59e",
+                        "primary-fixed-dim": "#80d2e8",
+                        "tertiary-fixed": "#ffdbd0",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "xs": "4px",
+                        "base": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "margin-mobile": "16px",
+                        "sm": "8px",
+                        "gutter": "16px",
+                        "margin-desktop": "40px",
+                        "md": "16px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["26px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background font-body-md h-screen w-screen overflow-hidden flex flex-col antialiased">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface fixed top-0 w-full z-50 shadow-sm transition-all duration-300">
+<div class="flex items-center justify-between px-margin-mobile w-full h-14">
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-95 duration-100 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="font-headline-sm text-headline-sm font-bold text-primary dark:text-primary-fixed">Community</h1>
+<button class="text-primary dark:text-primary-fixed hover:bg-surface-container-low dark:hover:bg-surface-container-highest transition-colors active:scale-95 duration-100 p-2 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+<!-- Tabs -->
+<nav class="flex border-b border-surface-variant dark:border-surface-variant overflow-x-auto hide-scrollbar">
+<button class="flex-1 py-3 text-center border-b-2 border-primary text-primary font-label-md text-label-md transition-colors relative">
+                Latest
+            </button>
+<button class="flex-1 py-3 text-center border-b-2 border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-label-md">
+                Hot
+            </button>
+<button class="flex-1 py-3 text-center border-b-2 border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors font-label-md text-label-md">
+                Featured
+            </button>
+</nav>
+</header>
+<!-- Main Canvas -->
+<main class="flex-1 overflow-y-auto mt-24 mb-20 px-margin-mobile py-4 space-y-md">
+<!-- Post Card -->
+<article class="bg-surface-container-lowest rounded-xl shadow-sm p-md border border-surface-variant/50">
+<!-- Header -->
+<div class="flex items-center justify-between mb-sm">
+<div class="flex items-center space-x-sm">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+<img alt="Avatar" class="w-full h-full object-cover" data-alt="A close up portrait of a fluffy tabby cat looking curiously at the camera, set against a soft blurred background, captured with bright natural lighting and a modern crisp photographic style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWaPe2WUnVMZ2BMJtni0SQzGihNa_epn2Fk5sXwliZxeWkh-rrkkNw1_a9vBHlkJBCv2Dq2Ka9d5Rw9ZPidfDsF4sZVA-pW36OExTAD5iwccv6GgW-1v6m1NQU5BUtTXwUpqBoWaioI899ZWmNiSaHY5rwmzUzUcpMs9SOogyEz5UTIHZFDQe7y35EOjjAyN29Ww6HQAWwJVKWqxqBO7uj4POPI-4YplM7PMGp4xBa46_DiZsBD7mCaWvSPmZ-Ut4g7aiiEgs5dcw"/>
+</div>
+<div>
+<h3 class="font-label-md text-label-md text-on-surface">test</h3>
+<p class="font-body-md text-[12px] text-on-surface-variant">6-3 10:19</p>
+</div>
+</div>
+<span class="px-2 py-1 rounded border border-primary text-primary font-label-md text-[10px]">Product Review</span>
+</div>
+<!-- Content -->
+<div class="mb-md">
+<h2 class="font-headline-sm text-headline-sm text-on-surface mb-xs">Shopping Experience</h2>
+<p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">The mall has a great selection of goods. Found everything I needed and the staff was very helpful. Will definitely return next weekend!</p>
+</div>
+<!-- Metrics -->
+<div class="flex items-center justify-between text-on-surface-variant font-body-md text-[13px] pt-sm border-t border-surface-variant/30">
+<div class="flex items-center space-x-1 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+<span>124</span>
+</div>
+<div class="flex items-center space-x-1 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">thumb_up</span>
+<span>42</span>
+</div>
+<div class="flex items-center space-x-1 cursor-pointer hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">chat</span>
+<span>8</span>
+</div>
+</div>
+</article>
+<!-- No More Content -->
+<div class="py-lg text-center font-body-md text-on-surface-variant/70">
+            No more posts
+        </div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-margin-mobile w-14 h-14 bg-primary text-on-primary rounded-full shadow-lg flex items-center justify-center hover:bg-primary-container active:scale-95 transition-all duration-200 z-40">
+<span class="material-symbols-outlined font-bold text-[28px]">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="bg-surface/70 dark:bg-surface/70 backdrop-blur-md fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-xs pb-sm pt-xs border-t border-outline-variant shadow-none md:hidden">
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-90 duration-200 p-2 rounded-lg min-w-[64px]">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-secondary-container dark:bg-secondary-container text-on-secondary-container dark:text-on-secondary-container rounded-full px-4 py-1 hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-90 duration-200 min-w-[64px]">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-md text-label-md">Community</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-90 duration-200 p-2 rounded-lg min-w-[64px]">
+<span class="material-symbols-outlined mb-1">chat_bubble</span>
+<span class="font-label-md text-label-md">Inquiry</span>
+</button>
+<button class="flex flex-col items-center justify-center text-on-surface-variant dark:text-on-surface-variant hover:bg-surface-container-high dark:hover:bg-surface-container-highest active:scale-90 duration-200 p-2 rounded-lg min-w-[64px]">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</button>
+</nav>
+<!-- Desktop Sidebar (Hidden on Mobile) -->
+<aside class="hidden md:flex flex-col w-64 h-full fixed left-0 top-0 bg-surface border-r border-surface-variant z-40 pt-16">
+<div class="flex-1 py-lg px-md space-y-sm">
+<button class="flex items-center w-full px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined mr-3">home</span>
+<span class="font-label-md text-label-md">Home</span>
+</button>
+<button class="flex items-center w-full px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg transition-colors font-bold">
+<span class="material-symbols-outlined mr-3" style="font-variation-settings: 'FILL' 1;">groups</span>
+<span class="font-label-md text-label-md">Community</span>
+</button>
+<button class="flex items-center w-full px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined mr-3">chat_bubble</span>
+<span class="font-label-md text-label-md">Inquiry</span>
+</button>
+<button class="flex items-center w-full px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors">
+<span class="material-symbols-outlined mr-3">person</span>
+<span class="font-label-md text-label-md">Profile</span>
+</button>
+</div>
+</aside>
+<!-- Adjust main content padding for desktop -->
+<style>
+        @media (min-width: 768px) {
+            main {
+                margin-left: 16rem;
+                max-width: 800px;
+                margin-right: auto;
+            }
+            .fixed.bottom-24.right-margin-mobile {
+                right: calc((100vw - 800px - 16rem) / 2 + 24px);
+                bottom: 32px;
+            }
+            header {
+                padding-left: 16rem;
+            }
+        }
+    </style>
+</body></html>

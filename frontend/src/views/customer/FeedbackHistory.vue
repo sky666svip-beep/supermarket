@@ -70,92 +70,117 @@ const onDelete = async (id: number) => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col bg-gray-50">
-    <van-nav-bar
-      title="我的反馈记录"
-      left-text="返回"
-      left-arrow
-      @click-left="router.back()"
-      class="flex-shrink-0"
-    >
-      <template #right>
-        <van-icon name="plus" size="20" @click="router.push('/customer/feedback/new')" />
-      </template>
-    </van-nav-bar>
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Top App Bar -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
+          我的反馈记录
+        </h1>
+        <button type="button" @click="router.push('/customer/feedback/new')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">add</span>
+        </button>
+      </div>
+    </header>
 
-    <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-20">
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile pt-4 pb-20 space-y-4">
       <div
         v-for="item in records"
         :key="item.id"
-        class="bg-white rounded-lg p-4 shadow-sm border-l-4 active:bg-gray-50"
-        :class="item.status === 'resolved' ? 'border-green-500' : (item.status === 'processing' ? 'border-orange-400' : 'border-red-500')"
+        class="bg-surface-container-lowest border border-surface-variant/50 rounded-2xl p-4 shadow-sm hover:shadow-md transition-shadow active:scale-[0.99] cursor-pointer flex flex-col gap-3 relative overflow-hidden"
         @click="openDetail(item)"
       >
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="font-bold text-gray-800 text-sm">
-            {{ item.facilityType }}
-            <span v-if="item.storeName" class="text-xs text-blue-500 font-normal ml-2 bg-blue-50 px-1 rounded">{{ item.storeName }}</span>
-          </h3>
-          <van-tag :type="getStatusTag(item.status).type" size="medium">
+        <!-- Status indicator line on the left -->
+        <div class="absolute left-0 top-0 bottom-0 w-1" :class="item.status === 'resolved' ? 'bg-[#10b981]' : (item.status === 'processing' ? 'bg-[#f59e0b]' : 'bg-[#ef4444]')"></div>
+        
+        <div class="flex justify-between items-start pl-2">
+          <div class="flex flex-col gap-1">
+            <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2">
+              {{ item.facilityType }}
+              <span v-if="item.storeName" class="text-[10px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-sm font-medium">{{ item.storeName }}</span>
+            </h3>
+          </div>
+          <van-tag :type="getStatusTag(item.status).type" round size="medium" class="font-medium px-2 py-0.5 text-[10px]">
             {{ getStatusTag(item.status).text }}
           </van-tag>
         </div>
-        <p class="text-sm text-gray-600 line-clamp-2">{{ item.message }}</p>
-        <div class="flex justify-between items-center mt-2">
-          <span class="text-xs text-gray-400">{{ new Date(item.createdAt).toLocaleString() }}</span>
-          <van-icon name="arrow" size="14" color="#999" />
+        
+        <p class="text-sm text-on-surface-variant line-clamp-2 pl-2">{{ item.message }}</p>
+        
+        <div class="flex justify-between items-center mt-1 pt-3 border-t border-surface-variant/30 pl-2">
+          <span class="text-xs text-on-surface-variant/70 font-medium">{{ new Date(item.createdAt).toLocaleString() }}</span>
+          <span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
         </div>
       </div>
 
-      <van-empty v-if="records.length === 0" description="暂无反馈记录">
-        <van-button round type="primary" size="small" @click="router.push('/customer/feedback/new')">去提交反馈</van-button>
-      </van-empty>
-    </div>
+      <div v-if="records.length === 0" class="py-12 flex flex-col items-center justify-center text-center">
+        <div class="w-32 h-32 mb-4 opacity-70">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full text-surface-variant"><path d="M20 4H4C2.89543 4 2 4.89543 2 6V18C2 19.1046 2.89543 20 4 20H20C21.1046 20 22 19.1046 22 18V6C22 4.89543 21.1046 4 20 4ZM20 18H4V6H20V18Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 12C12 12 13 14 16 14C19 14 20 12 20 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12C4 12 5 14 8 14C11 14 12 12 12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p class="text-sm text-on-surface-variant mb-6 font-medium">暂无反馈记录</p>
+        <button @click="router.push('/customer/feedback/new')" class="bg-primary text-white px-6 py-2.5 rounded-full font-label-lg font-bold shadow-sm active:scale-95 transition-transform">
+          去提交反馈
+        </button>
+      </div>
+    </main>
 
     <!-- Detail Popup -->
-    <van-popup v-model:show="showDetail" position="bottom" round :style="{ maxHeight: '85vh' }">
-      <div v-if="detailItem" class="p-5">
-        <h3 class="text-lg font-bold mb-1">{{ detailItem.facilityType }}</h3>
-        <van-tag :type="getStatusTag(detailItem.status).type" class="mb-4">
-          {{ getStatusTag(detailItem.status).text }}
-        </van-tag>
+    <van-popup v-model:show="showDetail" position="bottom" round safe-area-inset-bottom :style="{ maxHeight: '90vh' }">
+      <div v-if="detailItem" class="p-5 pb-8 flex flex-col gap-6">
+        
+        <div class="flex flex-col gap-2 relative">
+          <div class="absolute right-0 top-0">
+             <van-tag :type="getStatusTag(detailItem.status).type" round size="medium" class="font-medium">
+              {{ getStatusTag(detailItem.status).text }}
+            </van-tag>
+          </div>
+          <h3 class="font-headline-md text-xl font-bold text-on-surface pr-16">{{ detailItem.facilityType }}</h3>
+          <p class="text-xs text-on-surface-variant font-medium">提交时间: {{ new Date(detailItem.createdAt).toLocaleString() }}</p>
+        </div>
 
-        <van-divider content-position="left">反馈内容</van-divider>
-        <p class="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 p-3 rounded mb-3">{{ detailItem.message }}</p>
+        <div class="flex flex-col gap-3">
+          <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">description</span> 反馈内容
+          </h4>
+          <p class="text-sm text-on-surface leading-relaxed whitespace-pre-wrap bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-surface-variant/50">{{ detailItem.message }}</p>
+        </div>
 
-        <div v-if="detailImages.length > 0" class="mb-3">
-          <p class="text-xs text-gray-500 mb-2">附带图片：</p>
-          <div class="flex gap-2 flex-wrap">
-            <van-image
-              v-for="(img, idx) in detailImages"
-              :key="idx"
-              :src="img"
-              width="80"
-              height="80"
-              fit="cover"
-              radius="4"
+        <div v-if="detailImages.length > 0" class="flex flex-col gap-3">
+          <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">image</span> 附带图片
+          </h4>
+          <div class="flex gap-3 flex-wrap">
+            <div 
+              v-for="(img, idx) in detailImages" 
+              :key="idx" 
+              class="w-20 h-20 rounded-xl overflow-hidden shadow-sm border border-surface-variant/50 cursor-pointer active:scale-95 transition-transform"
               @click="previewImage(detailImages, Number(idx))"
-            />
+            >
+              <van-image :src="img" width="100%" height="100%" fit="cover" />
+            </div>
           </div>
         </div>
 
-        <van-divider content-position="left">管理员回复</van-divider>
-        <div v-if="detailItem.adminReply" class="bg-blue-50 border border-blue-200 p-3 rounded text-sm text-blue-800">
-          <van-icon name="manager-o" class="mr-1" />{{ detailItem.adminReply }}
+        <div class="flex flex-col gap-3">
+          <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
+            <span class="material-symbols-outlined text-[18px] text-primary">forum</span> 管理员回复
+          </h4>
+          <div v-if="detailItem.adminReply" class="bg-primary/5 border border-primary/20 p-4 rounded-xl text-sm text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            {{ detailItem.adminReply }}
+          </div>
+          <p v-else class="text-sm text-on-surface-variant/70 italic bg-surface-container-lowest p-4 rounded-xl border border-surface-variant/50 text-center">暂无回复</p>
         </div>
-        <p v-else class="text-sm text-gray-400">暂无回复</p>
 
-        <div class="flex justify-between items-center mt-4">
-          <van-button 
-            v-if="detailItem.status === 'resolved'" 
-            type="danger" 
-            plain 
-            size="small" 
+        <div class="mt-4 flex justify-end" v-if="detailItem.status === 'resolved'">
+          <button 
             @click="onDelete(detailItem.id)"
+            class="text-error border border-error/50 bg-error/5 px-6 py-2 rounded-full font-label-md font-bold hover:bg-error/10 active:scale-95 transition-colors"
           >
             删除工单
-          </van-button>
-          <p class="text-xs text-gray-400 text-right flex-1">提交时间: {{ new Date(detailItem.createdAt).toLocaleString() }}</p>
+          </button>
         </div>
       </div>
     </van-popup>

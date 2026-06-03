@@ -5,7 +5,7 @@ import Home from '../views/Home.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: Home },
+    { path: '/', name: 'home', component: Home, meta: { customNav: true } },
     { path: '/customer/stores', name: 'store-info', component: () => import('../views/customer/StoreInfo.vue') },
     { path: '/customer/mutual-help', name: 'mutual-help', component: () => import('../views/customer/MutualHelp.vue'), meta: { customNav: true } },
     { path: '/customer/checklist', name: 'checklist', component: () => import('../views/customer/Checklist.vue'), meta: { customNav: true, requiresAuth: true } },

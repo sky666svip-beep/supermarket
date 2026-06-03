@@ -284,237 +284,214 @@ const formatTime = (timeStr: string) => {
 </script>
 
 <template>
-  <div class="mutual-help-container min-h-screen bg-gray-50 pb-20">
-    <!-- 顶部导航，提供当前绑定门店切换入口 -->
-    <van-nav-bar left-arrow @click-left="router.push('/')" fixed placeholder>
-      <template #title>
-        <div class="flex items-center justify-center font-bold text-gray-800 text-sm">
-          <span>同店互助广场</span>
-        </div>
-      </template>
-      <template #right>
-        <div @click="showStorePicker = true" class="flex items-center text-blue-500 font-medium text-xs bg-blue-50 px-2 py-1 rounded-full cursor-pointer max-w-[120px]">
-          <van-icon name="location-o" class="mr-0.5" />
-          <span class="truncate">{{ currentStoreName }}</span>
-          <van-icon name="arrow-down" class="ml-0.5 text-[8px]" />
-        </div>
-      </template>
-    </van-nav-bar>
-
-    <!-- 分类标签导航，无缝切换不同互助类型 -->
-    <van-tabs v-model:active="activeTab" sticky offset-top="46" color="#3b82f6" title-active-color="#3b82f6" class="shadow-sm">
-      <van-tab title="全部" name="全部"></van-tab>
-      <van-tab title="🔍 寻物问答" name="寻物问答"></van-tab>
-      <van-tab title="🚗 拼车互助" name="拼车互助"></van-tab>
-    </van-tabs>
-
-    <!-- 骨架屏 / 加载指示器 -->
-    <div v-if="loading" class="flex justify-center items-center py-20">
-      <van-loading type="spinner" color="#3b82f6" vertical>加载中...</van-loading>
-    </div>
-
-    <!-- 空状态展示 -->
-    <div v-else-if="posts.length === 0" class="py-12 text-center">
-      <van-empty image="search" description="该门店目前暂无互助信息" />
-      <van-button 
-        type="primary" 
-        size="small" 
-        round 
-        class="mt-4 bg-gradient-to-r from-blue-500 to-indigo-600 border-0 shadow-sm"
-        @click="handleOpenPublish"
-      >
-        成为第一个发布的人
-      </van-button>
-    </div>
-
-    <!-- 互助信息流主体 -->
-    <div v-else class="p-4 space-y-4">
-      <div 
-        v-for="post in posts" 
-        :key="post.id"
-        class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:border-blue-100 active:bg-gray-50 transition-all cursor-pointer"
-        @click="router.push(`/community/post/${post.id}`)"
-      >
-        <!-- 头部作者信息及类别标签 -->
-        <div class="flex items-center justify-between mb-3">
-          <div class="flex items-center">
-            <van-image 
-              round 
-              width="36" 
-              height="36" 
-              :src="post.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" 
-              class="border border-gray-100 shadow-inner"
-            />
-            <div class="ml-3">
-              <div class="text-sm font-bold text-gray-800">{{ post.author.nickname || post.author.username }}</div>
-              <div class="text-[10px] text-gray-400 mt-0.5">{{ formatTime(post.createdAt) }}</div>
-            </div>
-          </div>
-          <!-- 标签徽章 -->
-          <van-tag 
-            :type="post.category === '寻物问答' ? 'primary' : 'success'" 
-            plain 
-            round
-            class="text-[10px] px-2 py-0.5 font-medium"
-          >
-            {{ post.category }}
-          </van-tag>
-        </div>
-
-        <!-- 互助标题与内容主体 -->
-        <h2 class="text-base font-bold text-gray-900 mb-2 leading-snug line-clamp-1">
-          {{ post.title }}
-        </h2>
-        <p class="text-sm text-gray-600 mb-3 leading-relaxed line-clamp-3 whitespace-pre-wrap">
-          {{ post.content }}
-        </p>
-
-        <!-- 缩略图网格，支持点击大图预览 -->
-        <div 
-          v-if="parseImages(post.images).length > 0" 
-          class="grid gap-2 mb-3 max-w-sm"
-          :class="parseImages(post.images).length === 1 ? 'grid-cols-1' : parseImages(post.images).length === 2 ? 'grid-cols-2' : 'grid-cols-3'"
-          @click.stop
-        >
-          <van-image 
-            v-for="(img, idx) in parseImages(post.images).slice(0, 3)" 
-            :key="idx"
-            :src="img.startsWith('/uploads') ? '/api' + img : img" 
-            height="85"
-            fit="cover"
-            radius="8"
-            class="shadow-sm border border-gray-50"
-            @click="previewImage(parseImages(post.images), Number(idx))"
-          />
-        </div>
-
-        <!-- 底部数据指标面板，点击整张卡片跳转详情后可深度互动 -->
-        <div class="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-3 mt-1">
-          <div class="flex items-center gap-4">
-            <span class="flex items-center gap-1">
-              <van-icon name="eye-o" />
-              {{ post.viewCount || 0 }} 阅读
-            </span>
-            <span class="flex items-center gap-1">
-              <van-icon name="chat-o" />
-              {{ post.commentCount || 0 }} 评论
-            </span>
-          </div>
-          <span class="flex items-center gap-1 text-blue-500 font-medium">
-            <van-icon name="good-job-o" />
-            {{ post.likeCount || 0 }} 觉得有用
-          </span>
+  <div class="mutual-help-container bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white pb-20 flex flex-col">
+    <!-- Top App Bar with Store Selector -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.push('/')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface truncate max-w-[50%] text-center">
+          同店互助广场
+        </h1>
+        <div @click="showStorePicker = true" class="flex items-center gap-1 text-primary bg-primary/10 px-2.5 py-1.5 rounded-full cursor-pointer hover:bg-primary/20 transition-colors max-w-[120px]">
+          <span class="material-symbols-outlined text-[16px]">location_on</span>
+          <span class="text-xs font-bold truncate">{{ currentStoreName }}</span>
+          <span class="material-symbols-outlined text-[16px]">arrow_drop_down</span>
         </div>
       </div>
-    </div>
+    </header>
 
-    <!-- 底部悬浮发布按钮 FAB -->
-    <div 
-      class="fixed bottom-20 right-6 w-14 h-14 rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg flex items-center justify-center text-white active:scale-95 transition-transform z-40 cursor-pointer"
-      @click="handleOpenPublish"
-    >
-      <van-icon name="edit" size="24" />
-    </div>
+    <!-- Tabs -->
+    <van-tabs v-model:active="activeTab" sticky offset-top="64" color="#005c6c" title-active-color="#005c6c" class="border-b border-surface-variant/30">
+      <van-tab title="全部" name="全部"></van-tab>
+      <van-tab title="寻物问答" name="寻物问答"></van-tab>
+      <van-tab title="拼车互助" name="拼车互助"></van-tab>
+    </van-tabs>
 
-    <!-- 门店强制切换/选择器 Popup -->
-    <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
-      <van-picker
-        :columns="storeOptions"
-        @confirm="onStoreConfirm"
-        @cancel="showStorePicker = false"
-        show-toolbar
-        title="选择关联门店"
-      />
-    </van-popup>
+    <main class="flex-1 w-full max-w-2xl mx-auto">
+      <!-- Loading state -->
+      <div v-if="loading" class="flex justify-center items-center py-20">
+        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
 
-
-
-    <!-- 发帖 Popup 对话框 -->
-    <van-popup 
-      v-model:show="showPublishPopup" 
-      position="bottom" 
-      round 
-      safe-area-inset-bottom 
-      class="max-h-[85%]"
-    >
-      <div class="publish-form p-4">
-        <!-- 弹窗页眉 -->
-        <div class="flex justify-between items-center mb-4 border-b border-gray-50 pb-3">
-          <span class="text-lg font-bold text-gray-900">发布同店互助信息</span>
-          <van-icon name="cross" size="20" class="text-gray-400" @click="showPublishPopup = false" />
+      <!-- Empty state -->
+      <div v-else-if="posts.length === 0" class="py-20 flex flex-col items-center justify-center text-center px-4">
+        <div class="w-24 h-24 mb-4 opacity-70">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="w-full h-full text-surface-variant"><path d="M15.5 14H14.71L14.43 13.73C15.41 12.59 16 11.11 16 9.5C16 5.91 13.09 3 9.5 3C5.91 3 3 5.91 3 9.5C3 13.09 5.91 16 9.5 16C11.11 16 12.59 15.41 13.73 14.43L14 14.71V15.5L19 20.49L20.49 19L15.5 14ZM9.5 14C7.01 14 5 11.99 5 9.5C5 7.01 7.01 5 9.5 5C11.99 5 14 7.01 14 9.5C14 11.99 11.99 14 9.5 14Z" fill="currentColor"/></svg>
         </div>
+        <p class="text-sm text-on-surface-variant mb-6 font-medium">该门店目前暂无互助信息</p>
+        <button 
+          @click="handleOpenPublish"
+          class="bg-primary text-white px-6 py-2.5 rounded-full font-label-lg font-bold shadow-sm active:scale-95 transition-transform"
+        >
+          成为第一个发布的人
+        </button>
+      </div>
 
-        <van-form @submit="onSubmitPublish">
-          <!-- 强锁当前门店 -->
-          <van-field
-            :model-value="currentStoreName"
-            label="关联门店"
-            readonly
-            left-icon="location-o"
-            class="bg-gray-50 rounded-xl mb-4 font-bold text-gray-700"
-          />
-
-          <!-- 互助品类单选 -->
-          <div class="mb-4 bg-gray-50 p-3 rounded-xl">
-            <span class="text-xs text-gray-400 block mb-2 font-medium">请选择互助类型</span>
-            <van-radio-group v-model="newCategory" direction="horizontal" class="flex gap-4">
-              <van-radio name="寻物问答" checked-color="#3b82f6">🔍 寻物问答</van-radio>
-              <van-radio name="拼车互助" checked-color="#10b981">🚗 拼车互助</van-radio>
-            </van-radio-group>
+      <!-- Post List -->
+      <div v-else class="p-4 flex flex-col gap-4">
+        <article 
+          v-for="post in posts" 
+          :key="post.id"
+          class="bg-surface-container-lowest border border-surface-variant/50 rounded-2xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_4px_12px_rgba(0,0,0,0.05)] active:scale-[0.99] transition-all cursor-pointer flex flex-col gap-3"
+          @click="router.push(`/community/post/${post.id}`)"
+        >
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-full overflow-hidden border border-surface-variant/30 shrink-0">
+                <van-image :src="post.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" width="100%" height="100%" fit="cover" />
+              </div>
+              <div class="flex flex-col">
+                <span class="font-label-md font-bold text-on-surface">{{ post.author.nickname || post.author.username }}</span>
+                <span class="text-[10px] text-on-surface-variant">{{ formatTime(post.createdAt) }}</span>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" :class="post.category === '寻物问答' ? 'bg-primary/10 text-primary' : 'bg-[#10b981]/10 text-[#10b981]'">
+              {{ post.category }}
+            </span>
           </div>
 
-          <!-- 标题输入，包含前端拦截提示 -->
-          <van-field
-            v-model="newTitle"
-            name="title"
-            label="互助标题"
-            placeholder="写下你要互助的核心问题（如：金谷园店今天有大白菜特价么）"
-            maxlength="40"
-            required
-            :rules="[{ required: true, message: '请填写简洁的互助标题' }]"
-            class="border border-gray-100 rounded-xl mb-4"
-          />
+          <div class="flex flex-col gap-1">
+            <h2 class="font-headline-sm text-base font-bold text-on-surface line-clamp-1">
+              {{ post.title }}
+            </h2>
+            <p class="text-sm text-on-surface-variant leading-relaxed line-clamp-3 whitespace-pre-wrap">
+              {{ post.content }}
+            </p>
+          </div>
 
-          <!-- 正文输入 -->
-          <van-field
-            v-model="newContent"
-            rows="5"
-            autosize
-            label="详细描述"
-            type="textarea"
-            maxlength="300"
-            placeholder="详细叙述你的需求或发布你的拼车同行方案。严禁带有商业引流链接，发布后实时对同店邻里展现。"
-            show-word-limit
-            required
-            :rules="[{ required: true, message: '请填写具体的详细描述' }]"
-            class="border border-gray-100 rounded-xl mb-4"
-          />
+          <div 
+            v-if="parseImages(post.images).length > 0" 
+            class="grid gap-2 mt-1"
+            :class="parseImages(post.images).length === 1 ? 'grid-cols-1 max-w-[60%]' : (parseImages(post.images).length === 2 ? 'grid-cols-2 max-w-[80%]' : 'grid-cols-3')"
+            @click.stop
+          >
+            <div 
+              v-for="(img, idx) in parseImages(post.images).slice(0, 3)" 
+              :key="idx"
+              class="aspect-square rounded-xl overflow-hidden shadow-sm border border-surface-variant/30 cursor-pointer active:scale-95 transition-transform"
+              @click="previewImage(parseImages(post.images), Number(idx))"
+            >
+              <van-image :src="img.startsWith('/uploads') ? '/api' + img : img" width="100%" height="100%" fit="cover" />
+            </div>
+          </div>
 
-          <!-- 多图上传 (可选) -->
-          <div class="mb-4">
-            <span class="text-xs text-gray-400 block mb-2 font-medium">添加现场图片 (可选，上限 9 张)</span>
-            <van-uploader 
-              v-model="fileList" 
-              :after-read="afterRead" 
-              multiple 
-              :max-count="9"
-              class="block"
+          <div class="flex items-center justify-between text-xs text-on-surface-variant font-medium pt-3 border-t border-surface-variant/30 mt-1">
+            <div class="flex items-center gap-4">
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ post.viewCount || 0 }}</span>
+              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat_bubble</span> {{ post.commentCount || 0 }}</span>
+            </div>
+            <span class="flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-[14px]">thumb_up</span> {{ post.likeCount || 0 }}</span>
+          </div>
+        </article>
+      </div>
+    </main>
+
+    <!-- FAB -->
+    <button 
+      @click="handleOpenPublish"
+      class="fixed bottom-20 right-6 w-14 h-14 rounded-2xl bg-primary text-white shadow-[0_4px_12px_rgba(0,92,108,0.3)] flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all z-40"
+    >
+      <span class="material-symbols-outlined text-[28px]">edit_square</span>
+    </button>
+
+    <!-- Store Picker Popup -->
+    <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
+      <van-picker :columns="storeOptions" @confirm="onStoreConfirm" @cancel="showStorePicker = false" show-toolbar title="选择关联门店" />
+    </van-popup>
+
+    <!-- Publish Popup -->
+    <van-popup v-model:show="showPublishPopup" position="bottom" round safe-area-inset-bottom class="max-h-[90vh]">
+      <div class="p-5 flex flex-col h-full overflow-y-auto">
+        <div class="flex justify-between items-center mb-6 pb-3 border-b border-surface-variant/30">
+          <h2 class="font-headline-sm text-lg font-bold text-on-surface">发布互助信息</h2>
+          <button @click="showPublishPopup = false" class="text-on-surface-variant hover:text-on-surface p-1 rounded-full active:bg-surface-variant/20 transition-colors">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form @submit.prevent="onSubmitPublish" class="flex flex-col gap-5">
+          <!-- Store Display -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant px-1">关联门店</label>
+            <div class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+              <span class="material-symbols-outlined text-primary">location_on</span>
+              <span class="text-on-surface font-bold">{{ currentStoreName }}</span>
+            </div>
+          </div>
+
+          <!-- Type Radio -->
+          <div class="flex flex-col gap-2">
+            <label class="font-label-md text-sm text-on-surface-variant px-1">互助类型</label>
+            <div class="flex gap-3">
+              <button 
+                type="button" 
+                @click="newCategory = '寻物问答'"
+                class="flex-1 py-3 px-2 rounded-xl border flex items-center justify-center gap-1 transition-colors font-bold text-sm"
+                :class="newCategory === '寻物问答' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-primary/50'"
+              >
+                <span class="material-symbols-outlined text-[18px]">search</span> 寻物问答
+              </button>
+              <button 
+                type="button" 
+                @click="newCategory = '拼车互助'"
+                class="flex-1 py-3 px-2 rounded-xl border flex items-center justify-center gap-1 transition-colors font-bold text-sm"
+                :class="newCategory === '拼车互助' ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-[#10b981]/50'"
+              >
+                <span class="material-symbols-outlined text-[18px]">directions_car</span> 拼车互助
+              </button>
+            </div>
+          </div>
+
+          <!-- Title Input -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant px-1">互助标题 <span class="text-error">*</span></label>
+            <input 
+              v-model="newTitle"
+              type="text"
+              maxlength="40"
+              required
+              placeholder="核心问题 (如: 今天有大白菜特价么)"
+              class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
             />
           </div>
 
-          <!-- 提交按钮 -->
-          <div class="mt-6">
-            <van-button 
-              round 
-              block 
-              type="primary" 
-              native-type="submit" 
-              class="bg-gradient-to-r from-blue-500 to-indigo-600 shadow-md border-0 text-white font-bold h-11"
+          <!-- Content Input -->
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between px-1">
+              <label class="font-label-md text-sm text-on-surface-variant">详细描述 <span class="text-error">*</span></label>
+              <span class="text-xs text-on-surface-variant/70">{{ newContent.length }}/300</span>
+            </div>
+            <textarea 
+              v-model="newContent"
+              rows="5"
+              maxlength="300"
+              required
+              placeholder="严禁带有商业引流链接，发布后实时对同店邻里展现。"
+              class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+            ></textarea>
+          </div>
+
+          <!-- Image Uploader -->
+          <div class="flex flex-col gap-1.5 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+            <div class="flex items-center justify-between mb-2">
+              <label class="font-label-md text-sm text-on-surface-variant">现场图片 (选填)</label>
+              <span class="text-xs text-on-surface-variant">上限9张</span>
+            </div>
+            <van-uploader v-model="fileList" :after-read="afterRead" multiple :max-count="9" />
+          </div>
+
+          <!-- Submit Button -->
+          <div class="mt-2 pt-2">
+            <button 
+              type="submit" 
+              class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
             >
               立刻发布上线
-            </van-button>
+            </button>
           </div>
-        </van-form>
+        </form>
       </div>
     </van-popup>
   </div>

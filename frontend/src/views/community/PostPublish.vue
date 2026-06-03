@@ -193,90 +193,107 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <div class="post-publish-container bg-white min-h-screen">
-    <van-nav-bar 
-      :title="isEdit ? '编辑帖子' : '发布帖子'" 
-      left-arrow 
-      @click-left="router.back()" 
-      fixed 
-      placeholder 
-    />
-
-    <van-form @submit="onSubmit" class="mt-2">
-      <van-field
-        v-model="storeName"
-        is-link
-        readonly
-        name="storePicker"
-        label="相关门店"
-        placeholder="选择相关门店"
-        :rules="[{ required: true, message: '请选择相关门店' }]"
-        @click="showStorePicker = true"
-      />
-      <van-popup v-model:show="showStorePicker" position="bottom">
-        <van-picker
-          :columns="storeColumns"
-          @confirm="onStoreConfirm"
-          @cancel="showStorePicker = false"
-        />
-      </van-popup>
-
-      <!-- 帖子分类 (固定的，按照用户需求不允许自定义) -->
-      <van-field
-        v-model="category"
-        is-link
-        readonly
-        name="category"
-        label="帖子分类"
-        placeholder="选择帖子分类"
-        @click="showPicker = true"
-      />
-      <van-popup v-model:show="showPicker" position="bottom">
-        <van-picker
-          :columns="categoryColumns"
-          @confirm="onConfirmCategory"
-          @cancel="showPicker = false"
-        />
-      </van-popup>
-
-      <van-field
-        v-model="title"
-        name="title"
-        label="标题"
-        placeholder="加个吸睛的标题吧"
-        maxlength="40"
-        :rules="[{ required: true, message: '请填写标题' }]"
-      />
-      
-      <van-field
-        v-model="content"
-        rows="6"
-        autosize
-        label="正文"
-        type="textarea"
-        maxlength="300"
-        placeholder="分享你的购物心得、评价商品..."
-        show-word-limit
-        :rules="[{ required: true, message: '请填写正文' }]"
-        class="border-b border-gray-100"
-      />
-      
-      <div class="p-4">
-        <p class="text-sm text-gray-500 mb-2">添加图片 (可选)</p>
-        <van-uploader 
-          v-model="fileList" 
-          :after-read="afterRead" 
-          multiple 
-          :max-count="9"
-          class="mb-4"
-        />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Top App Bar -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
+          {{ isEdit ? '编辑帖子' : '发布帖子' }}
+        </h1>
+        <div class="w-10 h-10"></div>
       </div>
-      
-      <div class="p-4 mt-4">
-        <van-button round block type="primary" native-type="submit" class="bg-blue-600 shadow-md">
-          {{ isEdit ? '保存修改' : '发布' }}
-        </van-button>
-      </div>
-    </van-form>
+    </header>
+
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile pt-4 pb-12">
+      <form @submit.prevent="onSubmit" class="flex flex-col gap-5">
+        
+        <!-- Store Picker Trigger -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">相关门店</label>
+          <button 
+            type="button" 
+            @click="showStorePicker = true"
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)] active:scale-[0.99] transition-transform"
+          >
+            <span :class="storeName ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
+              {{ storeName || '选择相关门店' }}
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          </button>
+        </div>
+        <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
+          <van-picker :columns="storeColumns" @confirm="onStoreConfirm" @cancel="showStorePicker = false" />
+        </van-popup>
+
+        <!-- Category Picker Trigger -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">帖子分类</label>
+          <button 
+            type="button" 
+            @click="showPicker = true"
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)] active:scale-[0.99] transition-transform"
+          >
+            <span :class="category ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
+              {{ category || '选择帖子分类' }}
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          </button>
+        </div>
+        <van-popup v-model:show="showPicker" position="bottom" round safe-area-inset-bottom>
+          <van-picker :columns="categoryColumns" @confirm="onConfirmCategory" @cancel="showPicker = false" />
+        </van-popup>
+
+        <!-- Title Input -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">标题</label>
+          <input 
+            v-model="title"
+            type="text"
+            maxlength="20"
+            placeholder="加个精彩的标题吧"
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+          />
+        </div>
+
+        <!-- Content Input -->
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between px-1">
+            <label class="font-label-md text-sm text-on-surface-variant">正文</label>
+            <span class="text-xs text-on-surface-variant/70">{{ content.length }}/300</span>
+          </div>
+          <textarea 
+            v-model="content"
+            rows="6"
+            maxlength="300"
+            placeholder="分享你的购物心得、评价商品..."
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+          ></textarea>
+        </div>
+
+        <!-- Image Uploader -->
+        <div class="flex flex-col gap-1.5 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <label class="font-label-md text-sm text-on-surface-variant mb-2">添加图片 (可选)</label>
+          <van-uploader 
+            v-model="fileList" 
+            :after-read="afterRead" 
+            multiple 
+            :max-count="9"
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <div class="mt-4">
+          <button 
+            type="submit" 
+            class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
+          >
+            {{ isEdit ? '保存修改' : '发布' }}
+          </button>
+        </div>
+      </form>
+    </main>
   </div>
 </template>

@@ -77,42 +77,72 @@ const formatDate = (dateStr?: string) => {
 </script>
 
 <template>
-  <div class="my-messages-container min-h-screen bg-gray-50 pb-4">
-    <van-nav-bar title="收到的回复" left-arrow @click-left="router.back()" fixed placeholder />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Header -->
+    <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors border-b border-surface-variant/20">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-on-surface hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-lg font-bold text-on-surface">收到的回复</h1>
+        <div class="w-10 h-10"></div> <!-- Placeholder to balance flex -->
+      </div>
+    </header>
     
-    <div v-if="isError && messages.length === 0" class="mt-20 text-center text-gray-400">
-      <van-empty description="加载失败" />
-      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
-      <van-button size="small" type="primary" class="mt-4" @click="reload">重试</van-button>
-    </div>
-    
-    <div v-else-if="messages.length === 0 && finished" class="mt-20 text-center text-gray-400">
-      <van-empty description="暂时没有收到任何回复" />
-    </div>
-    
-    <div v-else class="p-3">
-      <van-list
-        v-model:loading="loading"
-        :finished="finished"
-        finished-text="没有更多了"
-        @load="onLoad"
-      >
-        <div v-for="msg in messages" :key="msg.comment?.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(msg.post?.id)">
-          <div class="flex items-start">
-            <van-image round width="32" height="32" :src="msg.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" class="mt-1" />
-            <div class="ml-2 flex-1">
-              <div class="flex justify-between items-center mb-1">
-                <span class="text-sm font-medium text-gray-800">{{ msg.author?.nickname || msg.author?.username || '未知用户' }}</span>
-                <span class="text-xs text-gray-400">{{ formatDate(msg.comment?.createdAt) }}</span>
-              </div>
-              <div class="text-sm text-gray-600 mb-2">回复了你的帖子: <span class="text-blue-500">《{{ msg.post?.title || '帖子已删除' }}》</span></div>
-              <div class="bg-gray-50 p-2 rounded text-sm text-gray-800 line-clamp-2">
-                {{ msg.comment?.content || '' }}
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile py-6 flex flex-col gap-4">
+      
+      <div v-if="isError && messages.length === 0" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">error</span>
+        </div>
+        <p class="text-on-surface font-medium">加载失败</p>
+        <p class="text-error text-xs px-4 text-center">{{ errorMsg }}</p>
+        <button @click="reload" class="mt-2 bg-primary/10 text-primary font-bold text-sm px-6 py-2.5 rounded-full hover:bg-primary/20 transition-colors">
+          重试
+        </button>
+      </div>
+      
+      <div v-else-if="messages.length === 0 && finished" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-surface-container-high text-on-surface-variant rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">mark_email_read</span>
+        </div>
+        <p class="text-on-surface-variant text-sm">暂时没有收到任何回复</p>
+      </div>
+      
+      <div v-else class="flex flex-col gap-4">
+        <van-list
+          v-model:loading="loading"
+          :finished="finished"
+          finished-text="没有更多了"
+          @load="onLoad"
+          class="flex flex-col gap-4"
+        >
+          <div 
+            v-for="msg in messages" 
+            :key="msg.comment?.id" 
+            class="bg-surface-container-lowest rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-surface-variant/20 flex flex-col gap-3 active:scale-[0.99] transition-transform cursor-pointer"
+            @click="goDetail(msg.post?.id)"
+          >
+            <div class="flex items-start gap-3">
+              <img :src="msg.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" class="w-10 h-10 rounded-full object-cover border border-surface-variant/20 flex-shrink-0" />
+              <div class="flex-1 flex flex-col min-w-0">
+                <div class="flex justify-between items-center mb-1">
+                  <span class="font-headline-sm text-sm font-bold text-on-surface truncate">{{ msg.author?.nickname || msg.author?.username || '未知用户' }}</span>
+                  <span class="text-[11px] text-on-surface-variant font-medium flex-shrink-0 ml-2">{{ formatDate(msg.comment?.createdAt) }}</span>
+                </div>
+                
+                <div class="text-sm text-on-surface-variant mb-2 line-clamp-1">
+                  回复了你的帖子: <span class="text-primary font-medium">《{{ msg.post?.title || '帖子已删除' }}》</span>
+                </div>
+                
+                <div class="bg-surface-container-low p-3 rounded-2xl text-sm text-on-surface line-clamp-2 leading-relaxed border border-surface-variant/10">
+                  {{ msg.comment?.content || '' }}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </van-list>
-    </div>
+        </van-list>
+      </div>
+    </main>
   </div>
 </template>

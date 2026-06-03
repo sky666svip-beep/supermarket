@@ -15,7 +15,7 @@ export const jsonp = (
 ): Promise<any> => {
   return new Promise((resolve, reject) => {
     const callbackName = `jsonp_${Date.now()}_${Math.floor(Math.random() * 100000)}`
-    let timeoutId: number | NodeJS.Timeout | null = null
+    let timeoutId: ReturnType<typeof setTimeout> | null = null
     const script = document.createElement('script')
 
     const cleanup = () => {

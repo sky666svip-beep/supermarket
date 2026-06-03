@@ -77,61 +77,108 @@ const formatTime = (timeStr: string) => {
 </script>
 
 <template>
-  <div class="community-container">
-    <van-nav-bar title="社区" fixed placeholder />
-    
-    <van-tabs v-model:active="activeTab" @change="onTabChange" sticky offset-top="46">
-      <van-tab title="最新" name="latest"></van-tab>
-      <van-tab title="最热" name="hot"></van-tab>
-      <van-tab title="精华" name="elite"></van-tab>
-    </van-tabs>
+  <div class="bg-surface text-on-surface min-h-screen pb-20 antialiased font-body-md">
+    <!-- TopAppBar -->
+    <header class="bg-surface fixed top-0 left-0 w-full z-50 shadow-sm transition-all duration-300">
+      <div class="flex items-center justify-center px-4 w-full h-14 relative">
+        <h1 class="font-headline-sm text-headline-sm font-bold text-primary">社区</h1>
+      </div>
+      <!-- Tabs -->
+      <nav class="flex border-b border-surface-variant overflow-x-auto hide-scrollbar">
+        <button 
+          @click="activeTab = 'latest'; onTabChange()"
+          class="flex-1 py-3 text-center font-label-md text-label-md transition-colors relative"
+          :class="activeTab === 'latest' ? 'border-b-2 border-primary text-primary' : 'border-b-2 border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'"
+        >最新</button>
+        <button 
+          @click="activeTab = 'hot'; onTabChange()"
+          class="flex-1 py-3 text-center font-label-md text-label-md transition-colors relative"
+          :class="activeTab === 'hot' ? 'border-b-2 border-primary text-primary' : 'border-b-2 border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'"
+        >最热</button>
+        <button 
+          @click="activeTab = 'elite'; onTabChange()"
+          class="flex-1 py-3 text-center font-label-md text-label-md transition-colors relative"
+          :class="activeTab === 'elite' ? 'border-b-2 border-primary text-primary' : 'border-b-2 border-transparent text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low'"
+        >精华</button>
+      </nav>
+    </header>
 
-    <div class="post-list p-3">
+    <!-- Main Canvas -->
+    <main class="pt-[104px] px-4 py-4 space-y-4 max-w-3xl mx-auto">
       <van-list
         v-model:loading="loading"
         :finished="finished"
         finished-text="没有更多了"
         @load="onLoad"
       >
-        <div v-for="post in posts" :key="post.id" class="post-card bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 transition-all active:scale-[0.98]" @click="goDetail(post.id)">
-          <div class="flex items-center mb-2">
-            <van-image round width="32" height="32" :src="post.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
-            <div class="ml-2 flex-1">
-              <div class="text-sm font-medium text-gray-800">{{ post.author.nickname || post.author.username }}</div>
-              <div class="text-xs text-gray-400">{{ formatTime(post.createdAt) }}</div>
+        <article 
+          v-for="post in posts" :key="post.id"
+          class="bg-surface-container-lowest rounded-xl shadow-sm p-4 border border-surface-variant/50 mb-4 cursor-pointer hover:bg-surface-container-low transition-colors active:scale-[0.98]"
+          @click="goDetail(post.id)"
+        >
+          <!-- Header -->
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center space-x-2">
+              <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container flex-shrink-0">
+                <img alt="Avatar" class="w-full h-full object-cover" :src="post.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
+              </div>
+              <div>
+                <h3 class="font-label-md text-label-md text-on-surface">{{ post.author?.nickname || post.author?.username || '用户' }}</h3>
+                <p class="font-body-md text-[12px] text-on-surface-variant">{{ formatTime(post.createdAt) }}</p>
+              </div>
             </div>
-            <van-tag type="primary" plain size="medium" v-if="post.category">{{ post.category }}</van-tag>
+            <span v-if="post.category" class="px-2 py-1 rounded border border-primary text-primary font-label-md text-[10px]">{{ post.category }}</span>
           </div>
-          <div class="mb-2 flex gap-1" v-if="post.isTop || post.isElite">
-             <van-tag type="danger" v-if="post.isTop">置顶</van-tag>
-             <van-tag type="warning" v-if="post.isElite">精华</van-tag>
-          </div>
-          <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-2">{{ post.title }}</h3>
-          <p class="text-sm text-gray-600 mb-2 line-clamp-3">{{ post.content }}</p>
-          
-          <div class="grid grid-cols-3 gap-1 mb-2" v-if="post.parsedImages && post.parsedImages.length > 0">
-            <van-image v-for="(img, idx) in post.parsedImages.slice(0,3)" :key="idx" fit="cover" :src="img.startsWith('/uploads') ? '/api' + img : img" class="h-24 w-full rounded" />
-          </div>
-          
-          <div class="flex items-center text-xs text-gray-500 justify-between mt-2 pt-2 border-t border-gray-50">
-            <span class="flex items-center"><van-icon name="eye-o" class="mr-1"/>{{ post.viewCount || 0 }}</span>
-            <span class="flex items-center"><van-icon name="good-job-o" class="mr-1"/>{{ post.likeCount || 0 }}</span>
-            <span class="flex items-center"><van-icon name="comment-o" class="mr-1"/>{{ post.commentCount || 0 }}</span>
-          </div>
-        </div>
-      </van-list>
-    </div>
 
-    <!-- 悬浮发帖按钮 -->
-    <div class="fixed right-4 bottom-20 z-50">
-      <van-button type="primary" icon="plus" round class="shadow-lg w-12 h-12 flex items-center justify-center bg-blue-600 border-none" @click="goPublish"></van-button>
-    </div>
+          <!-- Content -->
+          <div class="mb-3">
+            <div class="flex gap-1 mb-2" v-if="post.isTop || post.isElite">
+               <span v-if="post.isTop" class="px-1.5 py-0.5 rounded bg-error/10 text-error font-label-md text-[10px]">置顶</span>
+               <span v-if="post.isElite" class="px-1.5 py-0.5 rounded bg-tertiary/10 text-tertiary font-label-md text-[10px]">精华</span>
+            </div>
+            <h2 class="font-headline-sm text-headline-sm text-on-surface mb-1 line-clamp-2">{{ post.title }}</h2>
+            <p class="font-body-md text-body-md text-on-surface-variant line-clamp-3">{{ post.content }}</p>
+          </div>
+
+          <!-- Images -->
+          <div class="grid grid-cols-3 gap-2 mb-3" v-if="post.parsedImages && post.parsedImages.length > 0">
+            <div v-for="(img, idx) in post.parsedImages.slice(0,3)" :key="idx" class="w-full h-24 rounded-lg overflow-hidden border border-surface-variant/30">
+              <img class="w-full h-full object-cover" :src="img.startsWith('/uploads') ? '/api' + img : img" />
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="flex items-center justify-between text-on-surface-variant font-body-md text-[13px] pt-3 border-t border-surface-variant/30">
+            <div class="flex items-center space-x-1 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[18px]">visibility</span>
+              <span>{{ post.viewCount || 0 }}</span>
+            </div>
+            <div class="flex items-center space-x-1 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[18px]">thumb_up</span>
+              <span>{{ post.likeCount || 0 }}</span>
+            </div>
+            <div class="flex items-center space-x-1 hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-[18px]">chat</span>
+              <span>{{ post.commentCount || 0 }}</span>
+            </div>
+          </div>
+        </article>
+      </van-list>
+    </main>
+
+    <!-- Floating Action Button -->
+    <button @click="goPublish" class="fixed bottom-24 right-4 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary-container active:scale-95 transition-all duration-200 z-40">
+      <span class="material-symbols-outlined font-bold text-[28px]">add</span>
+    </button>
   </div>
 </template>
 
 <style scoped>
-.community-container {
-  min-height: 100vh;
-  background-color: #f7f8fa;
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 </style>

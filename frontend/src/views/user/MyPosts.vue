@@ -95,47 +95,112 @@ const formatDate = (dateStr?: string) => {
 </script>
 
 <template>
-  <div class="my-posts-container min-h-screen bg-gray-50 pb-4">
-    <van-nav-bar title="我的帖子" left-arrow @click-left="router.back()" fixed placeholder />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Header -->
+    <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors border-b border-surface-variant/20">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-on-surface hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-lg font-bold text-on-surface">我的帖子</h1>
+        <div class="w-10 h-10"></div> <!-- Placeholder to balance flex -->
+      </div>
+    </header>
     
-    <div v-if="isError && posts.length === 0" class="mt-20 text-center text-gray-400">
-      <van-empty description="加载失败" />
-      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
-      <van-button size="small" type="primary" class="mt-4" @click="reload">重试</van-button>
-    </div>
-    
-    <div v-else-if="posts.length === 0 && finished" class="mt-20 text-center text-gray-400">
-      <van-empty description="还没发过帖子哦" />
-      <van-button type="primary" size="small" class="mt-4" @click="router.push('/community/publish')">去发帖</van-button>
-    </div>
-    
-    <div v-else class="p-3">
-      <van-list
-        v-model:loading="loading"
-        :finished="finished"
-        finished-text="没有更多了"
-        @load="onLoad"
-      >
-        <div v-for="post in posts" :key="post.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(post.id)">
-          <div class="flex justify-between items-center mb-2">
-            <van-tag :type="post.status === 'approved' ? 'success' : post.status === 'rejected' ? 'danger' : 'warning'">
-              {{ post.status === 'approved' ? '已发布' : post.status === 'rejected' ? '被拒绝' : '审核中' }}
-            </van-tag>
-            <span class="text-xs text-gray-400">{{ formatDate(post.createdAt) }}</span>
-          </div>
-          <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1">{{ post.title }}</h3>
-          <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ post.content }}</p>
-          <div class="flex items-center text-xs text-gray-500 gap-4 mt-2">
-            <span>阅读 {{ post.viewCount }}</span>
-            <span>点赞 {{ post.likeCount }}</span>
-            <span>评论 {{ post.commentCount }}</span>
-          </div>
-          <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-50" @click.stop>
-            <van-button size="mini" type="primary" plain @click="onEdit(post.id)">编辑</van-button>
-            <van-button size="mini" type="danger" plain @click="onDelete(post.id)">删除</van-button>
-          </div>
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile py-6 flex flex-col gap-4">
+      
+      <div v-if="isError && posts.length === 0" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">error</span>
         </div>
-      </van-list>
-    </div>
+        <p class="text-on-surface font-medium">加载失败</p>
+        <p class="text-error text-xs px-4 text-center">{{ errorMsg }}</p>
+        <button @click="reload" class="mt-2 bg-primary/10 text-primary font-bold text-sm px-6 py-2.5 rounded-full hover:bg-primary/20 transition-colors">
+          重试
+        </button>
+      </div>
+      
+      <div v-else-if="posts.length === 0 && finished" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-surface-container-high text-on-surface-variant rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">post_add</span>
+        </div>
+        <p class="text-on-surface-variant text-sm">还没发过帖子哦</p>
+        <button @click="router.push('/community/publish')" class="mt-2 bg-primary text-white font-bold text-sm px-6 py-2.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors">
+          去发帖
+        </button>
+      </div>
+      
+      <div v-else class="flex flex-col gap-4">
+        <van-list
+          v-model:loading="loading"
+          :finished="finished"
+          finished-text="没有更多了"
+          @load="onLoad"
+          class="flex flex-col gap-4"
+        >
+          <div 
+            v-for="post in posts" 
+            :key="post.id" 
+            class="bg-surface-container-lowest rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-surface-variant/20 flex flex-col gap-3 active:scale-[0.99] transition-transform cursor-pointer"
+            @click="goDetail(post.id)"
+          >
+            <!-- Header: Status and Date -->
+            <div class="flex justify-between items-center">
+              <div 
+                class="px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider"
+                :class="{
+                  'bg-[#e6f4ea] text-[#137333]': post.status === 'approved',
+                  'bg-[#fce8e6] text-[#c5221f]': post.status === 'rejected',
+                  'bg-[#fef7e0] text-[#b06000]': post.status !== 'approved' && post.status !== 'rejected'
+                }"
+              >
+                {{ post.status === 'approved' ? '已发布' : post.status === 'rejected' ? '被拒绝' : '审核中' }}
+              </div>
+              <span class="text-xs text-on-surface-variant/70 font-medium">{{ formatDate(post.createdAt) }}</span>
+            </div>
+            
+            <!-- Title & Content -->
+            <div class="flex flex-col gap-1">
+              <h3 class="font-headline-sm text-base font-bold text-on-surface line-clamp-1 leading-snug">{{ post.title }}</h3>
+              <p class="text-sm text-on-surface-variant line-clamp-2 leading-relaxed">{{ post.content }}</p>
+            </div>
+            
+            <!-- Stats -->
+            <div class="flex items-center gap-5 mt-1">
+              <div class="flex items-center gap-1.5 text-on-surface-variant/70">
+                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                <span class="text-[11px] font-medium">{{ post.viewCount }}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-on-surface-variant/70">
+                <span class="material-symbols-outlined text-[14px]">favorite</span>
+                <span class="text-[11px] font-medium">{{ post.likeCount }}</span>
+              </div>
+              <div class="flex items-center gap-1.5 text-on-surface-variant/70">
+                <span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                <span class="text-[11px] font-medium">{{ post.commentCount }}</span>
+              </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex justify-end gap-3 mt-3 pt-3 border-t border-surface-variant/20" @click.stop>
+              <button 
+                @click="onEdit(post.id)"
+                class="flex items-center justify-center gap-1.5 bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-primary-container/80"
+              >
+                <span class="material-symbols-outlined text-[14px]">edit</span>
+                编辑
+              </button>
+              <button 
+                @click="onDelete(post.id)"
+                class="flex items-center justify-center gap-1.5 bg-error-container text-on-error-container px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-error-container/80"
+              >
+                <span class="material-symbols-outlined text-[14px]">delete</span>
+                删除
+              </button>
+            </div>
+          </div>
+        </van-list>
+      </div>
+    </main>
   </div>
 </template>

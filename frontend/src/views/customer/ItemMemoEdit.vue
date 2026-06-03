@@ -70,83 +70,140 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col bg-gray-50">
-    <van-nav-bar
-      title="新增商品备忘"
-      left-arrow
-      @click-left="router.back()"
-      class="flex-shrink-0"
-    />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Top App Bar -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
+          新增商品备忘
+        </h1>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
 
-    <div class="flex-1 overflow-y-auto pb-8">
-      <van-form @submit="onSubmit">
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile pt-4 pb-12">
+      <form @submit.prevent="onSubmit" class="flex flex-col gap-6">
         
-        <van-cell-group inset class="!mt-4 shadow-sm">
-          <div class="px-4 py-3 bg-white">
-            <p class="text-sm text-gray-600 mb-2">实拍图 (最多上传1张)</p>
-            <van-uploader v-model="fileList" :max-count="1" />
+        <!-- Image Section -->
+        <section class="flex flex-col gap-3 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div class="flex items-center justify-between">
+            <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2">
+              <span class="material-symbols-outlined text-primary text-[20px]">image</span>实拍图
+            </h3>
+            <span class="text-xs text-on-surface-variant">最多1张</span>
           </div>
-        </van-cell-group>
+          <van-uploader v-model="fileList" :max-count="1" />
+        </section>
 
-        <van-cell-group inset class="!mt-4 shadow-sm">
-          <van-field
-            v-model="form.category"
-            label="分类"
-            placeholder="请选择或输入分类"
-          >
-            <template #button>
-              <van-button size="small" type="primary" plain @click.prevent="showCategoryPicker = true">
-                选择快捷分类
-              </van-button>
-            </template>
-          </van-field>
-          <van-popup v-model:show="showCategoryPicker" position="bottom">
-            <van-picker
-              :columns="categoryColumns"
-              @confirm="onCategoryConfirm"
-              @cancel="showCategoryPicker = false"
-            />
-          </van-popup>
-
-          <van-field
-            v-model="form.style"
-            label="商品款式"
-            placeholder="例如：Nike Air Max 白底黑边"
-            :rules="[{ required: true, message: '请填写商品款式' }]"
-          />
+        <!-- Basic Info Section -->
+        <section class="flex flex-col gap-4 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">info</span>基础信息
+          </h3>
           
-          <van-field
-            v-model="form.price"
-            label="价格"
-            type="number"
-            placeholder="例如：399"
-          />
-        </van-cell-group>
+          <!-- Category -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">分类</label>
+            <div class="flex gap-2">
+              <input 
+                v-model="form.category"
+                type="text"
+                placeholder="选择或输入"
+                class="flex-1 bg-surface border border-surface-variant/50 rounded-lg p-3 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+              />
+              <button 
+                type="button" 
+                @click="showCategoryPicker = true"
+                class="bg-primary/10 text-primary border border-primary/20 rounded-lg px-4 font-label-md text-sm active:scale-95 transition-transform whitespace-nowrap"
+              >
+                快捷分类
+              </button>
+            </div>
+            <van-popup v-model:show="showCategoryPicker" position="bottom" round safe-area-inset-bottom>
+              <van-picker :columns="categoryColumns" @confirm="onCategoryConfirm" @cancel="showCategoryPicker = false" />
+            </van-popup>
+          </div>
 
-        <van-cell-group inset class="!mt-4 shadow-sm">
-          <van-field
-            v-model="form.location"
-            label="店铺位置"
-            placeholder="例如：3F-A区-优衣库"
-          />
-          <van-field
-            v-model="form.contact"
-            label="店员联系"
-            placeholder="手机号/微信/姓名均可"
-          />
-          <van-field
-            v-model="form.tags"
-            label="自定义标签"
-            placeholder="多个标签用空格或逗号分隔"
-          />
-        </van-cell-group>
+          <!-- Style -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">商品款式 <span class="text-error">*</span></label>
+            <input 
+              v-model="form.style"
+              type="text"
+              required
+              placeholder="例如：Nike Air Max 白底黑边"
+              class="w-full bg-surface border border-surface-variant/50 rounded-lg p-3 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            />
+          </div>
 
-        <div class="mt-8 px-4">
-          <van-button round block type="primary" native-type="submit">
+          <!-- Price -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">价格</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 font-label-md text-on-surface-variant">¥</span>
+              <input 
+                v-model="form.price"
+                type="number"
+                placeholder="399"
+                class="w-full bg-surface border border-surface-variant/50 rounded-lg p-3 pl-7 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+              />
+            </div>
+          </div>
+        </section>
+
+        <!-- Location & Contact Section -->
+        <section class="flex flex-col gap-4 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2 mb-1">
+            <span class="material-symbols-outlined text-primary text-[20px]">location_on</span>购买指引
+          </h3>
+          
+          <!-- Location -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">店铺位置</label>
+            <input 
+              v-model="form.location"
+              type="text"
+              placeholder="例如：3F-A区-优衣库"
+              class="w-full bg-surface border border-surface-variant/50 rounded-lg p-3 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            />
+          </div>
+
+          <!-- Contact -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">店员联系</label>
+            <input 
+              v-model="form.contact"
+              type="text"
+              placeholder="手机号/微信/姓名均可"
+              class="w-full bg-surface border border-surface-variant/50 rounded-lg p-3 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            />
+          </div>
+          
+          <!-- Tags -->
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant">自定义标签</label>
+            <input 
+              v-model="form.tags"
+              type="text"
+              placeholder="多个标签用空格或逗号分隔"
+              class="w-full bg-surface border border-surface-variant/50 rounded-lg p-3 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+            />
+          </div>
+        </section>
+
+        <!-- Submit Button -->
+        <div class="mt-2">
+          <button 
+            type="submit" 
+            class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
+          >
             保存备忘本
-          </van-button>
+          </button>
         </div>
-      </van-form>
-    </div>
+      </form>
+    </main>
   </div>
 </template>

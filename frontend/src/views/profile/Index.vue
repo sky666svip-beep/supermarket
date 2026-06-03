@@ -141,85 +141,185 @@ const onShowAbout = () => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <!-- Logged in state -->
-    <div v-if="user" class="bg-white p-6 rounded-lg shadow-sm flex items-center space-x-4">
-      <van-image round width="64" height="64" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
-      <div>
-        <h2 class="text-xl font-bold mb-1">{{ user.nickname || user.username }}</h2>
-        <van-tag type="primary" plain>顾客用户</van-tag>
+  <div class="bg-surface text-on-surface font-body-md antialiased min-h-screen">
+    <main class="px-margin-mobile md:px-margin-desktop py-lg max-w-3xl mx-auto space-y-lg pb-24">
+      
+      <!-- User Profile Card (Logged In) -->
+      <div v-if="user" class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md">
+        <div class="w-20 h-20 rounded-full overflow-hidden shrink-0 border-2 border-surface-container">
+          <img alt="User Avatar" class="w-full h-full object-cover" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
+        </div>
+        <div class="flex flex-col gap-xs">
+          <h2 class="font-headline-md text-headline-md text-on-surface">{{ user.nickname || user.username }}</h2>
+          <span class="font-label-md text-label-md text-primary bg-primary-container/20 px-2 py-1 rounded-DEFAULT self-start border border-primary/30">
+            {{ user.role === 'admin' ? '管理员' : '顾客用户' }}
+          </span>
+        </div>
       </div>
-    </div>
-    
-    <!-- Not logged in state -->
-    <div v-else class="bg-white p-6 rounded-lg shadow-sm flex items-center space-x-4" @click="router.push('/login')">
-      <van-image round width="64" height="64" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" class="opacity-50" />
-      <div>
-        <h2 class="text-xl font-bold mb-1 text-gray-800">未登录</h2>
-        <p class="text-sm text-gray-500">点击此处进行登录或注册</p>
+
+      <!-- User Profile Card (Not Logged In) -->
+      <div v-else class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md cursor-pointer hover:bg-surface-container-low transition-colors" @click="router.push('/login')">
+        <div class="w-20 h-20 rounded-full overflow-hidden shrink-0 border-2 border-surface-container opacity-50">
+          <img alt="User Avatar" class="w-full h-full object-cover grayscale" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
+        </div>
+        <div class="flex flex-col gap-xs">
+          <h2 class="font-headline-md text-headline-md text-on-surface">未登录</h2>
+          <span class="font-label-md text-label-md text-secondary">点击此处进行登录或注册</span>
+        </div>
       </div>
-    </div>
-    
-    <div>
-      <van-cell-group inset class="!mx-0 shadow-sm" title="购物服务">
-        <van-cell title="我的购物清单" icon="orders-o" is-link @click="router.push('/customer/checklist')" />
-        <van-cell title="我的反馈记录" icon="comment-o" is-link @click="router.push('/customer/feedback')" />
-      </van-cell-group>
-    </div>
-    
-    <div>
-      <van-cell-group inset class="!mx-0 shadow-sm" title="社区互动">
-        <van-cell title="我的帖子" icon="notes-o" is-link @click="router.push('/profile/posts')" />
-        <van-cell title="我的评论" icon="chat-o" is-link @click="router.push('/profile/comments')" />
-        <van-cell title="我的收藏" icon="star-o" is-link @click="router.push('/profile/collections')" />
-        <van-cell title="收到的回复" icon="bell" is-link @click="router.push('/profile/messages')" />
-      </van-cell-group>
-    </div>
-    
-    <div>
-      <van-cell-group inset class="!mx-0 shadow-sm" title="账号管理">
-        <template v-if="user">
-          <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />
-          <van-cell title="修改个人资料" icon="edit" is-link @click="profileForm.nickname = user.nickname || ''; showProfileDialog = true" />
-          <van-cell title="修改密码" icon="shield-o" is-link @click="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true" />
-          <van-cell v-if="!user.email" title="绑定邮箱" icon="envelop-o" is-link @click="emailForm.email = ''; emailForm.code = ''; emailForm.password = ''; showEmailDialog = true" />
-          <van-cell title="退出登录" icon="revoke" is-link @click="onLogout" />
-        </template>
-        <van-cell title="关于商场助手" icon="info-o" is-link @click="onShowAbout" value="v1.3.0" />
-      </van-cell-group>
-    </div>
 
-    <!-- Profile Dialog -->
-    <van-dialog v-model:show="showProfileDialog" title="修改个人资料" show-cancel-button :before-close="() => true">
-      <van-form @submit="onSaveProfile" class="mt-4">
-        <van-field v-model="profileForm.nickname" label="昵称" placeholder="请输入新昵称 (3-20个字符)" :rules="[{ required: true, message: '请填写昵称' }, { validator: validateUsername }]" />
-        <div class="p-4"><van-button round block type="primary" native-type="submit">保存</van-button></div>
-      </van-form>
-    </van-dialog>
+      <!-- Shopping Services -->
+      <section class="space-y-sm">
+        <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">购物服务</h3>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/checklist')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">receipt_long</span>
+              <span class="font-body-lg text-body-lg text-on-surface">我的购物清单</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/customer/feedback')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">rate_review</span>
+              <span class="font-body-lg text-body-lg text-on-surface">我的反馈记录</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+        </div>
+      </section>
 
-    <!-- Password Dialog -->
-    <van-dialog v-model:show="showPasswordDialog" title="修改密码" show-cancel-button :before-close="() => true">
-      <van-form @submit="onSavePassword" class="mt-4">
-        <van-field v-model="pwdForm.oldPassword" type="password" label="原密码" placeholder="请输入原密码" :rules="[{ required: true, message: '请填写原密码' }]" />
-        <van-field v-model="pwdForm.newPassword" type="password" label="新密码" placeholder="请输入新密码" :rules="[{ required: true, message: '请填写新密码' }, { validator: validateNewPassword }]" />
-        <div class="p-4"><van-button round block type="primary" native-type="submit">确认修改</van-button></div>
-      </van-form>
-    </van-dialog>
+      <!-- Community Interaction -->
+      <section class="space-y-sm">
+        <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">社区互动</h3>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/posts')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">post_add</span>
+              <span class="font-body-lg text-body-lg text-on-surface">我的帖子</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/comments')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">chat_bubble_outline</span>
+              <span class="font-body-lg text-body-lg text-on-surface">我的评论</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/collections')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">star_border</span>
+              <span class="font-body-lg text-body-lg text-on-surface">我的收藏</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/messages')">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">notifications_active</span>
+              <span class="font-body-lg text-body-lg text-on-surface">收到的回复</span>
+            </div>
+            <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+          </a>
+        </div>
+      </section>
 
-    <!-- Email Bind Dialog -->
-    <van-dialog v-model:show="showEmailDialog" title="绑定邮箱" show-cancel-button :before-close="() => true">
-      <van-form @submit="onBindEmail" class="mt-4">
-        <van-field v-model="emailForm.email" type="email" label="邮箱" placeholder="请输入您的邮箱" :rules="[{ required: true, message: '请填写邮箱' }, { validator: validateEmail }]" />
-        <van-field v-model="emailForm.code" label="验证码" placeholder="请输入邮箱验证码" :rules="[{ required: true, message: '请填写验证码' }]">
-          <template #button>
-            <van-button size="small" type="primary" :disabled="emailCountdown > 0" @click.prevent="onSendEmailCode">
-              {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
-            </van-button>
+      <!-- Account Management -->
+      <section class="space-y-sm">
+        <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">账号管理</h3>
+        <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+          <template v-if="user">
+            <!-- Admin Manage -->
+            <a v-if="user.role === 'admin'" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/admin/feedbacks')">
+              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">admin_panel_settings</span>
+                <span class="font-body-lg text-body-lg text-on-surface">管理员后台管理</span>
+              </div>
+              <div class="flex items-center gap-xs">
+                <span class="font-body-md text-body-md text-outline">工单处理</span>
+                <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+              </div>
+            </a>
+            <!-- Edit Profile -->
+            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="profileForm.nickname = user.nickname || ''; showProfileDialog = true">
+              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">edit_square</span>
+                <span class="font-body-lg text-body-lg text-on-surface">修改个人资料</span>
+              </div>
+              <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+            </a>
+            <!-- Change Password -->
+            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true">
+              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">lock</span>
+                <span class="font-body-lg text-body-lg text-on-surface">修改密码</span>
+              </div>
+              <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+            </a>
+            <!-- Bind Email -->
+            <a v-if="!user.email" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="emailForm.email = ''; emailForm.code = ''; emailForm.password = ''; showEmailDialog = true">
+              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+                <span class="material-symbols-outlined">mail</span>
+                <span class="font-body-lg text-body-lg text-on-surface">绑定邮箱</span>
+              </div>
+              <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+            </a>
+            <!-- Logout -->
+            <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onLogout">
+              <div class="flex items-center gap-md text-on-surface-variant group-hover:text-error transition-colors">
+                <span class="material-symbols-outlined">logout</span>
+                <span class="font-body-lg text-body-lg text-on-surface group-hover:text-error">退出登录</span>
+              </div>
+              <span class="material-symbols-outlined text-outline-variant group-hover:text-error transition-colors">chevron_right</span>
+            </a>
           </template>
-        </van-field>
-        <van-field v-model="emailForm.password" type="password" label="当前密码" placeholder="请输入密码以验证身份" :rules="[{ required: true, message: '请填写当前密码' }]" />
-        <div class="p-4"><van-button round block type="primary" native-type="submit">绑定</van-button></div>
-      </van-form>
-    </van-dialog>
+          
+          <!-- About -->
+          <a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="onShowAbout">
+            <div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined">info</span>
+              <span class="font-body-lg text-body-lg text-on-surface">关于商场助手</span>
+            </div>
+            <div class="flex items-center gap-xs">
+              <span class="font-body-md text-body-md text-outline">v1.3.0</span>
+              <span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors">chevron_right</span>
+            </div>
+          </a>
+        </div>
+      </section>
+
+      <!-- Profile Dialog -->
+      <van-dialog v-model:show="showProfileDialog" title="修改个人资料" show-cancel-button :before-close="() => true">
+        <van-form @submit="onSaveProfile" class="mt-4">
+          <van-field v-model="profileForm.nickname" label="昵称" placeholder="请输入新昵称 (3-20个字符)" :rules="[{ required: true, message: '请填写昵称' }, { validator: validateUsername }]" />
+          <div class="px-6 py-4"><van-button round block type="primary" native-type="submit" style="height: 40px; font-size: 14px;">保存</van-button></div>
+        </van-form>
+      </van-dialog>
+
+      <!-- Password Dialog -->
+      <van-dialog v-model:show="showPasswordDialog" title="修改密码" show-cancel-button :before-close="() => true">
+        <van-form @submit="onSavePassword" class="mt-4">
+          <van-field v-model="pwdForm.oldPassword" type="password" label="原密码" placeholder="请输入原密码" :rules="[{ required: true, message: '请填写原密码' }]" />
+          <van-field v-model="pwdForm.newPassword" type="password" label="新密码" placeholder="请输入新密码" :rules="[{ required: true, message: '请填写新密码' }, { validator: validateNewPassword }]" />
+          <div class="px-6 py-4"><van-button round block type="primary" native-type="submit" style="height: 40px; font-size: 14px;">确认修改</van-button></div>
+        </van-form>
+      </van-dialog>
+
+      <!-- Email Bind Dialog -->
+      <van-dialog v-model:show="showEmailDialog" title="绑定邮箱" show-cancel-button :before-close="() => true">
+        <van-form @submit="onBindEmail" class="mt-4">
+          <van-field v-model="emailForm.email" type="email" label="邮箱" placeholder="请输入您的邮箱" :rules="[{ required: true, message: '请填写邮箱' }, { validator: validateEmail }]" />
+          <van-field v-model="emailForm.code" label="验证码" placeholder="请输入邮箱验证码" :rules="[{ required: true, message: '请填写验证码' }]">
+            <template #button>
+              <van-button size="small" type="primary" :disabled="emailCountdown > 0" @click.prevent="onSendEmailCode">
+                {{ emailCountdown > 0 ? `${emailCountdown}s` : '获取验证码' }}
+              </van-button>
+            </template>
+          </van-field>
+          <van-field v-model="emailForm.password" type="password" label="当前密码" placeholder="请输入密码以验证身份" :rules="[{ required: true, message: '请填写当前密码' }]" />
+          <div class="px-6 py-4"><van-button round block type="primary" native-type="submit" style="height: 40px; font-size: 14px;">绑定</van-button></div>
+        </van-form>
+      </van-dialog>
+    </main>
   </div>
 </template>

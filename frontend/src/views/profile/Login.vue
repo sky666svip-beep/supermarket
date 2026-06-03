@@ -24,37 +24,75 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <div class="h-full bg-white p-6 pt-12">
-    <h1 class="text-2xl font-bold mb-8 text-center">用户登录</h1>
-    <van-form @submit="onSubmit">
-      <div class="mb-8 space-y-4">
-        <van-field
-          v-model="username"
-          name="username"
-          label="用户名"
-          placeholder="请输入用户名"
-          :rules="[{ required: true, message: '请填写用户名' }]"
-          class="rounded-lg shadow-sm border border-gray-100 py-3"
-        />
-        <van-field
-          v-model="password"
-          type="password"
-          name="password"
-          label="密码"
-          placeholder="请输入密码"
-          :rules="[{ required: true, message: '请填写密码' }]"
-          class="rounded-lg shadow-sm border border-gray-100 py-3"
-        />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Header -->
+    <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.push('/profile')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
-      <div class="space-y-6">
-        <van-button round block type="primary" native-type="submit" class="!h-12 text-lg">
-          登录
-        </van-button>
-        <div class="flex justify-between px-2 mt-6 text-sm text-blue-500">
-          <span @click="router.push('/register')">没有账号？去注册</span>
-          <span @click="router.push('/forgot-password')">忘记密码？</span>
+    </header>
+
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile flex flex-col justify-center pb-20">
+      <div class="flex flex-col items-center mb-10">
+        <div class="w-20 h-20 bg-primary-container text-white rounded-3xl flex items-center justify-center mb-6 shadow-sm rotate-3">
+          <span class="material-symbols-outlined text-[40px]">storefront</span>
         </div>
+        <h1 class="font-headline-md text-2xl font-bold text-on-surface mb-2">欢迎回来</h1>
+        <p class="text-sm text-on-surface-variant">登录以继续使用您的账号</p>
       </div>
-    </van-form>
+
+      <form @submit.prevent="onSubmit" class="flex flex-col gap-5">
+        <div class="flex flex-col gap-4 bg-surface-container-lowest p-5 rounded-3xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-surface-variant/30">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant px-1">用户名</label>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">person</span>
+              <input 
+                v-model="username"
+                type="text"
+                required
+                placeholder="请输入用户名"
+                class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl py-3.5 pl-12 pr-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+              />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="font-label-md text-sm text-on-surface-variant px-1">密码</label>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">lock</span>
+              <input 
+                v-model="password"
+                type="password"
+                required
+                placeholder="请输入密码"
+                class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl py-3.5 pl-12 pr-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 flex flex-col gap-4">
+          <button 
+            type="submit" 
+            class="w-full bg-primary text-white py-4 rounded-full font-headline-sm text-base font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+          >
+            登录
+          </button>
+          
+          <div class="flex items-center justify-center gap-4 text-sm font-medium mt-2">
+            <button type="button" @click="router.push('/register')" class="text-primary hover:underline underline-offset-4">
+              注册新账号
+            </button>
+            <span class="w-1 h-1 rounded-full bg-surface-variant"></span>
+            <button type="button" @click="router.push('/forgot-password')" class="text-on-surface-variant hover:text-primary transition-colors">
+              忘记密码？
+            </button>
+          </div>
+        </div>
+      </form>
+    </main>
   </div>
 </template>

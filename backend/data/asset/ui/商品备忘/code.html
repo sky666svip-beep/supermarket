@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Product Memos</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "secondary-container": "#dce0e4",
+                      "secondary": "#5a5f62",
+                      "on-secondary-container": "#5e6367",
+                      "inverse-primary": "#80d2e8",
+                      "tertiary-fixed": "#ffdbd0",
+                      "background": "#f9f9fc",
+                      "secondary-fixed-dim": "#c3c7cb",
+                      "tertiary-container": "#b04e2e",
+                      "on-secondary-fixed": "#171c1f",
+                      "surface-container": "#eeeef0",
+                      "surface-dim": "#dadadc",
+                      "primary": "#005c6c",
+                      "on-primary-container": "#d1f4ff",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-container": "#ffe9e4",
+                      "surface-tint": "#00687a",
+                      "secondary-fixed": "#dfe3e7",
+                      "primary-container": "#0e768a",
+                      "surface-container-low": "#f3f3f6",
+                      "on-primary-fixed": "#001f26",
+                      "on-primary": "#ffffff",
+                      "surface-variant": "#e2e2e5",
+                      "surface-container-high": "#e8e8ea",
+                      "on-surface": "#1a1c1e",
+                      "inverse-on-surface": "#f0f0f3",
+                      "on-tertiary-fixed": "#3a0b00",
+                      "on-error-container": "#93000a",
+                      "outline": "#6f797c",
+                      "on-tertiary-fixed-variant": "#7f2a0d",
+                      "primary-fixed-dim": "#80d2e8",
+                      "tertiary": "#903719",
+                      "on-primary-fixed-variant": "#004e5c",
+                      "inverse-surface": "#2f3133",
+                      "on-background": "#1a1c1e",
+                      "surface": "#f9f9fc",
+                      "surface-container-highest": "#e2e2e5",
+                      "on-error": "#ffffff",
+                      "tertiary-fixed-dim": "#ffb59e",
+                      "on-secondary-fixed-variant": "#43474b",
+                      "surface-bright": "#f9f9fc",
+                      "error": "#ba1a1a",
+                      "outline-variant": "#bec8cc",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary": "#ffffff",
+                      "on-surface-variant": "#3f484b",
+                      "surface-container-lowest": "#ffffff",
+                      "primary-fixed": "#acedff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "xl": "32px",
+                      "md": "16px",
+                      "xs": "4px",
+                      "sm": "8px",
+                      "base": "4px",
+                      "margin-desktop": "40px",
+                      "gutter": "16px",
+                      "margin-mobile": "16px",
+                      "lg": "24px"
+              },
+              "fontFamily": {
+                      "headline-sm": [
+                              "Inter"
+                      ],
+                      "label-md": [
+                              "Inter"
+                      ],
+                      "headline-lg-mobile": [
+                              "Inter"
+                      ],
+                      "headline-md": [
+                              "Inter"
+                      ],
+                      "headline-lg": [
+                              "Inter"
+                      ],
+                      "body-md": [
+                              "Inter"
+                      ],
+                      "body-lg": [
+                              "Inter"
+                      ]
+              },
+              "fontSize": {
+                      "headline-sm": [
+                              "20px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "label-md": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg-mobile": [
+                              "26px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "headline-md": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "letterSpacing": "-0.01em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "headline-lg": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "700"
+                              }
+                      ],
+                      "body-md": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-lg": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Custom utilities for soft empty state illustration */
+        .empty-state-bg {
+            background: linear-gradient(145deg, theme('colors.surface-container-lowest'), theme('colors.surface-container-low'));
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased text-on-surface min-h-screen flex flex-col pb-[100px]">
+<!-- TopAppBar -->
+<header class="flex items-center justify-between px-margin-mobile h-16 w-full bg-surface top-0 sticky z-20">
+<!-- Leading Action (Back) -->
+<button class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<!-- Headline -->
+<h1 class="font-headline-sm text-headline-sm font-bold text-on-surface flex-1 text-center truncate px-2">商品备忘本</h1>
+<!-- Trailing Action (Add) -->
+<button class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+<span class="material-symbols-outlined">add</span>
+</button>
+</header>
+<!-- Tab Bar -->
+<div class="flex justify-center bg-surface sticky top-16 z-10 shadow-sm border-b border-surface-variant/40">
+<button class="relative py-3 px-8 font-label-md text-label-md text-primary font-bold active:scale-95 transition-transform">
+            全部
+            <span class="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-1 bg-primary rounded-t-full"></span>
+</button>
+</div>
+<!-- Main Content Canvas (Empty State) -->
+<main class="flex-1 flex flex-col items-center justify-center p-margin-mobile min-h-[530px]">
+<!-- Soft Empty State Illustration -->
+<div class="relative flex items-center justify-center w-48 h-48 mb-6">
+<!-- Ambient Blur -->
+<div class="absolute inset-0 bg-surface-variant/30 rounded-full blur-2xl scale-75"></div>
+<!-- Floating Document Card -->
+<div class="relative z-10 empty-state-bg border border-surface-variant/50 w-28 h-36 rounded-xl shadow-[0_8px_24px_rgba(0,0,0,0.04)] flex flex-col items-center p-4">
+<div class="w-full h-1 bg-surface-variant/50 rounded-full mb-3 mt-2"></div>
+<div class="w-3/4 h-1 bg-surface-variant/50 rounded-full mb-3 self-start"></div>
+<div class="w-5/6 h-1 bg-surface-variant/50 rounded-full mb-auto self-start"></div>
+<!-- Bottom stylized "drawer" or fold detail -->
+<div class="w-full h-8 bg-surface-variant/20 rounded-b-lg mt-4 flex items-center justify-center">
+<div class="w-6 h-1 bg-surface-variant/60 rounded-full"></div>
+</div>
+</div>
+<!-- Secondary floating element (subtle) -->
+<div class="absolute right-4 bottom-4 w-12 h-12 bg-surface-container-lowest rounded-lg shadow-sm border border-surface-variant/40 flex items-center justify-center -rotate-6 z-0">
+<span class="material-symbols-outlined text-surface-variant opacity-50">description</span>
+</div>
+</div>
+<!-- Empty State Message -->
+<p class="font-body-md text-body-md text-secondary text-center tracking-wide">暂无备忘记录</p>
+</main>
+<!-- BottomNavBar (Shared Component) -->
+<nav class="fixed bottom-0 w-full z-50 backdrop-blur-md bg-surface/80 border-t border-surface-variant/20 flex justify-around items-center h-20 px-4 pb-safe shadow-[0_-4px_16px_rgba(0,0,0,0.02)]">
+<!-- Stores Tab (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary px-4 py-1.5 hover:bg-surface-variant/20 rounded-xl active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">storefront</span>
+<span class="font-label-md text-label-md">Stores</span>
+</button>
+<!-- List Tab (Inactive) -->
+<button class="flex flex-col items-center justify-center text-secondary px-4 py-1.5 hover:bg-surface-variant/20 rounded-xl active:scale-90 transition-all duration-200">
+<span class="material-symbols-outlined mb-1">format_list_bulleted</span>
+<span class="font-label-md text-label-md">List</span>
+</button>
+<!-- Memos Tab (Active) -->
+<button class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-xl px-6 py-1.5 hover:bg-surface-variant/20 active:scale-90 transition-all duration-200 shadow-sm">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">sticky_note_2</span>
+<span class="font-label-md text-label-md">Memos</span>
+</button>
+</nav>
+</body></html>

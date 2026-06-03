@@ -92,44 +92,77 @@ const groupedList = computed(() => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col bg-gray-50">
-    <van-nav-bar
-      title="我的购物清单"
-      left-text="返回"
-      left-arrow
-      @click-left="router.back()"
-      class="flex-shrink-0"
-    />
-
-    <div class="flex-1 overflow-y-auto p-4 space-y-4 pb-20">
-      <van-cell-group inset class="!mx-0 shadow-sm">
-        <van-field v-model="newItem" center clearable placeholder="添加想买的物品...">
-          <template #button>
-            <van-button size="small" type="primary" @click="onAdd">添加</van-button>
-          </template>
-        </van-field>
-      </van-cell-group>
-      
-      <div v-for="group in groupedList" :key="group.date">
-        <div class="text-sm text-gray-500 mb-2 px-2">{{ group.date }}</div>
-        <van-cell-group inset class="!mx-0 shadow-sm">
-          <van-cell v-for="item in group.items" :key="item.id" clickable @click="toggleItem(item)">
-            <template #icon>
-              <van-checkbox :model-value="item.isCompleted" class="mr-3 pointer-events-none" />
-            </template>
-            <template #title>
-              <span :class="{ 'line-through text-gray-400': item.isCompleted }">{{ item.title }}</span>
-            </template>
-            <template #right-icon>
-              <div class="flex items-center h-full">
-                <van-icon name="delete-o" class="text-red-500 text-lg p-1" @click.stop="onDelete(item)" />
-              </div>
-            </template>
-          </van-cell>
-        </van-cell-group>
+  <div class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-md selection:bg-primary-container selection:text-white">
+    <!-- Top App Bar -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-40 transition-colors shadow-sm">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button @click="router.back()" class="flex items-center text-primary font-body-md hover:bg-surface-container-low p-2 -ml-2 rounded-lg transition-colors active:scale-95">
+          <span class="material-symbols-outlined mr-1" style="font-size: 20px;">arrow_back_ios_new</span>
+          返回
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2">
+          我的购物清单
+        </h1>
+        <div class="w-12"></div> <!-- Spacer for centering -->
       </div>
-        
-      <van-empty v-if="list.length === 0" description="清单空空如也，添加点什么吧" />
-    </div>
+    </header>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 overflow-y-auto px-margin-mobile py-lg pb-24 md:max-w-2xl md:mx-auto md:w-full">
+      <!-- Add Item Card -->
+      <div class="bg-surface shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl p-2 flex items-center mb-lg border border-transparent focus-within:border-primary/30 transition-all duration-300">
+        <input 
+          v-model="newItem" 
+          @keyup.enter="onAdd"
+          class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-md px-sm placeholder-secondary/60" 
+          placeholder="添加想买的物品..." 
+          type="text"
+        />
+        <button @click="onAdd" class="bg-primary text-white px-lg py-sm rounded-lg font-label-md hover:bg-surface-tint transition-colors active:scale-95 shadow-sm">
+          添加
+        </button>
+      </div>
+
+      <!-- List Section -->
+      <section class="flex flex-col gap-sm">
+        <div v-for="group in groupedList" :key="group.date">
+          <!-- Date Header -->
+          <div class="px-sm mb-xs mt-sm">
+            <h2 class="font-label-md text-label-md text-secondary">{{ group.date }}</h2>
+          </div>
+          
+          <div class="flex flex-col gap-2">
+            <!-- List Items -->
+            <div 
+              v-for="item in group.items" 
+              :key="item.id" 
+              class="bg-surface shadow-[0px_4px_12px_rgba(0,0,0,0.05)] rounded-xl p-md flex items-center justify-between group hover:shadow-md transition-shadow duration-300"
+              :class="{ 'opacity-60': item.isCompleted }"
+            >
+              <div @click="toggleItem(item)" class="flex items-center gap-md flex-1 cursor-pointer">
+                <span 
+                  class="material-symbols-outlined transition-colors"
+                  :class="item.isCompleted ? 'text-primary fill' : 'text-secondary/50 group-hover:text-primary'"
+                  :style="item.isCompleted ? 'font-variation-settings: \'FILL\' 1;' : ''"
+                >
+                  {{ item.isCompleted ? 'check_circle' : 'radio_button_unchecked' }}
+                </span>
+                <span class="font-body-md transition-colors" :class="item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'">
+                  {{ item.title }}
+                </span>
+              </div>
+              <button @click="onDelete(item)" class="text-error/60 hover:text-error hover:bg-error-container/50 p-sm rounded-full transition-all active:scale-90">
+                <span class="material-symbols-outlined" style="font-size: 20px;">delete_outline</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="list.length === 0" class="py-12 flex flex-col items-center justify-center opacity-50">
+          <span class="material-symbols-outlined text-6xl text-surface-variant mb-4">list_alt</span>
+          <p class="font-body-md text-secondary">清单空空如也，添加点什么吧</p>
+        </div>
+      </section>
+    </main>
   </div>
 </template>

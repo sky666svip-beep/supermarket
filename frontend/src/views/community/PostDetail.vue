@@ -293,86 +293,101 @@ const formatTime = (timeStr: string) => {
 </script>
 
 <template>
-  <div class="post-detail-container pb-16 bg-gray-50 min-h-screen">
-    <van-nav-bar title="帖子详情" left-arrow @click-left="router.back()" fixed placeholder />
-    
+  <div class="bg-background text-on-background min-h-screen font-body-md pb-20">
+    <!-- Top App Bar -->
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
+          帖子详情
+        </h1>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+
     <van-loading v-if="loading" class="mt-10 text-center" />
     
-    <div v-else-if="post" class="content">
-      <!-- 帖子主要内容 -->
-      <div class="bg-white p-4 mb-2 shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center">
-            <van-image round width="40" height="40" :src="post.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
-            <div class="ml-3">
-              <div class="text-sm font-bold text-gray-800">{{ post.author.nickname || post.author.username }}</div>
-              <div class="text-xs text-gray-400">{{ formatTime(post.post.createdAt) }}</div>
+    <main v-else-if="post" class="w-full max-w-2xl mx-auto px-margin-mobile pt-4 flex flex-col gap-4">
+      <!-- Post Content Card -->
+      <article class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <img class="w-10 h-10 rounded-full object-cover shadow-sm border border-surface-variant/30" :src="post.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" alt="avatar" />
+            <div class="flex flex-col">
+              <span class="font-label-md text-sm text-on-surface">{{ post.author.nickname || post.author.username }}</span>
+              <span class="text-xs text-on-surface-variant">{{ formatTime(post.post.createdAt) }}</span>
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <van-tag type="primary" plain>{{ post.post.category }}</van-tag>
-            <div @click="openReport('post', post.post.id)" class="text-gray-400 flex flex-col items-center justify-center">
-              <van-icon name="warning-o" size="18" />
-            </div>
+            <span class="px-2 py-0.5 rounded border border-primary/30 text-primary font-label-md text-xs bg-primary/5">{{ post.post.category }}</span>
+            <button @click="openReport('post', post.post.id)" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full active:bg-surface-variant">
+              <span class="material-symbols-outlined text-[20px]">warning</span>
+            </button>
           </div>
         </div>
+
+        <h1 class="font-headline-sm text-lg font-bold text-on-surface leading-snug">{{ post.post.title }}</h1>
+        <p class="font-body-md text-on-surface-variant whitespace-pre-wrap leading-relaxed">{{ post.post.content }}</p>
         
-        <h1 class="text-lg font-bold mb-3 text-gray-900">{{ post.post.title }}</h1>
-        <div class="text-base text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">{{ post.post.content }}</div>
-        
-        <div class="flex flex-col gap-2 mb-4" v-if="postImages.length > 0">
-          <van-image 
+        <div v-if="postImages.length > 0" class="flex flex-col gap-2 rounded-lg overflow-hidden">
+          <img 
             v-for="(img, idx) in postImages" 
             :key="idx" 
             :src="img.startsWith('/uploads') ? '/api' + img : img" 
-            width="100%" 
-            radius="8"
-            class="shadow-sm block"
+            class="w-full object-cover shadow-sm rounded-lg"
             @click="previewImage(postImages, Number(idx))"
           />
         </div>
-        <div class="flex items-center text-xs text-gray-400 gap-4 mt-4">
+        
+        <div class="flex items-center text-xs text-outline mt-2 gap-1">
+          <span class="material-symbols-outlined text-[16px]">visibility</span>
           <span>阅读 {{ post.post.viewCount }}</span>
         </div>
-      </div>
+      </article>
 
-      <!-- 评论区 -->
-      <div class="bg-white p-4 shadow-sm min-h-[300px]">
-        <h3 class="font-bold text-gray-800 mb-4 flex items-center">
-          <span class="w-1 h-4 bg-blue-500 rounded mr-2"></span>评论 {{ post.post.commentCount }}
+      <!-- Comments Section -->
+      <section class="bg-surface-container-lowest rounded-xl p-4 shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant mb-6">
+        <h3 class="font-label-md text-base text-on-surface mb-4 flex items-center gap-2">
+          <span class="w-1 h-4 bg-primary rounded-full"></span>
+          评论 {{ post.post.commentCount }}
         </h3>
         
-        <div v-if="comments.length === 0" class="text-center text-gray-400 py-8">
-          暂无评论，快来抢沙发吧~
+        <div v-if="comments.length === 0" class="flex flex-col items-center justify-center py-8 text-on-surface-variant opacity-60">
+          <span class="material-symbols-outlined text-4xl mb-2">forum</span>
+          <p class="font-body-md text-sm">暂无评论，快来抢沙发吧~</p>
         </div>
         
-        <div v-else>
-          <div v-for="node in commentTree" :key="node.comment.id" class="mb-4 border-b border-gray-50 pb-4">
-            <div class="flex items-start">
-              <van-image round width="32" height="32" :src="node.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" class="mt-1" />
-              <div class="ml-2 flex-1">
+        <div v-else class="flex flex-col gap-4">
+          <div v-for="node in commentTree" :key="node.comment.id" class="border-b border-surface-variant/50 pb-4 last:border-0 last:pb-0">
+            <div class="flex items-start gap-3">
+              <img class="w-8 h-8 rounded-full object-cover shadow-sm border border-surface-variant/30" :src="node.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
+              <div class="flex-1 flex flex-col gap-1">
                 <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600 font-medium">{{ node.author.nickname || node.author.username }}</span>
-                  <div class="flex items-center text-gray-400" @click="handleLikeComment(node)">
-                    <span class="text-xs mr-1">{{ node.comment.likeCount || '' }}</span>
-                    <van-icon name="good-job-o" />
-                  </div>
+                  <span class="font-label-md text-sm text-on-surface-variant">{{ node.author.nickname || node.author.username }}</span>
+                  <button @click="handleLikeComment(node)" class="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors active:scale-95">
+                    <span class="text-xs">{{ node.comment.likeCount || '' }}</span>
+                    <span class="material-symbols-outlined text-[18px]">thumb_up</span>
+                  </button>
                 </div>
-                <div class="text-sm text-gray-800 mt-1 whitespace-pre-wrap">{{ node.comment.content }}</div>
-                <div class="flex items-center mt-2 text-xs text-gray-400">
-                  <span class="mr-4">{{ formatTime(node.comment.createdAt) }}</span>
-                  <span class="text-blue-500 mr-4" @click="openComment(node)">回复</span>
-                  <span class="text-red-400" @click="openReport('comment', node.comment.id)">举报</span>
+                <p class="font-body-md text-sm text-on-surface whitespace-pre-wrap">{{ node.comment.content }}</p>
+                <div class="flex items-center gap-4 text-xs text-outline mt-1">
+                  <span>{{ formatTime(node.comment.createdAt) }}</span>
+                  <button @click="openComment(node)" class="text-primary font-medium hover:underline active:opacity-70">回复</button>
+                  <button @click="openReport('comment', node.comment.id)" class="text-error font-medium hover:underline active:opacity-70">举报</button>
                 </div>
                 
-                <!-- 二级评论展示区 -->
-                <div class="bg-gray-50 p-2 rounded-lg mt-2" v-if="node.children && node.children.length > 0">
-                  <div v-for="child in node.children" :key="child.comment.id" class="mb-2 last:mb-0">
-                    <span class="text-blue-600 text-sm font-medium">{{ child.author.nickname || child.author.username }}</span>
-                    <span class="text-gray-800 text-sm">: {{ child.comment.content }}</span>
-                    <div class="flex items-center mt-1 text-xs text-gray-400">
-                      <span class="mr-4">{{ formatTime(child.comment.createdAt) }}</span>
-                      <span class="text-red-400" @click="openReport('comment', child.comment.id)">举报</span>
+                <!-- Sub-comments -->
+                <div v-if="node.children && node.children.length > 0" class="bg-surface-container-low rounded-lg p-3 mt-3 flex flex-col gap-3 border border-surface-variant/30">
+                  <div v-for="child in node.children" :key="child.comment.id" class="flex flex-col gap-1">
+                    <div class="font-body-md text-sm">
+                      <span class="text-primary font-medium">{{ child.author.nickname || child.author.username }}</span>
+                      <span class="text-on-surface-variant">: {{ child.comment.content }}</span>
+                    </div>
+                    <div class="flex items-center gap-4 text-xs text-outline">
+                      <span>{{ formatTime(child.comment.createdAt) }}</span>
+                      <button @click="openReport('comment', child.comment.id)" class="text-error font-medium hover:underline active:opacity-70">举报</button>
                     </div>
                   </div>
                 </div>
@@ -380,52 +395,46 @@ const formatTime = (timeStr: string) => {
             </div>
           </div>
         </div>
-      </div>
-    </div>
-    <div v-else class="text-center mt-10 text-gray-400">帖子找不到了</div>
+      </section>
+    </main>
+    <div v-else class="flex-1 flex items-center justify-center text-on-surface-variant font-body-md">帖子找不到了</div>
 
-    <!-- 底部操作栏 -->
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex items-center p-2 px-4 shadow-lg z-10" v-if="post">
-      <div class="flex-1 bg-gray-100 rounded-full py-2 px-4 text-gray-400 text-sm flex items-center" @click="openComment()">
-        <van-icon name="edit" class="mr-1" /> 说点什么...
-      </div>
-      
-      <!-- 互助板块底部：不显示点赞收藏。如果是发帖作者本人，展示已解决标注并下线按钮 -->
-      <div v-if="isMutualHelpPost" class="ml-4 flex items-center">
-        <van-button 
-          v-if="isAuthor" 
-          type="success" 
-          size="small" 
-          round 
-          icon="success"
-          @click="handleMarkSolved"
-          class="shadow-sm font-bold bg-green-500 border-none px-4"
-        >
-          已解决
-        </van-button>
-      </div>
-
-      <!-- 传统社区板块底部：展示常规点赞收藏 -->
-      <div v-else class="flex items-center gap-6 ml-6 text-gray-600">
-        <div class="flex flex-col items-center justify-center relative" @click="toggleLike">
-          <van-icon :name="interaction.liked ? 'good-job' : 'good-job-o'" :color="interaction.liked ? '#ef4444' : ''" size="22" />
-          <span class="text-xs mt-0.5">{{ post.post.likeCount || '点赞' }}</span>
+    <!-- Bottom Action Bar -->
+    <div v-if="post" class="fixed bottom-0 left-0 w-full z-20 backdrop-blur-md bg-surface/80 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] border-t border-surface-variant/30 pb-safe">
+      <div class="max-w-2xl mx-auto h-14 px-4 flex items-center gap-4">
+        <div @click="openComment()" class="flex-1 bg-surface-container-low hover:bg-surface-variant transition-colors rounded-full py-2 px-4 flex items-center gap-2 cursor-pointer active:scale-[0.98]">
+          <span class="material-symbols-outlined text-outline text-[18px]">edit</span>
+          <span class="font-body-md text-sm text-outline">说点什么...</span>
         </div>
-        <div class="flex flex-col items-center justify-center relative" @click="toggleCollect">
-          <van-icon :name="interaction.collected ? 'star' : 'star-o'" :color="interaction.collected ? '#f59e0b' : ''" size="22" />
-          <span class="text-xs mt-0.5">收藏</span>
+        
+        <div v-if="isMutualHelpPost" class="flex items-center">
+          <button v-if="isAuthor" @click="handleMarkSolved" class="bg-primary text-white px-4 py-1.5 rounded-full font-label-md text-sm shadow-sm active:scale-95 flex items-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            已解决
+          </button>
+        </div>
+        
+        <div v-else class="flex items-center gap-6 pr-2">
+          <button @click="toggleLike" class="flex flex-col items-center justify-center gap-0.5 group active:scale-90 transition-transform">
+            <span class="material-symbols-outlined transition-colors text-[24px]" :class="interaction.liked ? 'text-error fill' : 'text-on-surface-variant group-hover:text-error'" :style="interaction.liked ? 'font-variation-settings: \'FILL\' 1;' : ''">favorite</span>
+            <span class="font-label-md text-[10px]" :class="interaction.liked ? 'text-error' : 'text-on-surface-variant'">{{ post.post.likeCount || '点赞' }}</span>
+          </button>
+          <button @click="toggleCollect" class="flex flex-col items-center justify-center gap-0.5 group active:scale-90 transition-transform">
+            <span class="material-symbols-outlined transition-colors text-[24px]" :class="interaction.collected ? 'text-[#f59e0b] fill' : 'text-on-surface-variant group-hover:text-[#f59e0b]'" :style="interaction.collected ? 'font-variation-settings: \'FILL\' 1;' : ''">star</span>
+            <span class="font-label-md text-[10px]" :class="interaction.collected ? 'text-[#f59e0b]' : 'text-on-surface-variant'">收藏</span>
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 评论弹窗 -->
+    <!-- Popups -->
     <van-popup v-model:show="showCommentPopup" position="bottom" round safe-area-inset-bottom>
-      <div class="p-4">
+      <div class="p-4 bg-surface">
         <div class="flex justify-between items-center mb-3">
-          <span class="text-sm text-gray-600">
+          <span class="font-label-md text-sm text-on-surface-variant">
             {{ replyTo ? `回复 ${replyTo.author.nickname || replyTo.author.username}` : '发表评论' }}
           </span>
-          <van-button type="primary" size="small" @click="onSubmitComment">发布</van-button>
+          <button @click="onSubmitComment" class="bg-primary text-white px-4 py-1.5 rounded-lg font-label-md text-sm active:scale-95 transition-transform shadow-sm">发布</button>
         </div>
         <van-field
           v-model="commentContent"
@@ -435,21 +444,22 @@ const formatTime = (timeStr: string) => {
           maxlength="500"
           placeholder="写下你的评论..."
           show-word-limit
-          class="bg-gray-50 rounded-lg"
+          class="bg-surface-container-low rounded-lg !p-3 font-body-md"
         />
       </div>
     </van-popup>
 
-    <!-- 举报弹窗 -->
     <van-popup v-model:show="showReportPopup" position="bottom" round safe-area-inset-bottom>
-      <div class="p-4">
-        <div class="flex justify-between items-center mb-4">
-          <span class="text-base font-bold text-gray-800">举报{{ reportTarget === 'post' ? '帖子' : '评论' }}</span>
-          <van-icon name="cross" size="20" class="text-gray-400" @click="showReportPopup = false" />
+      <div class="p-4 bg-surface rounded-t-xl">
+        <div class="flex justify-between items-center mb-4 border-b border-surface-variant pb-2">
+          <span class="font-headline-sm text-base font-bold text-on-surface">举报{{ reportTarget === 'post' ? '帖子' : '评论' }}</span>
+          <button @click="showReportPopup = false" class="text-on-surface-variant hover:text-on-surface p-1 rounded-full active:bg-surface-variant transition-colors">
+            <span class="material-symbols-outlined text-[20px]">close</span>
+          </button>
         </div>
         
         <div class="mb-4">
-          <div class="text-sm text-gray-500 mb-2">举报原因 (必选)</div>
+          <div class="font-label-md text-sm text-on-surface-variant mb-2">举报原因 (必选)</div>
           <van-radio-group v-model="reportReason" class="grid grid-cols-2 gap-3">
             <van-radio name="垃圾广告" shape="square">垃圾广告</van-radio>
             <van-radio name="低俗色情" shape="square">低俗色情</van-radio>
@@ -460,7 +470,7 @@ const formatTime = (timeStr: string) => {
         </div>
         
         <div class="mb-5">
-          <div class="text-sm text-gray-500 mb-2">详细说明 (选填)</div>
+          <div class="font-label-md text-sm text-on-surface-variant mb-2">详细说明 (选填)</div>
           <van-field
             v-model="reportDesc"
             rows="3"
@@ -469,11 +479,11 @@ const formatTime = (timeStr: string) => {
             maxlength="200"
             show-word-limit
             placeholder="请详细描述违规情况..."
-            class="bg-gray-50 rounded border border-gray-100 p-2"
+            class="bg-surface-container-low rounded-lg !p-2 font-body-md border border-surface-variant/50"
           />
         </div>
         
-        <van-button type="danger" block round @click="submitReport">提交举报</van-button>
+        <button @click="submitReport" class="w-full bg-error text-on-error py-3 rounded-xl font-label-md font-bold shadow-sm active:scale-[0.98] transition-transform">提交举报</button>
       </div>
     </van-popup>
   </div>

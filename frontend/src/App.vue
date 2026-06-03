@@ -5,7 +5,6 @@ import { areaList } from '@vant/area-data'
 import { showToast } from 'vant'
 import { autoLocate, getCachedLocation, setCachedLocation, type LocationInfo } from './utils/location'
 
-const active = ref(0)
 const route = useRoute()
 
 const currentLocation = ref<LocationInfo | null>(null)
@@ -23,6 +22,7 @@ const onAreaConfirm = ({ selectedOptions }: any) => {
     currentLocation.value = loc
     setCachedLocation(loc)
     showAreaPopup.value = false
+    window.dispatchEvent(new CustomEvent('location-updated'))
   }
 }
 
@@ -75,6 +75,11 @@ onMounted(async () => {
       showAreaPopup.value = true
     }
   }
+
+  // Listen for event from Home.vue or other components to manually open popup
+  window.addEventListener('open-area-popup', () => {
+    showAreaPopup.value = true
+  })
 })
 </script>
 
@@ -104,11 +109,28 @@ onMounted(async () => {
       <router-view />
     </main>
     
-    <van-tabbar v-model="active" route fixed>
-      <van-tabbar-item icon="home-o" replace to="/">顾客服务</van-tabbar-item>
-      <van-tabbar-item icon="chat-o" replace to="/community">社区</van-tabbar-item>
-      <van-tabbar-item icon="user-o" replace to="/profile">我的</van-tabbar-item>
-    </van-tabbar>
+    <nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+      <router-link to="/" custom v-slot="{ navigate, isActive }">
+        <div @click="navigate" :class="isActive ? 'bg-blue-500 text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
+          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">home</span>
+          <span class="font-label-md text-label-md mt-1">顾客服务</span>
+        </div>
+      </router-link>
+      
+      <router-link to="/community" custom v-slot="{ navigate, isActive }">
+        <div @click="navigate" :class="isActive ? 'bg-blue-500 text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
+          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">forum</span>
+          <span class="font-label-md text-label-md mt-1">社区</span>
+        </div>
+      </router-link>
+
+      <router-link to="/profile" custom v-slot="{ navigate, isActive }">
+        <div @click="navigate" :class="isActive ? 'bg-blue-500 text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
+          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">person</span>
+          <span class="font-label-md text-label-md mt-1">我的</span>
+        </div>
+      </router-link>
+    </nav>
 
     <van-popup v-model:show="showAreaPopup" position="bottom" round>
       <van-area 

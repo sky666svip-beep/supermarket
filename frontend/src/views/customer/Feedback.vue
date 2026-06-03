@@ -135,66 +135,88 @@ const onSubmit = async () => {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <van-form @submit="onSubmit">
-      <van-cell-group inset class="!mx-0 shadow-sm">
-        <van-field
-          v-model="storeName"
-          is-link
-          readonly
-          name="storePicker"
-          label="相关门店"
-          placeholder="点击选择门店"
-          :rules="[{ required: true, message: '请选择相关门店' }]"
-          @click="showStorePicker = true"
-        />
-        <van-popup v-model:show="showStorePicker" position="bottom">
-          <van-picker
-            :columns="storeColumns"
-            @confirm="onStoreConfirm"
-            @cancel="showStorePicker = false"
-          />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
+          问题上报
+        </h1>
+        <div class="w-10 h-10"></div>
+      </div>
+    </header>
+
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile pt-4 pb-12">
+      <form @submit.prevent="onSubmit" class="flex flex-col gap-5">
+        
+        <!-- Store Picker -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">相关门店</label>
+          <button 
+            type="button" 
+            @click="showStorePicker = true"
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)] active:scale-[0.99] transition-transform"
+          >
+            <span :class="storeName ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
+              {{ storeName || '点击选择门店' }}
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          </button>
+        </div>
+        <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
+          <van-picker :columns="storeColumns" @confirm="onStoreConfirm" @cancel="showStorePicker = false" />
         </van-popup>
         
-        <van-field
-          v-model="facilityType"
-          is-link
-          readonly
-          name="picker"
-          label="反馈分类"
-          placeholder="点击选择分类"
-          @click="showPicker = true"
-        />
-        <van-popup v-model:show="showPicker" position="bottom">
-          <van-picker
-            v-model="pickerValue"
-            :columns="columns"
-            @confirm="onConfirm"
-            @cancel="showPicker = false"
-          />
+        <!-- Feedback Category Picker -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">反馈分类</label>
+          <button 
+            type="button" 
+            @click="showPicker = true"
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center justify-between shadow-[0_2px_8px_rgba(0,0,0,0.02)] active:scale-[0.99] transition-transform"
+          >
+            <span :class="facilityType ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
+              {{ facilityType || '点击选择分类' }}
+            </span>
+            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+          </button>
+        </div>
+        <van-popup v-model:show="showPicker" position="bottom" round safe-area-inset-bottom>
+          <van-picker v-model="pickerValue" :columns="columns" @confirm="onConfirm" @cancel="showPicker = false" />
         </van-popup>
 
-        <van-field
-          v-model="message"
-          rows="3"
-          autosize
-          label="问题描述"
-          type="textarea"
-          placeholder="请输入您遇到的问题详细描述"
-          :rules="[{ required: true, message: '请填写问题描述' }]"
-        />
+        <!-- Message -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-label-md text-sm text-on-surface-variant px-1">问题描述</label>
+          <textarea 
+            v-model="message"
+            rows="5"
+            required
+            placeholder="请输入您遇到的问题详细描述..."
+            class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
+          ></textarea>
+        </div>
 
-        <div class="px-4 py-3 bg-white">
-          <p class="text-sm text-gray-600 mb-2">图片上传 (选填)</p>
+        <!-- Image Uploader -->
+        <div class="flex flex-col gap-1.5 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+          <div class="flex items-center justify-between mb-2">
+            <label class="font-label-md text-sm text-on-surface-variant">图片上传 (选填)</label>
+            <span class="text-xs text-on-surface-variant">最多3张</span>
+          </div>
           <van-uploader v-model="fileList" multiple :max-count="3" :after-read="afterRead" />
         </div>
-      </van-cell-group>
-      
-      <div class="mt-8 px-4">
-        <van-button round block type="primary" native-type="submit">
-          提交反馈
-        </van-button>
-      </div>
-    </van-form>
+        
+        <div class="mt-4">
+          <button 
+            type="submit" 
+            class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
+          >
+            提交反馈
+          </button>
+        </div>
+      </form>
+    </main>
   </div>
 </template>

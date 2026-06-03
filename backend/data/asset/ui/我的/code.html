@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-width=1.0" name="viewport"/>
+<title>Mall Assistant - Me</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error-container": "#ffdad6",
+                        "surface-container-high": "#e8e8ea",
+                        "secondary-fixed": "#dfe3e7",
+                        "tertiary-container": "#b04e2e",
+                        "secondary": "#5a5f62",
+                        "on-secondary-fixed-variant": "#43474b",
+                        "on-secondary-fixed": "#171c1f",
+                        "surface": "#f9f9fc",
+                        "surface-container-highest": "#e2e2e5",
+                        "inverse-surface": "#2f3133",
+                        "inverse-on-surface": "#f0f0f3",
+                        "outline": "#6f797c",
+                        "on-surface": "#1a1c1e",
+                        "on-error": "#ffffff",
+                        "on-background": "#1a1c1e",
+                        "surface-container": "#eeeef0",
+                        "secondary-container": "#dce0e4",
+                        "outline-variant": "#bec8cc",
+                        "surface-dim": "#dadadc",
+                        "surface-bright": "#f9f9fc",
+                        "tertiary-fixed-dim": "#ffb59e",
+                        "surface-tint": "#00687a",
+                        "on-tertiary-fixed": "#3a0b00",
+                        "surface-variant": "#e2e2e5",
+                        "on-tertiary": "#ffffff",
+                        "surface-container-low": "#f3f3f6",
+                        "tertiary-fixed": "#ffdbd0",
+                        "primary": "#005c6c",
+                        "on-tertiary-container": "#ffe9e4",
+                        "tertiary": "#903719",
+                        "on-primary-fixed-variant": "#004e5c",
+                        "background": "#f9f9fc",
+                        "primary-container": "#0e768a",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#001f26",
+                        "on-primary-container": "#d1f4ff",
+                        "on-tertiary-fixed-variant": "#7f2a0d",
+                        "on-surface-variant": "#3f484b",
+                        "secondary-fixed-dim": "#c3c7cb",
+                        "primary-fixed": "#acedff",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#80d2e8",
+                        "inverse-primary": "#80d2e8",
+                        "on-secondary-container": "#5e6367"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "16px",
+                        "margin-desktop": "40px",
+                        "base": "4px",
+                        "md": "16px",
+                        "margin-mobile": "16px",
+                        "xs": "4px",
+                        "xl": "32px",
+                        "lg": "24px",
+                        "sm": "8px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-sm": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "headline-lg-mobile": ["26px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body-md antialiased pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-surface dark:bg-on-background flex justify-between items-center px-margin-mobile md:px-margin-desktop h-16 w-full z-40 transition-colors">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed cursor-pointer hover:bg-secondary-container/50 dark:hover:bg-on-secondary-fixed-variant/20 transition-colors p-2 rounded-full active:scale-95 duration-150" data-icon="search">search</span>
+</div>
+<h1 class="font-headline-sm text-headline-sm-mobile md:text-headline-sm text-primary dark:text-primary-fixed font-bold">Metro Mall</h1>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed cursor-pointer hover:bg-secondary-container/50 dark:hover:bg-on-secondary-fixed-variant/20 transition-colors p-2 rounded-full active:scale-95 duration-150" data-icon="notifications">notifications</span>
+</div>
+</header>
+<!-- Main Content -->
+<main class="px-margin-mobile md:px-margin-desktop py-lg max-w-3xl mx-auto space-y-lg">
+<!-- User Profile Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md">
+<div class="w-20 h-20 rounded-full overflow-hidden shrink-0 border-2 border-surface-container">
+<img alt="Cat Avatar" class="w-full h-full object-cover" data-alt="A high-quality, close-up portrait of a cat looking attentively at the camera, set against a soft, plain background. The lighting is bright and modern, fitting a high-end application profile picture. The color palette is natural and vibrant." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4G1r3MFRnsxHP4APaE43rrrcktr0UTWJYRpWI6Ev6iE5OAZKWRcutPUBOgCVlnO1uUJQSrAZy7b1kSzGwqHChGEODedxt7FJbT_mW_e7icYC9Hj5_yPR8qcg5WVxzJ7epUzf7PWwPn4i919P7HLlgHBj5A1J8WByyulMa0puk63z22S5P0bcEO5tN8_xwhK6oyxH8aJTwbnbyaPnL5MBsCBZl1vRO1TQuPOdKC_ZZLnCAIexUsXHz1xLKXY3WvcOmbFuYKhsj24s"/>
+</div>
+<div class="flex flex-col gap-xs">
+<h2 class="font-headline-md text-headline-md text-on-surface">test</h2>
+<span class="font-label-md text-label-md text-primary bg-primary-container/20 px-2 py-1 rounded-DEFAULT self-start border border-primary/30">Customer User</span>
+</div>
+</div>
+<!-- Shopping Services -->
+<section class="space-y-sm">
+<h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">Shopping Services</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-body-lg text-body-lg text-on-surface">My Shopping List</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="rate_review">rate_review</span>
+<span class="font-body-lg text-body-lg text-on-surface">My Feedback Records</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</section>
+<!-- Community Interaction -->
+<section class="space-y-sm">
+<h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">Community Interaction</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="post_add">post_add</span>
+<span class="font-body-lg text-body-lg text-on-surface">My Posts</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="chat_bubble_outline">chat_bubble_outline</span>
+<span class="font-body-lg text-body-lg text-on-surface">My Comments</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="star_border">star_border</span>
+<span class="font-body-lg text-body-lg text-on-surface">My Favorites</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-body-lg text-body-lg text-on-surface">Replies Received</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+</div>
+</section>
+<!-- Account Management -->
+<section class="space-y-sm">
+<h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">Account Management</h3>
+<div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="edit_square">edit_square</span>
+<span class="font-body-lg text-body-lg text-on-surface">Edit Profile</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="lock">lock</span>
+<span class="font-body-lg text-body-lg text-on-surface">Change Password</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-error transition-colors">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-body-lg text-body-lg text-on-surface group-hover:text-error">Logout</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-error transition-colors" data-icon="chevron_right">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group" href="#">
+<div class="flex items-center gap-md text-on-surface-variant group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="info">info</span>
+<span class="font-body-lg text-body-lg text-on-surface">About Mall Assistant</span>
+</div>
+<div class="flex items-center gap-xs">
+<span class="font-body-md text-body-md text-outline">v1.3.0</span>
+<span class="material-symbols-outlined text-outline-variant group-hover:text-primary transition-colors" data-icon="chevron_right">chevron_right</span>
+</div>
+</a>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 pb-safe h-20 bg-surface/70 dark:bg-on-background/70 backdrop-blur-md shadow-sm">
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim px-4 py-1 hover:text-primary dark:hover:text-primary-fixed transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-md text-label-md mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim px-4 py-1 hover:text-primary dark:hover:text-primary-fixed transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="groups">groups</span>
+<span class="font-label-md text-label-md mt-1">Community</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary dark:text-secondary-fixed-dim px-4 py-1 hover:text-primary dark:hover:text-primary-fixed transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="concierge">concierge</span>
+<span class="font-label-md text-label-md mt-1">Service</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-on-primary-fixed-variant text-on-primary-container dark:text-on-primary-fixed rounded-xl px-4 py-1 hover:text-primary dark:hover:text-primary-fixed transition-all active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined fill" data-icon="person" data-weight="fill">person</span>
+<span class="font-label-md text-label-md mt-1">Me</span>
+</a>
+</nav>
+</body></html>

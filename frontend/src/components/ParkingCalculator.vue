@@ -97,62 +97,77 @@ watch(() => props.initialStoreId, (newId) => {
 </script>
 
 <template>
-  <div class="bg-white min-h-full flex flex-col">
-    <div class="p-4 flex-1 flex flex-col" v-if="rules.length > 0">
-      <!-- Store Selector -->
-      <div class="mb-4">
-        <label class="block text-sm text-gray-500 mb-1">选择门店</label>
-        <select v-model="selectedStoreId" class="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2 px-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option v-for="rule in rules" :key="rule.id" :value="rule.storeId">
-            {{ rule.storeName }}
-          </option>
+  <main v-if="rules.length > 0" class="px-margin-mobile py-md max-w-2xl mx-auto space-y-md h-full">
+    <!-- Store Selection -->
+    <section class="space-y-sm">
+      <label class="font-body-md text-body-md text-on-surface-variant">选择门店</label>
+      <div class="relative">
+        <select v-model="selectedStoreId" class="w-full appearance-none bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors">
+          <option v-for="rule in rules" :key="rule.id" :value="rule.storeId">{{ rule.storeName }}</option>
         </select>
-      </div>
-
-      <div v-if="activeStore" class="mb-4 bg-blue-50 p-3 rounded-md text-sm text-blue-800">
-        <div class="flex items-center justify-between mb-1">
-          <span class="font-bold">车位: {{ activeStore.capacity }}个</span>
-          <span>开放时间: {{ activeStore.openingHours }}</span>
-        </div>
-        <div class="text-xs text-blue-600 mt-2 whitespace-pre-wrap leading-relaxed">{{ activeStore.rawText }}</div>
-      </div>
-
-      <!-- Vehicle Type -->
-      <div class="mb-4">
-        <label class="block text-sm text-gray-500 mb-1">车辆类型</label>
-        <div class="flex flex-wrap gap-2">
-          <van-tag size="medium" :type="vehicleType === 'small' ? 'primary' : 'default'" @click="vehicleType = 'small'">小型汽车</van-tag>
-          <van-tag size="medium" :type="vehicleType === 'medium' ? 'primary' : 'default'" @click="vehicleType = 'medium'">中型汽车</van-tag>
-          <van-tag size="medium" :type="vehicleType === 'large' ? 'primary' : 'default'" @click="vehicleType = 'large'">大型汽车</van-tag>
-          <van-tag size="medium" :type="vehicleType === 'new_energy' ? 'success' : 'default'" @click="vehicleType = 'new_energy'">新能源(减半)</van-tag>
-          <van-tag size="medium" :type="vehicleType === 'military' ? 'danger' : 'default'" @click="vehicleType = 'military'">军警救援(免费)</van-tag>
+        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
+          <span class="material-symbols-outlined">expand_more</span>
         </div>
       </div>
+    </section>
 
-      <!-- Time Inputs -->
-      <div class="flex flex-col gap-4 mb-6">
-        <div class="flex-1">
-          <label class="block text-sm text-gray-500 mb-1">入场时间</label>
-          <input type="datetime-local" v-model="startTime" class="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2 px-2 rounded-md focus:outline-none" />
-        </div>
-        <div class="flex-1">
-          <label class="block text-sm text-gray-500 mb-1">出场时间</label>
-          <input type="datetime-local" v-model="endTime" class="w-full bg-gray-50 border border-gray-200 text-gray-700 py-2 px-2 rounded-md focus:outline-none" />
-        </div>
+    <!-- Parking Info Card -->
+    <div v-if="activeStore" class="bg-primary-container/10 rounded-lg p-md border border-primary/20 space-y-md">
+      <div class="flex justify-between items-center text-primary">
+        <span class="font-headline-sm text-headline-sm font-bold">车位: {{ activeStore.capacity }}个</span>
+        <span class="font-body-md text-body-md">开放时间: {{ activeStore.openingHours }}</span>
       </div>
-
-      <!-- Result -->
-      <div class="mt-6 text-center border-t border-gray-100 pt-4">
-        <div class="text-gray-500 text-sm mb-1">预计停车费</div>
-        <div class="text-3xl font-bold text-red-500">
-          <span v-if="fee !== null">¥ {{ fee }}</span>
-          <span v-else class="text-gray-300">-</span>
-        </div>
+      <div class="font-body-md text-body-md text-primary/80 space-y-2 whitespace-pre-wrap leading-relaxed">
+        {{ activeStore.rawText }}
       </div>
     </div>
-    
-    <div v-else class="p-4 text-center text-gray-400 flex-1">
-      暂无支持停车计费的门店
-    </div>
+
+    <!-- Vehicle Type Selection -->
+    <section class="space-y-sm">
+      <label class="font-body-md text-body-md text-on-surface-variant">车辆类型</label>
+      <div class="flex flex-wrap gap-2">
+        <button @click="vehicleType = 'small'" :class="vehicleType === 'small' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">小型汽车</button>
+        <button @click="vehicleType = 'medium'" :class="vehicleType === 'medium' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">中型汽车</button>
+        <button @click="vehicleType = 'large'" :class="vehicleType === 'large' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">大型汽车</button>
+        <button @click="vehicleType = 'new_energy'" :class="vehicleType === 'new_energy' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">新能源(减半)</button>
+        <button @click="vehicleType = 'military'" :class="vehicleType === 'military' ? 'bg-primary text-white shadow-sm' : 'bg-surface-variant text-on-surface-variant hover:bg-surface-container-highest'" class="font-label-md text-xs px-3 py-1.5 rounded-DEFAULT active:scale-95 transition-all">军警救援(免费)</button>
+      </div>
+    </section>
+
+    <!-- Time Pickers -->
+    <section class="space-y-sm">
+      <label class="font-body-md text-body-md text-on-surface-variant">入场时间</label>
+      <div class="relative">
+        <input type="datetime-local" v-model="startTime" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary transition-colors cursor-pointer" />
+      </div>
+    </section>
+
+    <section class="space-y-sm">
+      <label class="font-body-md text-body-md text-on-surface-variant">出场时间</label>
+      <div class="relative">
+        <input type="datetime-local" v-model="endTime" class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg px-4 py-3 font-body-lg text-body-lg text-on-surface focus:outline-none focus:border-primary transition-colors cursor-pointer" />
+      </div>
+    </section>
+
+    <!-- Divider -->
+    <hr class="border-t border-outline-variant/30 my-lg"/>
+
+    <!-- Estimated Fee -->
+    <section class="text-center space-y-sm py-md">
+      <p class="font-body-md text-body-md text-on-surface-variant">预计停车费</p>
+      <div class="text-error font-bold flex items-baseline justify-center gap-1">
+        <template v-if="fee !== null">
+          <span class="text-2xl">¥</span>
+          <span class="text-5xl tracking-tight">{{ fee }}</span>
+        </template>
+        <template v-else>
+          <span class="text-5xl tracking-tight text-outline-variant">-</span>
+        </template>
+      </div>
+    </section>
+  </main>
+  
+  <div v-else class="p-4 text-center text-on-surface-variant flex-1 h-full flex items-center justify-center font-body-md">
+    暂无支持停车计费的门店
   </div>
 </template>

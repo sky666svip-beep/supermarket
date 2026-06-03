@@ -94,43 +94,75 @@ const onUncollect = (e: Event, item: CollectionItem) => {
 </script>
 
 <template>
-  <div class="my-collections-container min-h-screen bg-gray-50 pb-4">
-    <van-nav-bar title="我的收藏" left-arrow @click-left="router.back()" fixed placeholder />
+  <div class="bg-background text-on-background min-h-screen font-body-md selection:bg-primary-container selection:text-white flex flex-col">
+    <!-- Header -->
+    <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors border-b border-surface-variant/20">
+      <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
+        <button type="button" @click="router.back()" class="flex items-center justify-center text-on-surface hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
+          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+        </button>
+        <h1 class="font-headline-sm text-lg font-bold text-on-surface">我的收藏</h1>
+        <div class="w-10 h-10"></div> <!-- Placeholder to balance flex -->
+      </div>
+    </header>
     
-    <div v-if="isError && posts.length === 0" class="mt-20 text-center text-gray-400">
-      <van-empty description="加载失败" />
-      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
-      <van-button size="small" type="primary" class="mt-4" @click="reload">重试</van-button>
-    </div>
-    
-    <div v-else-if="posts.length === 0 && finished" class="mt-20 text-center text-gray-400">
-      <van-empty description="还没有收藏任何帖子哦" />
-    </div>
-    
-    <div v-else class="p-3">
-      <van-list
-        v-model:loading="loading"
-        :finished="finished"
-        finished-text="没有更多了"
-        @load="onLoad"
-      >
-        <div 
-          v-for="item in posts" 
-          :key="item.post?.id || item.id" 
-          class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100 flex flex-col relative"
-          @click="goDetail(item.post?.id)"
-        >
-          <div class="flex items-center justify-between mb-2">
-            <div class="flex items-center">
-              <van-image round width="24" height="24" :src="item.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" />
-              <span class="ml-2 text-xs text-gray-600">{{ item.author?.nickname || '未知用户' }}</span>
-            </div>
-            <van-button size="mini" plain type="danger" round @click="onUncollect($event, item)">取消收藏</van-button>
-          </div>
-          <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1 pr-16">{{ item.post?.title || '已删除帖子' }}</h3>
-          <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ item.post?.content || '' }}</p>
+    <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile py-6 flex flex-col gap-4">
+      
+      <div v-if="isError && posts.length === 0" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">error</span>
         </div>
-      </van-list>
-    </div>
+        <p class="text-on-surface font-medium">加载失败</p>
+        <p class="text-error text-xs px-4 text-center">{{ errorMsg }}</p>
+        <button @click="reload" class="mt-2 bg-primary/10 text-primary font-bold text-sm px-6 py-2.5 rounded-full hover:bg-primary/20 transition-colors">
+          重试
+        </button>
+      </div>
+      
+      <div v-else-if="posts.length === 0 && finished" class="flex flex-col items-center justify-center h-64 gap-4">
+        <div class="w-16 h-16 bg-surface-container-high text-on-surface-variant rounded-full flex items-center justify-center mb-2 shadow-sm">
+          <span class="material-symbols-outlined text-[32px]">bookmark_added</span>
+        </div>
+        <p class="text-on-surface-variant text-sm">还没有收藏任何帖子哦</p>
+      </div>
+      
+      <div v-else class="flex flex-col gap-4">
+        <van-list
+          v-model:loading="loading"
+          :finished="finished"
+          finished-text="没有更多了"
+          @load="onLoad"
+          class="flex flex-col gap-4"
+        >
+          <div 
+            v-for="item in posts" 
+            :key="item.post?.id || item.id" 
+            class="bg-surface-container-lowest rounded-3xl p-5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] border border-surface-variant/20 flex flex-col gap-3 active:scale-[0.99] transition-transform cursor-pointer"
+            @click="goDetail(item.post?.id)"
+          >
+            <!-- Header: Author and Uncollect Button -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <img :src="item.author?.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" class="w-6 h-6 rounded-full object-cover border border-surface-variant/20" />
+                <span class="text-xs text-on-surface-variant font-medium">{{ item.author?.nickname || '未知用户' }}</span>
+              </div>
+              <button 
+                @click="onUncollect($event, item)"
+                class="flex items-center justify-center gap-1 bg-surface-container-low text-on-surface-variant px-3 py-1.5 rounded-full text-[11px] font-bold transition-colors hover:bg-error-container hover:text-on-error-container active:scale-95"
+              >
+                <span class="material-symbols-outlined text-[14px]">bookmark_remove</span>
+                取消收藏
+              </button>
+            </div>
+            
+            <!-- Title & Content -->
+            <div class="flex flex-col gap-1 mt-1">
+              <h3 class="font-headline-sm text-base font-bold text-on-surface line-clamp-1 leading-snug">{{ item.post?.title || '已删除帖子' }}</h3>
+              <p class="text-sm text-on-surface-variant line-clamp-2 leading-relaxed">{{ item.post?.content || '' }}</p>
+            </div>
+          </div>
+        </van-list>
+      </div>
+    </main>
   </div>
 </template>

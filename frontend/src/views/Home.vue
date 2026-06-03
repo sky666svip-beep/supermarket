@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 模块：首页与公告动态
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { showImagePreview } from 'vant'
 import { getNotices, getActivities, getStores } from '../api'
 import { getCachedLocation, setCachedLocation } from '../utils/location'
@@ -60,6 +60,7 @@ const urgentNotices = ref<Notice[]>([])
 const normalNotices = ref<Notice[]>([])
 const activities = ref<Activity[]>([])
 const currentStoreName = ref('')
+const currentAreaName = ref('')
 const closestStoreId = ref<number | null>(null)
 const loading = ref(true)
 const isError = ref(false)
@@ -72,6 +73,10 @@ const loadData = async () => {
     let loc = getCachedLocation()
     let userLat = loc?.lat
     let userLng = loc?.lng
+
+    if (loc) {
+      currentAreaName.value = `${loc.city || ''} ${loc.district || ''}`.trim()
+    }
 
     if (!userLat || !userLng) {
       const coords = await tryBrowserGeolocation()
@@ -132,7 +137,16 @@ const loadData = async () => {
 
 onMounted(() => {
   loadData()
+  window.addEventListener('location-updated', loadData)
 })
+
+onUnmounted(() => {
+  window.removeEventListener('location-updated', loadData)
+})
+
+const openAreaPopup = () => {
+  window.dispatchEvent(new CustomEvent('open-area-popup'))
+}
 
 const showNoticeDialog = ref(false)
 const currentNotice = ref<Notice | null>(null)
@@ -159,111 +173,156 @@ const openActivityImages = (activity: Activity) => {
 </script>
 
 <template>
-  <div class="space-y-4 pb-4">
-    <van-loading v-if="loading" class="mt-20 text-center block mx-auto" />
+  <div class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-lg">
+    <!-- TopAppBar -->
+    <header class="docked full-width top-0 bg-surface shadow-sm z-50 flex items-center px-margin-mobile h-14 w-full relative">
+      <div @click="openAreaPopup" class="flex items-center gap-1 text-primary cursor-pointer active:scale-95 transition-transform duration-200 z-10">
+        <span class="material-symbols-outlined">location_on</span>
+        <span class="font-body-md text-body-md font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
+        <span class="material-symbols-outlined text-sm">expand_more</span>
+      </div>
+      <h1 class="font-headline-sm text-headline-sm font-semibold text-primary absolute left-1/2 -translate-x-1/2 w-full text-center pointer-events-none">
+        Mall Assistant
+      </h1>
+    </header>
+
+    <!-- Main Content Canvas -->
+    <main class="flex-1 overflow-y-auto hide-scrollbar pb-24 md:pb-8 md:pt-6 w-full max-w-7xl mx-auto md:px-margin-desktop">
+      <van-loading v-if="loading" class="mt-20 text-center block mx-auto" />
     
-    <div v-else-if="isError" class="mt-20 text-center text-gray-400">
-      <van-empty description="加载失败" />
-      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
-      <van-button size="small" type="primary" class="mt-4" @click="loadData">重试</van-button>
-    </div>
+      <div v-else-if="isError" class="mt-20 text-center text-gray-400">
+        <van-empty description="加载失败" />
+        <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
+        <van-button size="small" type="primary" class="mt-4" @click="loadData">重试</van-button>
+      </div>
 
-    <template v-else>
-      <!-- 紧急横幅通知 -->
-      <van-notice-bar
-      v-if="urgentNotices && urgentNotices.length > 0"
-      left-icon="volume-o"
-      :text="urgentNotices.map((n) => (n.storeName ? `[${n.storeName}] ` : '') + n.title + ': ' + n.content).join('  |  ')"
-      mode="link"
-      @click="openNotice(urgentNotices[0])"
-      class="mb-2"
-    />
-
-    <div class="bg-white p-4 rounded-lg shadow-sm" :class="{ 'mt-2': urgentNotices && urgentNotices.length > 0 }">
-      <h2 class="text-lg font-bold mb-2">欢迎来到商场助手</h2>
-      <p class="text-gray-500 text-sm">提供门店查询、购物清单和问题上报功能。</p>
-    </div>
-    
-    <van-grid :column-num="4" :border="false" class="bg-white rounded-lg overflow-hidden shadow-sm">
-      <van-grid-item icon="shop-o" text="门店查询" @click="$router.push('/customer/stores')" />
-      <van-grid-item icon="orders-o" text="购物清单" @click="$router.push('/customer/checklist')" />
-      <van-grid-item icon="goods-collect-o" text="商品备忘" @click="$router.push('/customer/memos')" />
-      <van-grid-item icon="warning-o" text="问题上报" @click="$router.push('/customer/feedback')" />
-      <van-grid-item icon="friends-o" text="客流分析" @click="$router.push('/customer/traffic')" />
-      <van-grid-item icon="logistics" text="停车计费" @click="$router.push('/customer/parking')" />
-      <van-grid-item icon="cluster-o" text="同店互助" @click="$router.push('/customer/mutual-help')" />
-      <van-grid-item icon="manager-o" text="加入我们" @click="$router.push('/customer/jobs')" />
-    </van-grid>
-
-    <!-- 最新动态 (普通公告) -->
-    <div v-if="normalNotices.length > 0">
-      <van-cell-group inset class="!mx-0">
-        <template #title>
-          <div class="flex justify-between items-center">
-            <span>最新动态</span>
-            <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
-              📍 当前: {{ currentStoreName }}
-            </span>
-          </div>
-        </template>
-        <van-cell 
-          v-for="notice in normalNotices" 
-          :key="notice.id"
-          :title="notice.title" 
-          :label="notice.content.substring(0, 30) + (notice.content.length > 30 ? '...' : '')" 
-          is-link 
-          @click="openNotice(notice)"
+      <template v-else>
+        <!-- Urgent Notice -->
+        <van-notice-bar
+          v-if="urgentNotices && urgentNotices.length > 0"
+          left-icon="volume-o"
+          :text="urgentNotices.map((n) => (n.storeName ? `[${n.storeName}] ` : '') + n.title + ': ' + n.content).join('  |  ')"
+          mode="link"
+          @click="openNotice(urgentNotices[0])"
+          class="mb-2 mx-4 mt-2"
         />
-      </van-cell-group>
-    </div>
-    
-    <!-- 热门活动 -->
-    <div v-if="activities.length > 0">
-      <van-cell-group inset class="!mx-0">
-        <template #title>
-          <div class="flex justify-between items-center">
-            <span>热门活动</span>
-            <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
-              📍 当前: {{ currentStoreName }}
-            </span>
+
+        <!-- Hero/Greeting Card -->
+        <section class="px-margin-mobile mt-4 md:mt-0">
+          <div class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant relative overflow-hidden">
+            <div class="relative z-10">
+              <h2 class="font-headline-md text-headline-md text-primary mb-2">Welcome to Mall Assistant</h2>
+              <p class="font-body-md text-body-md text-secondary">
+                  Your comprehensive guide for Store Query, Shopping List, and Issue Reporting.
+              </p>
+            </div>
+            <!-- Decorative background elements -->
+            <div class="absolute -right-8 -top-8 w-32 h-32 bg-primary-container/20 rounded-full blur-2xl"></div>
+            <div class="absolute -bottom-12 right-12 w-24 h-24 bg-tertiary-container/10 rounded-full blur-xl"></div>
           </div>
-        </template>
-        <div 
-          v-for="act in activities" 
-          :key="act.id"
-          class="bg-white p-4 border-b border-gray-100 last:border-0"
-        >
-          <h3 class="text-base font-bold mb-1 flex items-center justify-between">
-            <span>{{ act.title }}</span>
-            <span v-if="act.storeNames && act.storeNames.length > 0" class="text-xs text-blue-500 font-normal bg-blue-50 px-2 py-0.5 rounded ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">
-              📍 {{ act.storeNames.join('、') }}
-            </span>
-          </h3>
-          <p class="text-gray-500 text-sm mb-3 whitespace-pre-wrap">{{ act.content }}</p>
-          
-          <div 
-            class="relative w-full h-40 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer"
-            @click="openActivityImages(act)"
-          >
-            <template v-if="act.parsedImages && act.parsedImages.length > 0">
-              <van-image
-                lazy-load
-                fit="cover"
-                class="w-full h-full"
-                :src="act.parsedImages[0]"
-              />
-              <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                共 {{ act.parsedImages.length }} 张
+        </section>
+
+        <!-- Quick Action Grid -->
+        <section class="px-margin-mobile mt-lg">
+          <div class="grid grid-cols-4 md:grid-cols-8 gap-y-lg gap-x-xs">
+            <div @click="$router.push('/customer/stores')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">storefront</span>
               </div>
-            </template>
-            <template v-else>
-              <van-icon name="photo-o" size="32" color="#dcdee0" />
-              <span class="text-gray-400 text-sm ml-2">暂无图片</span>
-            </template>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">门店查询</span>
+            </div>
+            <div @click="$router.push('/customer/checklist')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">shopping_bag</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">购物清单</span>
+            </div>
+            <div @click="$router.push('/customer/memos')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">edit_note</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">商品备忘</span>
+            </div>
+            <div @click="$router.push('/customer/feedback')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">report_problem</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">问题上报</span>
+            </div>
+            <div @click="$router.push('/customer/traffic')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">analytics</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">客流分析</span>
+            </div>
+            <div @click="$router.push('/customer/parking')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">local_parking</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">停车计费</span>
+            </div>
+            <div @click="$router.push('/customer/mutual-help')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">diversity_3</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">同店互助</span>
+            </div>
+            <div @click="$router.push('/customer/jobs')" class="flex flex-col items-center gap-sm cursor-pointer group">
+              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+                <span class="material-symbols-outlined" style="font-size: 30px; font-variation-settings: 'wght' 200;">handshake</span>
+              </div>
+              <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">加入我们</span>
+            </div>
           </div>
-        </div>
-      </van-cell-group>
-    </div>
+        </section>
+
+        <!-- Latest News -->
+        <section v-if="normalNotices.length > 0" class="px-margin-mobile mt-lg">
+          <div class="flex justify-between items-center mb-md">
+            <h3 class="font-headline-sm text-headline-sm text-on-background">Latest News</h3>
+            <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
+          </div>
+          <div v-for="notice in normalNotices.slice(0, 3)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
+            <div class="bg-error-container text-on-error-container p-2 rounded-lg flex-shrink-0">
+              <span class="material-symbols-outlined">campaign</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1 truncate">{{ notice.title }}</h4>
+              <p class="font-body-md text-body-md text-secondary line-clamp-2">
+                  {{ notice.content }}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Hot Activities -->
+        <section v-if="activities.length > 0" class="px-margin-mobile mt-lg">
+          <div class="flex justify-between items-center mb-md">
+            <h3 class="font-headline-sm text-headline-sm text-on-background">Hot Activities</h3>
+            <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
+          </div>
+          <div v-for="act in activities" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4">
+            <div class="h-40 w-full relative bg-surface-container">
+              <img v-if="act.parsedImages && act.parsedImages.length > 0" :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
+                <span class="material-symbols-outlined text-4xl mb-2">image</span>
+                <span class="text-sm">暂无图片</span>
+              </div>
+              <div class="absolute top-md right-md bg-tertiary-container/90 backdrop-blur text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md">
+                  Hot
+              </div>
+            </div>
+            <div class="p-md">
+              <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-2">{{ act.title }}</h4>
+              <div class="flex items-center gap-xs text-secondary font-body-md text-body-md">
+                <span class="material-symbols-outlined text-sm">location_on</span>
+                <span>{{ (act.storeNames && act.storeNames.length > 0) ? act.storeNames.join('、') : '全局活动' }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </template>
+    </main>
 
     <!-- 公告详情弹窗 -->
     <van-dialog v-model:show="showNoticeDialog" :title="currentNotice?.title" confirm-button-text="知道了">
@@ -283,7 +342,6 @@ const openActivityImages = (activity: Activity) => {
         </div>
       </div>
     </van-dialog>
-    </template>
   </div>
 </template>
 

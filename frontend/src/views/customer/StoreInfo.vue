@@ -359,54 +359,79 @@ const initOrUpdateMap = async () => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col">
-    <div class="bg-white shadow-sm z-10 relative">
-      <van-field
-        v-model="selectedRegion"
-        is-link
-        readonly
-        label="选择区域"
-        placeholder="请选择省市区"
-        @click="showPicker = true"
-      />
-      <van-popup v-model:show="showPicker" position="bottom" teleport="body">
-        <van-picker
-          :columns="columns"
-          @confirm="onConfirm"
-          @cancel="showPicker = false"
-        />
-      </van-popup>
-
-      <van-action-sheet
-        v-model:show="showNavSheet"
-        :actions="currentNavActions"
-        cancel-text="取消"
-        description="请选择导航应用"
-        close-on-click-action
-        @select="onSelectNav"
-        teleport="body"
-      />
-
-      <van-search 
-        v-model="searchValue" 
-        placeholder="全局搜索：输入门店名称或位置" 
-        show-action
-        @search="onSearch" 
-        @clear="fetchStores(false)" 
-        class="!px-0" 
-      >
-        <template #action>
-          <div @click="onSearch" class="text-blue-500 px-2 font-medium active:opacity-70">搜索</div>
-        </template>
-      </van-search>
-      <div class="px-4 pb-2 bg-white flex justify-center">
-        <van-tabs v-model:active="viewMode" type="card" @change="initOrUpdateMap" class="w-full">
-          <van-tab title="列表模式" name="list"></van-tab>
-          <van-tab title="地图模式" name="map"></van-tab>
-        </van-tabs>
-      </div>
-    </div>
+  <div class="flex-grow w-full max-w-screen-md mx-auto flex flex-col bg-background font-body-md text-on-background min-h-screen">
     
+    <!-- Popups/Overlays -->
+    <van-popup v-model:show="showPicker" position="bottom" teleport="body">
+      <van-picker
+        :columns="columns"
+        @confirm="onConfirm"
+        @cancel="showPicker = false"
+      />
+    </van-popup>
+
+    <van-action-sheet
+      v-model:show="showNavSheet"
+      :actions="currentNavActions"
+      cancel-text="取消"
+      description="请选择导航应用"
+      close-on-click-action
+      @select="onSelectNav"
+      teleport="body"
+    />
+
+    <!-- Fixed Header & Controls -->
+    <div class="bg-surface shadow-sm z-10 sticky top-0 px-margin-mobile pt-4 pb-4">
+      <section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-variant flex flex-col gap-4">
+        <!-- Region Selector -->
+        <div @click="showPicker = true" class="flex items-center justify-between py-2 border-b border-surface-variant cursor-pointer active:bg-surface-container-low transition-colors rounded-lg px-2">
+          <span class="font-body-md text-on-surface-variant">选择区域</span>
+          <div class="flex items-center gap-2 text-on-surface">
+            <span class="font-body-md font-medium">{{ selectedRegion || '请选择省市区' }}</span>
+            <span class="material-symbols-outlined text-outline">chevron_right</span>
+          </div>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="flex gap-2">
+          <div class="relative flex-grow">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span class="material-symbols-outlined text-outline text-sm">search</span>
+            </div>
+            <input 
+              v-model="searchValue"
+              @keyup.enter="onSearch"
+              class="w-full pl-10 pr-4 py-2 bg-surface-container-low border border-surface-variant rounded-lg font-body-md text-on-surface focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all placeholder:text-outline-variant" 
+              placeholder="全局搜索: 输入门店名称或位置" 
+              type="text"
+            />
+            <div v-show="searchValue" @click="searchValue = ''; fetchStores(false)" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-outline hover:text-on-surface">
+              <span class="material-symbols-outlined text-sm">close</span>
+            </div>
+          </div>
+          <button @click="onSearch" class="bg-primary text-white px-4 py-2 rounded-lg font-body-md font-medium hover:bg-primary-container hover:text-white transition-colors active:scale-95">搜索</button>
+        </div>
+
+        <!-- Mode Toggle -->
+        <div class="flex rounded-lg overflow-hidden border border-primary mt-2">
+          <button 
+            @click="viewMode = 'list'; initOrUpdateMap()" 
+            class="flex-1 py-2 font-body-md font-medium text-center transition-colors"
+            :class="viewMode === 'list' ? 'bg-primary text-white' : 'bg-surface-container-lowest text-primary hover:bg-surface-container-low'"
+          >
+            列表模式
+          </button>
+          <button 
+            @click="viewMode = 'map'; initOrUpdateMap()" 
+            class="flex-1 py-2 font-body-md font-medium text-center transition-colors"
+            :class="viewMode === 'map' ? 'bg-primary text-white' : 'bg-surface-container-lowest text-primary hover:bg-surface-container-low'"
+          >
+            地图模式
+          </button>
+        </div>
+      </section>
+    </div>
+
     <div v-if="loading && viewMode === 'list'" class="flex-1 flex items-center justify-center py-12">
       <van-loading type="spinner" color="#1989fa" vertical>加载门店中...</van-loading>
     </div>
@@ -415,27 +440,34 @@ const initOrUpdateMap = async () => {
       未找到相关门店数据
     </div>
 
-    <!-- List View -->
-    <div v-else-if="viewMode === 'list'" class="flex-1 mt-4 space-y-3 overflow-y-auto pb-6 px-4">
-      <div v-for="store in stores" :key="store.id" class="bg-white p-4 rounded-lg shadow-sm">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="font-bold text-base">{{ store.name }}</h3>
-          <div class="text-right">
-             <van-tag type="primary" plain class="mb-1">{{ store.district }}</van-tag>
-             <div v-if="store.distance && store.distance !== Infinity" class="text-xs text-blue-500">
-               距离您 {{ store.distance }} 公里
-             </div>
+    <!-- Store List -->
+    <main v-else-if="viewMode === 'list'" class="flex-grow w-full max-w-screen-md mx-auto px-margin-mobile pt-2 pb-24 flex flex-col gap-4">
+      <article v-for="store in stores" :key="store.id" class="bg-surface-container-lowest rounded-xl p-md shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant hover:border-primary-fixed-dim transition-colors cursor-pointer group">
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">{{ store.name }}</h2>
+          <div class="flex flex-col items-end gap-1">
+            <span class="px-2 py-0.5 rounded border border-primary/30 text-primary font-label-md text-[10px] bg-primary/5">{{ store.district }}</span>
+            <span v-if="store.distance && store.distance !== Infinity" class="font-body-md text-sm text-primary">距离您 {{ store.distance }} 公里</span>
           </div>
         </div>
-        <div class="text-sm text-gray-500 space-y-1">
-          <p><van-icon name="location-o" class="mr-1" /> 地址：{{ store.location }}</p>
-          <p><van-icon name="clock-o" class="mr-1" /> 营业时间：{{ store.time }}</p>
-          <p><van-icon name="phone-o" class="mr-1" /> 联系电话：{{ store.phone }}</p>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-start gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px] mt-0.5" style="font-variation-settings: 'FILL' 1;">location_on</span>
+            <span class="font-body-md text-sm">地址: {{ store.location }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px]">schedule</span>
+            <span class="font-body-md text-sm">营业时间: {{ store.time }}</span>
+          </div>
+          <div class="flex items-center gap-2 text-on-surface-variant">
+            <span class="material-symbols-outlined text-[18px]">call</span>
+            <span class="font-body-md text-sm">联系电话: {{ store.phone }}</span>
+          </div>
         </div>
-      </div>
-    </div>
+      </article>
+    </main>
 
     <!-- Map View -->
-    <div v-show="viewMode === 'map'" id="map-container" style="width: 100%; height: calc(100vh - 180px);"></div>
+    <div v-show="viewMode === 'map'" id="map-container" style="width: 100%; height: calc(100vh - 240px);" class="z-0"></div>
   </div>
 </template>
