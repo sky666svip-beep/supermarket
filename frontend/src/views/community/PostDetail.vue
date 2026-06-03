@@ -91,6 +91,11 @@ const fetchInteraction = async () => {
 }
 
 const toggleLike = async () => {
+  if (!currentUserId.value) {
+    showToast('请先登录再操作')
+    router.push('/login')
+    return
+  }
   if (!post.value) return
   try {
     const res = await likePost(postId)
@@ -106,6 +111,11 @@ const toggleLike = async () => {
 }
 
 const toggleCollect = async () => {
+  if (!currentUserId.value) {
+    showToast('请先登录再操作')
+    router.push('/login')
+    return
+  }
   if (!post.value) return
   try {
     const res = await collectPost(postId)
@@ -120,6 +130,11 @@ const toggleCollect = async () => {
 }
 
 const handleLikeComment = async (comment: any) => {
+  if (!currentUserId.value) {
+    showToast('请先登录再操作')
+    router.push('/login')
+    return
+  }
   try {
     const res = await likeComment(comment.comment.id)
     if (res.success) {
@@ -131,6 +146,11 @@ const handleLikeComment = async (comment: any) => {
 }
 
 const openComment = (item?: any) => {
+  if (!currentUserId.value) {
+    showToast('请先登录再操作')
+    router.push('/login')
+    return
+  }
   replyTo.value = item || null
   showCommentPopup.value = true
 }
@@ -195,6 +215,11 @@ const handleMarkSolved = () => {
 }
 
 const openReport = (type: 'post' | 'comment', id: number) => {
+  if (!currentUserId.value) {
+    showToast('请先登录再操作')
+    router.push('/login')
+    return
+  }
   reportTarget.value = type
   reportTargetId.value = id
   reportReason.value = ''

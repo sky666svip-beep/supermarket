@@ -54,7 +54,12 @@ const checkVerificationCode = async (email: string, code: string, type: 'registe
     ))
     .orderBy(desc(verificationCodes.createdAt))
     .limit(1)
-  return codes.length > 0
+  
+  if (codes.length > 0) {
+    await db.delete(verificationCodes).where(eq(verificationCodes.id, codes[0].id))
+    return true
+  }
+  return false
 }
 
 // 发送验证码
@@ -63,11 +68,29 @@ auth.post('/send-code', async (c) => {
     const { email, type } = await c.req.json()
     if (!email || !type) return c.json({ error: '参数不完整' }, 400)
     
+    const cleanEmail = email.trim()
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      return c.json({ error: '邮箱格式不正确' }, 400)
+    }
+
+    // 频率限制：1分钟内只能发送一次
+    const recentCode = await db.select().from(verificationCodes)
+      .where(and(
+        eq(verificationCodes.email, cleanEmail),
+        eq(verificationCodes.type, type),
+        gte(verificationCodes.createdAt, new Date(Date.now() - 60 * 1000))
+      ))
+      .limit(1)
+    
+    if (recentCode.length > 0) {
+      return c.json({ error: '发送太频繁，请稍后再试' }, 429)
+    }
+    
     const code = Math.floor(100000 + Math.random() * 900000).toString()
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
     
     await db.insert(verificationCodes).values({
-      email: email.trim(),
+      email: cleanEmail,
       code,
       type,
       expiresAt
@@ -78,12 +101,17 @@ auth.post('/send-code', async (c) => {
     else if (type === 'forgot_password') actionName = '找回密码'
     else if (type === 'bind_email') actionName = '绑定邮箱'
     
-    await transporter.sendMail({
-      from: `"Supermarket" <${process.env.MAIL_USERNAME}>`,
-      to: email.trim(),
-      subject: `${actionName}验证码`,
-      text: `您的${actionName}验证码是 ${code}，5分钟内有效。`
-    })
+    try {
+      await transporter.sendMail({
+        from: `"Supermarket" <${process.env.MAIL_USERNAME}>`,
+        to: cleanEmail,
+        subject: `${actionName}验证码`,
+        text: `您的${actionName}验证码是 ${code}，5分钟内有效。`
+      })
+    } catch (sendErr) {
+      console.error('Mail send error:', sendErr)
+      return c.json({ error: '邮件发送失败，请稍后再试' }, 500)
+    }
     
     return c.json({ success: true })
   } catch (err) {
@@ -116,8 +144,11 @@ auth.post('/register', async (c) => {
       if (!isValid) return c.json({ error: '验证码无效或已过期' }, 400)
     }
     
-    const existing = await db.select().from(users).where(eq(users.username, cleanUser))
-    if (existing.length > 0) return c.json({ error: '用户已存在，请换一个用户名' }, 400)
+    const existing = await db.select().from(users).where(or(
+      eq(users.username, cleanUser),
+      eq(users.nickname, cleanUser)
+    ))
+    if (existing.length > 0) return c.json({ error: '该用户名已被占用（可能是他人的用户名或昵称）' }, 400)
     
     await db.insert(users).values({ 
       username: cleanUser, 
@@ -169,6 +200,9 @@ auth.put('/password', async (c) => {
     const { userId, oldPassword, newPassword } = await c.req.json()
     if (!userId || !oldPassword || !newPassword) {
       return c.json({ error: '参数不完整' }, 400)
+    }
+    if (oldPassword === newPassword) {
+      return c.json({ error: '新密码不能与原密码相同' }, 400)
     }
     if (!isValidPassword(newPassword)) {
       return c.json({ error: '新密码至少6位，且必须包含字母和数字' }, 400)
@@ -241,9 +275,14 @@ auth.put('/profile', async (c) => {
 // 绑定邮箱
 auth.put('/email', async (c) => {
   try {
-    const { userId, email, code } = await c.req.json()
-    if (!userId || !email || !code) return c.json({ error: '参数不完整' }, 400)
+    const { userId, email, code, password } = await c.req.json()
+    if (!userId || !email || !code || !password) return c.json({ error: '参数不完整' }, 400)
     
+    const userList = await db.select().from(users).where(eq(users.id, userId))
+    if (userList.length === 0 || !bcrypt.compareSync(password, userList[0].password)) {
+      return c.json({ error: '当前密码错误，无法验证身份' }, 401)
+    }
+
     const isValid = await checkVerificationCode(email, code, 'bind_email')
     if (!isValid) return c.json({ error: '验证码无效或已过期' }, 400)
     

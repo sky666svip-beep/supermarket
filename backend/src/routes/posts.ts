@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { posts, postLikes, postCollections, users, comments, commentLikes, stores, reports } from '../db/schema.js'
-import { eq, desc, and, or, sql } from 'drizzle-orm'
+import { eq, desc, and, or, sql, inArray } from 'drizzle-orm'
 import { authMiddleware, AuthContext } from './auth.js'
 
 export const postRouter = new Hono<AuthContext>()
@@ -227,18 +227,29 @@ postRouter.delete('/:id', authMiddleware, async (c) => {
     }
 
     // 手动级联删除关联数据，避免外键约束报错
-    await db.delete(postLikes).where(eq(postLikes.postId, id))
-    await db.delete(postCollections).where(eq(postCollections.postId, id))
-    
-    const postComments = await db.select({ id: comments.id }).from(comments).where(eq(comments.postId, id))
-    for (const comment of postComments) {
-      await db.delete(commentLikes).where(eq(commentLikes.commentId, comment.id))
-    }
-    await db.delete(comments).where(eq(comments.postId, id))
+    db.transaction((tx) => {
+      tx.delete(postLikes).where(eq(postLikes.postId, id)).run()
+      tx.delete(postCollections).where(eq(postCollections.postId, id)).run()
+      
+      const postComments = tx.select({ id: comments.id }).from(comments).where(eq(comments.postId, id)).all()
+      for (const comment of postComments) {
+        tx.delete(commentLikes).where(eq(commentLikes.commentId, comment.id)).run()
+      }
+      tx.delete(comments).where(eq(comments.postId, id)).run()
+      
+      // 删除关联的举报记录
+      tx.delete(reports).where(and(eq(reports.targetType, 'post'), eq(reports.targetId, id))).run()
+      if (postComments.length > 0) {
+        const commentIds = postComments.map(c => c.id)
+        tx.delete(reports).where(and(eq(reports.targetType, 'comment'), inArray(reports.targetId, commentIds))).run()
+      }
 
-    await db.delete(posts).where(eq(posts.id, id))
+      tx.delete(posts).where(eq(posts.id, id)).run()
+    })
+
     return c.json({ success: true, data: null, message: '删除成功' })
   } catch (error) {
+    console.error('Delete post error:', error)
     return c.json({ success: false, data: null, message: '删除失败' }, 500)
   }
 })
@@ -313,6 +324,11 @@ postRouter.post('/:id/report', authMiddleware, async (c) => {
     const post = await db.select().from(posts).where(eq(posts.id, id)).limit(1)
     if (post.length === 0) {
       return c.json({ success: false, data: null, message: '帖子不存在' }, 404)
+    }
+
+    const existingReport = await db.select().from(reports).where(and(eq(reports.userId, user.id), eq(reports.targetType, 'post'), eq(reports.targetId, id))).limit(1)
+    if (existingReport.length > 0) {
+      return c.json({ success: false, data: null, message: '您已举报过该帖子' })
     }
 
     await db.insert(reports).values({

@@ -16,10 +16,21 @@ upload.post('/', async (c) => {
     return c.json({ error: 'No file uploaded' }, 400)
   }
 
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'png'
+  const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp']
+  if (!allowedExts.includes(ext)) {
+    return c.json({ error: '不支持的文件类型，仅允许图片上传' }, 400)
+  }
+
+  // 10MB limit
+  const MAX_SIZE = 5 * 1024 * 1024
+  if (file.size > MAX_SIZE) {
+    return c.json({ error: '文件大小不能超过 5MB' }, 400)
+  }
+
   const arrayBuffer = await file.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
   
-  const ext = file.name.split('.').pop() || 'png'
   const filename = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${ext}`
   
   const uploadDir = path.resolve(__dirname, '../../data/uploads')

@@ -14,7 +14,7 @@ const showEmailDialog = ref(false)
 
 const profileForm = ref({ nickname: '' })
 const pwdForm = ref({ oldPassword: '', newPassword: '' })
-const emailForm = ref({ email: '', code: '' })
+const emailForm = ref({ email: '', code: '', password: '' })
 const emailCountdown = ref(0)
 let emailTimer: any = null
 
@@ -117,7 +117,8 @@ const onBindEmail = async () => {
     const res = await bindEmail({ 
       userId: user.value.id, 
       email: emailForm.value.email,
-      code: emailForm.value.code
+      code: emailForm.value.code,
+      password: emailForm.value.password
     })
     if (res.success) {
       user.value.email = emailForm.value.email
@@ -159,28 +160,34 @@ const onShowAbout = () => {
       </div>
     </div>
     
-    <van-cell-group inset class="!mx-0 shadow-sm" title="购物服务">
-      <van-cell title="我的购物清单" icon="orders-o" is-link @click="router.push('/customer/checklist')" />
-      <van-cell title="我的反馈记录" icon="comment-o" is-link @click="router.push('/customer/feedback')" />
-    </van-cell-group>
+    <div>
+      <van-cell-group inset class="!mx-0 shadow-sm" title="购物服务">
+        <van-cell title="我的购物清单" icon="orders-o" is-link @click="router.push('/customer/checklist')" />
+        <van-cell title="我的反馈记录" icon="comment-o" is-link @click="router.push('/customer/feedback')" />
+      </van-cell-group>
+    </div>
     
-    <van-cell-group inset class="!mx-0 shadow-sm mt-4" title="社区互动">
-      <van-cell title="我的帖子" icon="notes-o" is-link @click="router.push('/profile/posts')" />
-      <van-cell title="我的评论" icon="chat-o" is-link @click="router.push('/profile/comments')" />
-      <van-cell title="我的收藏" icon="star-o" is-link @click="router.push('/profile/collections')" />
-      <van-cell title="收到的回复" icon="bell" is-link @click="router.push('/profile/messages')" />
-    </van-cell-group>
+    <div>
+      <van-cell-group inset class="!mx-0 shadow-sm" title="社区互动">
+        <van-cell title="我的帖子" icon="notes-o" is-link @click="router.push('/profile/posts')" />
+        <van-cell title="我的评论" icon="chat-o" is-link @click="router.push('/profile/comments')" />
+        <van-cell title="我的收藏" icon="star-o" is-link @click="router.push('/profile/collections')" />
+        <van-cell title="收到的回复" icon="bell" is-link @click="router.push('/profile/messages')" />
+      </van-cell-group>
+    </div>
     
-    <van-cell-group inset class="!mx-0 shadow-sm mt-4" title="账号管理">
-      <template v-if="user">
-        <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />
-        <van-cell title="修改个人资料" icon="edit" is-link @click="profileForm.nickname = user.nickname || ''; showProfileDialog = true" />
-        <van-cell title="修改密码" icon="shield-o" is-link @click="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true" />
-        <van-cell v-if="!user.email" title="绑定邮箱" icon="envelop-o" is-link @click="emailForm.email = ''; emailForm.code = ''; showEmailDialog = true" />
-        <van-cell title="退出登录" icon="revoke" is-link @click="onLogout" />
-      </template>
-      <van-cell title="关于商场助手" icon="info-o" is-link @click="onShowAbout" value="v1.3.0" />
-    </van-cell-group>
+    <div>
+      <van-cell-group inset class="!mx-0 shadow-sm" title="账号管理">
+        <template v-if="user">
+          <van-cell v-if="user.role === 'admin'" title="管理员后台管理" icon="manager-o" is-link @click="router.push('/admin/feedbacks')" value="工单处理" />
+          <van-cell title="修改个人资料" icon="edit" is-link @click="profileForm.nickname = user.nickname || ''; showProfileDialog = true" />
+          <van-cell title="修改密码" icon="shield-o" is-link @click="pwdForm.oldPassword = ''; pwdForm.newPassword = ''; showPasswordDialog = true" />
+          <van-cell v-if="!user.email" title="绑定邮箱" icon="envelop-o" is-link @click="emailForm.email = ''; emailForm.code = ''; emailForm.password = ''; showEmailDialog = true" />
+          <van-cell title="退出登录" icon="revoke" is-link @click="onLogout" />
+        </template>
+        <van-cell title="关于商场助手" icon="info-o" is-link @click="onShowAbout" value="v1.3.0" />
+      </van-cell-group>
+    </div>
 
     <!-- Profile Dialog -->
     <van-dialog v-model:show="showProfileDialog" title="修改个人资料" show-cancel-button :before-close="() => true">
@@ -210,6 +217,7 @@ const onShowAbout = () => {
             </van-button>
           </template>
         </van-field>
+        <van-field v-model="emailForm.password" type="password" label="当前密码" placeholder="请输入密码以验证身份" :rules="[{ required: true, message: '请填写当前密码' }]" />
         <div class="p-4"><van-button round block type="primary" native-type="submit">绑定</van-button></div>
       </van-form>
     </van-dialog>

@@ -167,70 +167,74 @@ const openActivityImages = (activity: Activity) => {
     </van-grid>
 
     <!-- 最新动态 (普通公告) -->
-    <van-cell-group inset class="!mx-0 !mt-6" v-if="normalNotices.length > 0">
-      <template #title>
-        <div class="flex justify-between items-center">
-          <span>最新动态</span>
-          <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
-            📍 当前: {{ currentStoreName }}
-          </span>
-        </div>
-      </template>
-      <van-cell 
-        v-for="notice in normalNotices" 
-        :key="notice.id"
-        :title="notice.title" 
-        :label="notice.content.substring(0, 30) + (notice.content.length > 30 ? '...' : '')" 
-        is-link 
-        @click="openNotice(notice)"
-      />
-    </van-cell-group>
+    <div v-if="normalNotices.length > 0">
+      <van-cell-group inset class="!mx-0">
+        <template #title>
+          <div class="flex justify-between items-center">
+            <span>最新动态</span>
+            <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
+              📍 当前: {{ currentStoreName }}
+            </span>
+          </div>
+        </template>
+        <van-cell 
+          v-for="notice in normalNotices" 
+          :key="notice.id"
+          :title="notice.title" 
+          :label="notice.content.substring(0, 30) + (notice.content.length > 30 ? '...' : '')" 
+          is-link 
+          @click="openNotice(notice)"
+        />
+      </van-cell-group>
+    </div>
     
     <!-- 热门活动 -->
-    <van-cell-group inset class="!mx-0 !mt-6" v-if="activities.length > 0">
-      <template #title>
-        <div class="flex justify-between items-center">
-          <span>热门活动</span>
-          <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
-            📍 当前: {{ currentStoreName }}
-          </span>
-        </div>
-      </template>
-      <div 
-        v-for="act in activities" 
-        :key="act.id"
-        class="bg-white p-4 border-b border-gray-100 last:border-0"
-      >
-        <h3 class="text-base font-bold mb-1 flex items-center justify-between">
-          <span>{{ act.title }}</span>
-          <span v-if="act.storeNames && act.storeNames.length > 0" class="text-xs text-blue-500 font-normal bg-blue-50 px-2 py-0.5 rounded ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">
-            📍 {{ act.storeNames.join('、') }}
-          </span>
-        </h3>
-        <p class="text-gray-500 text-sm mb-3 whitespace-pre-wrap">{{ act.content }}</p>
-        
+    <div v-if="activities.length > 0">
+      <van-cell-group inset class="!mx-0">
+        <template #title>
+          <div class="flex justify-between items-center">
+            <span>热门活动</span>
+            <span v-if="currentStoreName" class="text-xs text-blue-500 font-normal">
+              📍 当前: {{ currentStoreName }}
+            </span>
+          </div>
+        </template>
         <div 
-          class="relative w-full h-40 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer"
-          @click="openActivityImages(act)"
+          v-for="act in activities" 
+          :key="act.id"
+          class="bg-white p-4 border-b border-gray-100 last:border-0"
         >
-          <template v-if="getImages(act.images).length > 0">
-            <van-image
-              lazy-load
-              fit="cover"
-              class="w-full h-full"
-              :src="getImages(act.images)[0]"
-            />
-            <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-              共 {{ getImages(act.images).length }} 张
-            </div>
-          </template>
-          <template v-else>
-            <van-icon name="photo-o" size="32" color="#dcdee0" />
-            <span class="text-gray-400 text-sm ml-2">暂无图片</span>
-          </template>
+          <h3 class="text-base font-bold mb-1 flex items-center justify-between">
+            <span>{{ act.title }}</span>
+            <span v-if="act.storeNames && act.storeNames.length > 0" class="text-xs text-blue-500 font-normal bg-blue-50 px-2 py-0.5 rounded ml-2 whitespace-nowrap overflow-hidden text-ellipsis max-w-[50%]">
+              📍 {{ act.storeNames.join('、') }}
+            </span>
+          </h3>
+          <p class="text-gray-500 text-sm mb-3 whitespace-pre-wrap">{{ act.content }}</p>
+          
+          <div 
+            class="relative w-full h-40 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer"
+            @click="openActivityImages(act)"
+          >
+            <template v-if="getImages(act.images).length > 0">
+              <van-image
+                lazy-load
+                fit="cover"
+                class="w-full h-full"
+                :src="getImages(act.images)[0]"
+              />
+              <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
+                共 {{ getImages(act.images).length }} 张
+              </div>
+            </template>
+            <template v-else>
+              <van-icon name="photo-o" size="32" color="#dcdee0" />
+              <span class="text-gray-400 text-sm ml-2">暂无图片</span>
+            </template>
+          </div>
         </div>
-      </div>
-    </van-cell-group>
+      </van-cell-group>
+    </div>
 
     <!-- 公告详情弹窗 -->
     <van-dialog v-model:show="showNoticeDialog" :title="currentNotice?.title" confirm-button-text="知道了">

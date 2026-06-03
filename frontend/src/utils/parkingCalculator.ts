@@ -130,22 +130,30 @@ export const calculateFee = (rule: ParkingRule, startTime: Date, endTime: Date, 
     }
     
     if (remainder > 0) {
-      let lastPeriod = -1 // 0 for day, 1 for night
       let dayCount = 0
       let nightCount = 0
       
-      for(let m = 0; m < remainder; m++) {
-        const checkTime = new Date(startTime.getTime() + (totalDays * 24 * 60 + m) * 60000)
+      let currentMin = 0
+      while (currentMin < remainder) {
+        const checkTime = new Date(startTime.getTime() + (totalDays * 24 * 60 + currentMin) * 60000)
         const hh = checkTime.getHours()
         const mm = checkTime.getMinutes()
         const minOfDay = hh * 60 + mm
-        const isDay = (minOfDay >= dayStartMinOfDay && minOfDay < nightStartMinOfDay)
-        const currentPeriod = isDay ? 0 : 1
         
-        if (currentPeriod !== lastPeriod) {
-          if (isDay) dayCount++
-          else nightCount++
-          lastPeriod = currentPeriod
+        const isDay = (minOfDay >= dayStartMinOfDay && minOfDay < nightStartMinOfDay)
+        
+        if (isDay) {
+          dayCount++
+          const minsToEnd = nightStartMinOfDay > minOfDay 
+            ? (nightStartMinOfDay - minOfDay) 
+            : (nightStartMinOfDay + 24 * 60 - minOfDay)
+          currentMin += minsToEnd
+        } else {
+          nightCount++
+          const minsToEnd = dayStartMinOfDay > minOfDay 
+            ? (dayStartMinOfDay - minOfDay) 
+            : (dayStartMinOfDay + 24 * 60 - minOfDay)
+          currentMin += minsToEnd
         }
       }
       
@@ -153,6 +161,12 @@ export const calculateFee = (rule: ParkingRule, startTime: Date, endTime: Date, 
       crossFee = Math.min(crossFee, max24hRate)
       totalFee += crossFee
     }
+  }
+
+  // 最终的整体金额校验，防止极端情况叠加超过理论最大值
+  if (max24hRate > 0 && max24hRate !== Infinity) {
+    const maxAllowedFee = Math.ceil(minutes / (24 * 60)) * max24hRate
+    totalFee = Math.min(totalFee, maxAllowedFee)
   }
 
   return Math.round(totalFee * 100) / 100

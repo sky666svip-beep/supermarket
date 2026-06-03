@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { posts, reports, users, comments, commentLikes, postLikes, postCollections } from '../db/schema.js'
-import { eq, desc, sql } from 'drizzle-orm'
+import { eq, desc, sql, inArray, and } from 'drizzle-orm'
 import { authMiddleware, AuthContext } from './auth.js'
 
 export const communityAdminRouter = new Hono<AuthContext>()
@@ -71,25 +71,20 @@ communityAdminRouter.get('/reports', async (c) => {
   try {
     const rawReports = await db.select().from(reports).orderBy(desc(reports.createdAt))
     
-    const result = []
-    for (const report of rawReports) {
-      let targetPost = null
-      let targetComment = null
-      
-      if (report.targetType === 'post') {
-        const p = await db.select().from(posts).where(eq(posts.id, report.targetId)).limit(1)
-        targetPost = p[0] || null
-      } else if (report.targetType === 'comment') {
-        const com = await db.select().from(comments).where(eq(comments.id, report.targetId)).limit(1)
-        targetComment = com[0] || null
-      }
-      
-      result.push({
-        report,
-        targetPost,
-        targetComment
-      })
-    }
+    const postIds = rawReports.filter(r => r.targetType === 'post').map(r => r.targetId)
+    const commentIds = rawReports.filter(r => r.targetType === 'comment').map(r => r.targetId)
+    
+    const fetchedPosts = postIds.length > 0 ? await db.select().from(posts).where(inArray(posts.id, postIds)) : []
+    const fetchedComments = commentIds.length > 0 ? await db.select().from(comments).where(inArray(comments.id, commentIds)) : []
+    
+    const postMap = new Map(fetchedPosts.map(p => [p.id, p]))
+    const commentMap = new Map(fetchedComments.map(c => [c.id, c]))
+
+    const result = rawReports.map(report => ({
+      report,
+      targetPost: report.targetType === 'post' ? (postMap.get(report.targetId) || null) : null,
+      targetComment: report.targetType === 'comment' ? (commentMap.get(report.targetId) || null) : null
+    }))
 
     return c.json({ success: true, data: result, message: '获取成功' })
   } catch (error) {
@@ -111,34 +106,51 @@ communityAdminRouter.put('/reports/:id/status', async (c) => {
 
     // 如果举报属实 (resolved)，隐藏/删除被举报的内容
     if (status === 'resolved') {
-      if (report.targetType === 'post') {
-        // 直接删除违规帖子及关联数据
-        const post = await db.select().from(posts).where(eq(posts.id, report.targetId)).limit(1)
-        if (post.length > 0) {
-          await db.delete(postLikes).where(eq(postLikes.postId, report.targetId))
-          await db.delete(postCollections).where(eq(postCollections.postId, report.targetId))
-          
-          const postComments = await db.select({ id: comments.id }).from(comments).where(eq(comments.postId, report.targetId))
-          for (const comment of postComments) {
-            await db.delete(commentLikes).where(eq(commentLikes.commentId, comment.id))
+      db.transaction((tx) => {
+        if (report.targetType === 'post') {
+          // 直接删除违规帖子及关联数据
+          const post = tx.select().from(posts).where(eq(posts.id, report.targetId)).limit(1).all()
+          if (post.length > 0) {
+            tx.delete(postLikes).where(eq(postLikes.postId, report.targetId)).run()
+            tx.delete(postCollections).where(eq(postCollections.postId, report.targetId)).run()
+            
+            const postComments = tx.select({ id: comments.id }).from(comments).where(eq(comments.postId, report.targetId)).all()
+            for (const comment of postComments) {
+              tx.delete(commentLikes).where(eq(commentLikes.commentId, comment.id)).run()
+            }
+            tx.delete(comments).where(eq(comments.postId, report.targetId)).run()
+            tx.delete(posts).where(eq(posts.id, report.targetId)).run()
+            
+            // 删除相关的举报记录 (避免脏数据)
+            tx.delete(reports).where(and(eq(reports.targetType, 'post'), eq(reports.targetId, report.targetId))).run()
+            if (postComments.length > 0) {
+              const commentIds = postComments.map(c => c.id)
+              tx.delete(reports).where(and(eq(reports.targetType, 'comment'), inArray(reports.targetId, commentIds))).run()
+            }
           }
-          await db.delete(comments).where(eq(comments.postId, report.targetId))
+        } else if (report.targetType === 'comment') {
+          // 级联删除子评论
+          const childComments = tx.select().from(comments).where(eq(comments.parentId, report.targetId)).all()
+          if (childComments.length > 0) {
+            tx.delete(comments).where(eq(comments.parentId, report.targetId)).run()
+          }
           
-          await db.delete(posts).where(eq(posts.id, report.targetId))
+          const deleted = tx.delete(comments).where(eq(comments.id, report.targetId)).returning().all()
+          if (deleted.length > 0) {
+            tx.delete(commentLikes).where(eq(commentLikes.commentId, report.targetId)).run()
+            const countToSubtract = 1 + childComments.length
+            tx.update(posts)
+              .set({ commentCount: sql`${posts.commentCount} - ${countToSubtract}` })
+              .where(eq(posts.id, deleted[0].postId)).run()
+              
+            const allDeletedCommentIds = [report.targetId, ...childComments.map(c => c.id)]
+            tx.delete(reports).where(and(eq(reports.targetType, 'comment'), inArray(reports.targetId, allDeletedCommentIds))).run()
+          }
         }
-      } else if (report.targetType === 'comment') {
-        // 直接删除违规评论
-        const comment = await db.select().from(comments).where(eq(comments.id, report.targetId)).limit(1)
-        if (comment.length > 0) {
-          await db.delete(commentLikes).where(eq(commentLikes.commentId, report.targetId))
-          await db.delete(comments).where(eq(comments.id, report.targetId))
-          // 更新帖子评论数
-          await db.update(posts).set({ commentCount: sql`${posts.commentCount} - 1` }).where(eq(posts.id, comment[0].postId))
-        }
-      }
+      })
+    } else {
+      await db.update(reports).set({ status }).where(eq(reports.id, id))
     }
-
-    await db.update(reports).set({ status }).where(eq(reports.id, id))
     return c.json({ success: true, data: null, message: '处理成功' })
   } catch (error) {
     console.error('Update report status error:', error)

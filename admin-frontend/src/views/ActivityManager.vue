@@ -65,6 +65,13 @@ const formData = ref({
 })
 
 const showStoreSelector = ref(false)
+const checkboxRefs = ref<any[]>([])
+
+const toggleStore = (index: number) => {
+  if (checkboxRefs.value[index]) {
+    checkboxRefs.value[index].toggle()
+  }
+}
 
 const openCreate = () => {
   isEditing.value = false
@@ -104,7 +111,7 @@ const openEdit = (act: Activity) => {
     images: parsedImages,
     startTime: formatDateLocal(act.startTime),
     endTime: formatDateLocal(act.endTime),
-    storeIds: act.storeIds || []
+    storeIds: act.storeIds ? [...act.storeIds] : []
   }
   showDialog.value = true
 }
@@ -290,18 +297,14 @@ const getStoreNames = (ids: number[]) => {
               <van-checkbox-group v-model="formData.storeIds">
                 <van-cell-group>
                   <van-cell
-                    v-for="store in stores"
+                    v-for="(store, index) in stores"
                     clickable
                     :key="store.id"
                     :title="store.name"
-                    @click="(e) => {
-                      const idx = formData.storeIds.indexOf(store.id);
-                      if (idx > -1) formData.storeIds.splice(idx, 1);
-                      else formData.storeIds.push(store.id);
-                    }"
+                    @click="toggleStore(index)"
                   >
                     <template #right-icon>
-                      <van-checkbox :name="store.id" @click.stop />
+                      <van-checkbox :name="store.id" :ref="el => checkboxRefs[index] = el" @click.stop />
                     </template>
                   </van-cell>
                 </van-cell-group>

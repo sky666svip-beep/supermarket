@@ -1,1 +1,5 @@
 @import "tailwindcss";
+
+:root {
+  --van-cell-group-title-padding: 16px 16px 0;
+}

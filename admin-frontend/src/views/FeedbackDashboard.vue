@@ -10,7 +10,16 @@ const feedbacks = ref<any[]>([])
 
 const fetchFeedbacks = async () => {
   try {
-    feedbacks.value = await getAdminFeedbacks()
+    const data = await getAdminFeedbacks()
+    feedbacks.value = data.map((item: any) => {
+      let parsedImages = []
+      if (item.images) {
+        try {
+          parsedImages = typeof item.images === 'string' ? JSON.parse(item.images) : item.images
+        } catch { /* ignore */ }
+      }
+      return { ...item, parsedImages }
+    })
   } catch (e: any) {
     showToast(e.response?.data?.error || '加载数据失败')
   }
@@ -45,11 +54,15 @@ const openAction = (item: any) => {
 const onSelect = async (action: any) => {
   showAction.value = false
   try {
-    await updateAdminFeedbackStatus(currentItem.value.id, action.value)
+    const res = await updateAdminFeedbackStatus(currentItem.value.id, action.value)
+    if (res.error) {
+      showToast(res.error)
+      return
+    }
     showToast('状态已更新')
     fetchFeedbacks()
-  } catch (e) {
-    showToast('状态更新失败')
+  } catch (e: any) {
+    showToast(e.response?.data?.error || '状态更新失败')
   }
 }
 
@@ -67,15 +80,20 @@ const openReply = (item: any) => {
 const onSaveReply = async () => {
   if (!replyText.value.trim()) {
     showToast('请输入回复内容')
-    return
+    return false
   }
   try {
-    await replyAdminFeedback(replyTarget.value.id, replyText.value.trim())
+    const res = await replyAdminFeedback(replyTarget.value.id, replyText.value.trim())
+    if (res.error) {
+      showToast(res.error)
+      return false
+    }
     showToast('回复已保存')
-    showReplyDialog.value = false
     fetchFeedbacks()
-  } catch (e) {
-    showToast('回复失败')
+    return true
+  } catch (e: any) {
+    showToast(e.response?.data?.error || '回复失败')
+    return false
   }
 }
 
@@ -83,16 +101,11 @@ const onSaveReply = async () => {
 const showImagePreview = ref(false)
 const previewImages = ref<string[]>([])
 
-const openImages = (imagesStr: string) => {
+const openImages = (images: string[] | string) => {
   try {
-    previewImages.value = JSON.parse(imagesStr)
+    previewImages.value = typeof images === 'string' ? JSON.parse(images) : images
     showImagePreview.value = true
   } catch { /* ignore */ }
-}
-
-const getImages = (imagesStr: string | null) => {
-  if (!imagesStr) return []
-  try { return JSON.parse(imagesStr) } catch { return [] }
 }
 
 const onDelete = (id: number) => {
@@ -102,7 +115,11 @@ const onDelete = (id: number) => {
       message: '确定要删除此工单吗？删除后不可恢复。'
     }).then(async () => {
       try {
-        await deleteAdminFeedback(id)
+        const res = await deleteAdminFeedback(id)
+        if (res.error) {
+          showToast(res.error)
+          return
+        }
         showToast('删除成功')
         fetchFeedbacks()
       } catch (e: any) {
@@ -139,18 +156,18 @@ const onDelete = (id: number) => {
         <p class="text-sm text-gray-700 mt-3 whitespace-pre-wrap bg-gray-50 p-2 rounded">{{ item.message }}</p>
 
         <!-- Images -->
-        <div v-if="getImages(item.images).length > 0" class="mt-3">
+        <div v-if="item.parsedImages && item.parsedImages.length > 0" class="mt-3">
           <p class="text-xs text-gray-500 mb-1">用户附图：</p>
           <div class="flex gap-2 flex-wrap">
             <van-image
-              v-for="(img, idx) in getImages(item.images)"
+              v-for="(img, idx) in item.parsedImages"
               :key="idx"
               :src="img"
               width="60"
               height="60"
               fit="cover"
               radius="4"
-              @click="openImages(item.images)"
+              @click="openImages(item.parsedImages)"
             />
           </div>
         </div>
@@ -185,12 +202,10 @@ const onDelete = (id: number) => {
       description="请选择工单新的处理状态"
     />
 
-    <!-- Reply Dialog -->
-    <van-dialog v-model:show="showReplyDialog" title="回复工单" show-cancel-button :before-close="() => true">
+    <van-dialog v-model:show="showReplyDialog" title="回复工单" show-cancel-button :before-close="(action: any) => action === 'confirm' ? onSaveReply() : true">
       <div class="p-4">
         <p class="text-xs text-gray-500 mb-2">工单: {{ replyTarget?.facilityType }}</p>
         <van-field v-model="replyText" rows="3" autosize type="textarea" placeholder="请输入回复内容（用户可见）" />
-        <van-button round block type="primary" class="mt-4" @click="onSaveReply">保存回复</van-button>
       </div>
     </van-dialog>
 

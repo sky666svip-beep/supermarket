@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized } from 'vue-router'
 import { showToast } from 'vant'
 import Home from '../views/Home.vue'
 
@@ -58,7 +58,7 @@ router.beforeEach((to, _from) => {
 })
 
 // 全局路由错误处理，重点捕获动态组件加载失败（如断网或发布导致的原有 chunk 丢失）
-router.onError((error: Error, to: any) => {
+router.onError((error: Error, to: RouteLocationNormalized) => {
   console.error('Router error:', error)
   
   const isChunkLoadFailed = error.message.includes('Failed to fetch dynamically imported module') 
@@ -66,17 +66,18 @@ router.onError((error: Error, to: any) => {
     || error.message.includes('Importing a module script failed')
 
   if (isChunkLoadFailed) {
-    showToast('页面资源加载失败，正在尝试恢复...')
-    
     // 利用 sessionStorage 实现防死循环的单次重试刷新机制
     const cacheKey = `router-retry-${to.fullPath}`
-    const hasRetried = sessionStorage.getItem(cacheKey)
+    const lastRetryStr = sessionStorage.getItem(cacheKey)
+    const lastRetry = lastRetryStr ? parseInt(lastRetryStr, 10) : 0
+    const now = Date.now()
     
-    if (!hasRetried) {
-      sessionStorage.setItem(cacheKey, 'true')
+    // 如果距离上次重试不到10秒，认为是连续失败，不再重试
+    if (now - lastRetry > 10000) {
+      showToast('页面资源加载失败，正在尝试恢复...')
+      sessionStorage.setItem(cacheKey, now.toString())
       window.location.reload()
     } else {
-      sessionStorage.removeItem(cacheKey)
       showToast('网络错误导致页面加载失败，请检查网络设置')
     }
   } else {

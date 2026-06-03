@@ -69,6 +69,7 @@ customer.post('/checklist', authMiddleware, async (c) => {
   const user = c.get('user')
   const userId = user.id
   const { title } = await c.req.json()
+  if (!title) return c.json({ error: '标题不能为空' }, 400)
   const result = await db.insert(checklists).values({ title, userId }).returning()
   return c.json(result[0])
 })
@@ -78,9 +79,11 @@ customer.put('/checklist/:id', authMiddleware, async (c) => {
   const userId = user.id
   const id = Number(c.req.param('id'))
   const { isCompleted } = await c.req.json()
-  await db.update(checklists)
+  const result = await db.update(checklists)
     .set({ isCompleted })
     .where(and(eq(checklists.id, id), eq(checklists.userId, userId)))
+    .returning()
+  if (result.length === 0) return c.json({ error: '清单项不存在' }, 404)
   return c.json({ success: true })
 })
 
@@ -118,6 +121,9 @@ customer.post('/feedback', authMiddleware, async (c) => {
   const user = c.get('user')
   const userId = user.id
   const { storeId, facilityType, message, images } = await c.req.json()
+  if (!storeId || !facilityType || !message) {
+    return c.json({ error: '门店、反馈类型和内容不能为空' }, 400)
+  }
   const imagesJson = images && images.length > 0 ? JSON.stringify(images) : null
   const result = await db.insert(feedbacks).values({ storeId, facilityType, message, images: imagesJson, userId }).returning()
   return c.json(result[0])

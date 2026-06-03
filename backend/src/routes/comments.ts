@@ -29,7 +29,7 @@ commentRouter.get('/post/:postId', async (c) => {
     // 为了简单起见，可以先平铺，通过 parentId 在前端组合
     return c.json({ success: true, data: list, message: '获取成功' })
   } catch (error) {
-    console.error(error)
+    console.error('获取评论失败:', error)
     return c.json({ success: false, data: null, message: '获取失败' }, 500)
   }
 })
@@ -68,6 +68,7 @@ commentRouter.get('/my/received', authMiddleware, async (c) => {
     
     return c.json({ success: true, data: result, message: '获取成功' })
   } catch (error) {
+    console.error('获取收到的评论失败:', error)
     return c.json({ success: false, data: null, message: '获取失败' }, 500)
   }
 })
@@ -88,19 +89,30 @@ commentRouter.post('/', authMiddleware, async (c) => {
   }
 
   try {
-    const newComment = await db.insert(comments).values({
-      userId: user.id,
-      postId,
-      parentId: parentId || null,
-      content,
-      images: JSON.stringify(images || [])
-    }).returning()
+    if (parentId) {
+      const parentComment = await db.select().from(comments).where(eq(comments.id, parentId)).limit(1)
+      if (parentComment.length === 0) {
+        return c.json({ success: false, data: null, message: '回复的评论不存在' }, 404)
+      }
+    }
+
+    const newComment = db.transaction((tx) => {
+      const inserted = tx.insert(comments).values({
+        userId: user.id,
+        postId,
+        parentId: parentId || null,
+        content,
+        images: JSON.stringify(images || [])
+      }).returning().get()
+      
+      // 帖子评论数+1
+      tx.update(posts).set({ commentCount: sql`${posts.commentCount} + 1` }).where(eq(posts.id, postId)).run()
+      return inserted
+    })
     
-    // 帖子评论数+1
-    await db.update(posts).set({ commentCount: sql`${posts.commentCount} + 1` }).where(eq(posts.id, postId))
-    
-    return c.json({ success: true, data: newComment[0], message: '评论成功' })
+    return c.json({ success: true, data: newComment, message: '评论成功' })
   } catch (error) {
+    console.error('发布评论失败:', error)
     return c.json({ success: false, data: null, message: '评论失败' }, 500)
   }
 })
@@ -116,12 +128,28 @@ commentRouter.delete('/:id', authMiddleware, async (c) => {
       return c.json({ success: false, data: null, message: '无权操作' }, 403)
     }
 
-    await db.delete(comments).where(eq(comments.id, id))
-    // 评论数-1
-    await db.update(posts).set({ commentCount: sql`${posts.commentCount} - 1` }).where(eq(posts.id, comment[0].postId))
+    db.transaction((tx) => {
+      // 级联删除子评论
+      const childComments = tx.select().from(comments).where(eq(comments.parentId, id)).all()
+      if (childComments.length > 0) {
+        tx.delete(comments).where(eq(comments.parentId, id)).run()
+      }
+      
+      // 删除自身
+      const deleted = tx.delete(comments).where(eq(comments.id, id)).returning().all()
+      
+      if (deleted.length > 0) {
+        // 评论数减去自身和关联的子评论数量
+        const countToSubtract = 1 + childComments.length
+        tx.update(posts)
+          .set({ commentCount: sql`${posts.commentCount} - ${countToSubtract}` })
+          .where(eq(posts.id, comment[0].postId)).run()
+      }
+    })
 
     return c.json({ success: true, data: null, message: '删除成功' })
   } catch (error) {
+    console.error('删除评论失败:', error)
     return c.json({ success: false, data: null, message: '删除失败' }, 500)
   }
 })
@@ -132,18 +160,22 @@ commentRouter.post('/:id/like', authMiddleware, async (c) => {
   const id = parseInt(c.req.param('id') || '')
   
   try {
-    const existingLike = await db.select().from(commentLikes).where(and(eq(commentLikes.userId, user.id), eq(commentLikes.commentId, id))).limit(1)
-    
-    if (existingLike.length > 0) {
-      await db.delete(commentLikes).where(eq(commentLikes.id, existingLike[0].id))
-      await db.update(comments).set({ likeCount: sql`${comments.likeCount} - 1` }).where(eq(comments.id, id))
-      return c.json({ success: true, data: { liked: false }, message: '已取消点赞' })
-    } else {
-      await db.insert(commentLikes).values({ userId: user.id, commentId: id })
-      await db.update(comments).set({ likeCount: sql`${comments.likeCount} + 1` }).where(eq(comments.id, id))
-      return c.json({ success: true, data: { liked: true }, message: '点赞成功' })
-    }
+    const result = db.transaction((tx) => {
+      const existingLike = tx.select().from(commentLikes).where(and(eq(commentLikes.userId, user.id), eq(commentLikes.commentId, id))).limit(1).all()
+      
+      if (existingLike.length > 0) {
+        tx.delete(commentLikes).where(eq(commentLikes.id, existingLike[0].id)).run()
+        tx.update(comments).set({ likeCount: sql`${comments.likeCount} - 1` }).where(eq(comments.id, id)).run()
+        return { liked: false, message: '已取消点赞' }
+      } else {
+        tx.insert(commentLikes).values({ userId: user.id, commentId: id }).run()
+        tx.update(comments).set({ likeCount: sql`${comments.likeCount} + 1` }).where(eq(comments.id, id)).run()
+        return { liked: true, message: '点赞成功' }
+      }
+    })
+    return c.json({ success: true, data: { liked: result.liked }, message: result.message })
   } catch (error) {
+    console.error('评论点赞失败:', error)
     return c.json({ success: false, data: null, message: '操作失败' }, 500)
   }
 })
@@ -164,6 +196,11 @@ commentRouter.post('/:id/report', authMiddleware, async (c) => {
       return c.json({ success: false, data: null, message: '评论不存在' }, 404)
     }
 
+    const existingReport = db.select().from(reports).where(and(eq(reports.userId, user.id), eq(reports.targetType, 'comment'), eq(reports.targetId, id))).limit(1).all()
+    if (existingReport.length > 0) {
+      return c.json({ success: false, data: null, message: '您已举报过该评论' })
+    }
+
     await db.insert(reports).values({
       userId: user.id,
       targetType: 'comment',
@@ -173,6 +210,7 @@ commentRouter.post('/:id/report', authMiddleware, async (c) => {
     })
     return c.json({ success: true, data: null, message: '举报成功' })
   } catch (error) {
+    console.error('举报失败:', error)
     return c.json({ success: false, data: null, message: '举报失败' }, 500)
   }
 })

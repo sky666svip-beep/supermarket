@@ -1,25 +1,29 @@
 <script setup lang="ts">
 // 模块：社区举报处理
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminReports, updateReportStatus, deleteAdminReport } from '../api'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()
 const activeTab = ref('pending')
-const reports = ref<any[]>([])
+const allReports = ref<any[]>([])
 const loading = ref(false)
+
+const reports = computed(() => {
+  if (activeTab.value === 'pending') {
+    return allReports.value.filter((r: any) => r.report.status === 'pending')
+  } else {
+    return allReports.value.filter((r: any) => r.report.status !== 'pending')
+  }
+})
 
 const loadReports = async () => {
   loading.value = true
   try {
     const res = await getAdminReports()
     if (res.success) {
-      if (activeTab.value === 'pending') {
-        reports.value = res.data.filter((r: any) => r.report.status === 'pending')
-      } else {
-        reports.value = res.data.filter((r: any) => r.report.status !== 'pending')
-      }
+      allReports.value = res.data
     } else {
       showToast(res.message || '获取失败')
     }
@@ -33,10 +37,6 @@ const loadReports = async () => {
 onMounted(() => {
   loadReports()
 })
-
-const onTabChange = () => {
-  loadReports()
-}
 
 const handleProcess = (id: number, status: string, actionDesc: string) => {
   showConfirmDialog({
@@ -77,7 +77,7 @@ const handleDelete = (id: number) => {
   <div class="admin-reports-container min-h-screen bg-gray-50 pb-4">
     <van-nav-bar title="举报管理" left-arrow @click-left="router.back()" fixed placeholder />
     
-    <van-tabs v-model:active="activeTab" @change="onTabChange" sticky offset-top="46">
+    <van-tabs v-model:active="activeTab" sticky offset-top="46">
       <van-tab title="待处理" name="pending"></van-tab>
       <van-tab title="已处理" name="processed"></van-tab>
     </van-tabs>

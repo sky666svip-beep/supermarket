@@ -71,6 +71,11 @@ export const jsonp = (
         ;(window as any)[callbackName] = () => {
           try { delete (window as any)[callbackName] } catch (e) {}
         }
+        // 防止脚本最终未能成功加载导致内存泄漏，60秒后自动清理该空函数
+        setTimeout(() => {
+          try { delete (window as any)[callbackName] } catch (e) {}
+        }, 60000)
+        
         reject(new Error(`JSONP Request Timeout after ${timeoutMs}ms. URL: ${url}`))
       }, timeoutMs)
     }

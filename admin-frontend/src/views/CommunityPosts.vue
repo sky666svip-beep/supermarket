@@ -15,7 +15,18 @@ const loadPosts = async () => {
   try {
     const res = await getAdminPosts(activeTab.value === 'all' ? undefined : activeTab.value)
     if (res.success) {
-      posts.value = res.data
+      posts.value = res.data.map((item: any) => {
+        let parsedImages = []
+        if (item.post.images) {
+          try {
+            parsedImages = typeof item.post.images === 'string' ? JSON.parse(item.post.images) : item.post.images
+          } catch (e) {
+            console.error('Failed to parse images', e)
+          }
+        }
+        item.post.parsedImages = parsedImages
+        return item
+      })
     } else {
       showToast(res.message || '获取失败')
     }
@@ -70,7 +81,9 @@ const toggleTop = async (item: any) => {
       item.post.isTop = !item.post.isTop
       showToast(item.post.isTop ? '已置顶' : '已取消置顶')
     }
-  } catch (error) {}
+  } catch (error) {
+    showToast('操作失败')
+  }
 }
 
 const toggleElite = async (item: any) => {
@@ -80,7 +93,9 @@ const toggleElite = async (item: any) => {
       item.post.isElite = !item.post.isElite
       showToast(item.post.isElite ? '已加精' : '已取消加精')
     }
-  } catch (error) {}
+  } catch (error) {
+    showToast('操作失败')
+  }
 }
 </script>
 
@@ -116,16 +131,16 @@ const toggleElite = async (item: any) => {
         <h3 class="text-base font-bold text-gray-900 mb-1">{{ item.post.title }}</h3>
         <p class="text-sm text-gray-600 mb-2 line-clamp-3">{{ item.post.content }}</p>
         
-        <div class="flex gap-2 mb-3" v-if="item.post.images && JSON.parse(item.post.images).length > 0">
+        <div class="flex gap-2 mb-3" v-if="item.post.parsedImages && item.post.parsedImages.length > 0">
           <van-image 
-            v-for="(img, idx) in JSON.parse(item.post.images).slice(0,3)" 
+            v-for="(img, idx) in item.post.parsedImages.slice(0,3)" 
             :key="idx" 
             :src="img.startsWith('/uploads') ? '/api' + img : img" 
             width="60" 
             height="60" 
             class="rounded"
           />
-          <span v-if="JSON.parse(item.post.images).length > 3" class="text-xs text-gray-400 self-end mb-1">等{{ JSON.parse(item.post.images).length }}张</span>
+          <span v-if="item.post.parsedImages.length > 3" class="text-xs text-gray-400 self-end mb-1">等{{ item.post.parsedImages.length }}张</span>
         </div>
         
         <div class="text-xs text-gray-400 mb-3 border-b border-gray-50 pb-2">

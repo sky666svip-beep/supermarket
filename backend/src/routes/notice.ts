@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { notices, users, stores } from '../db/schema.js'
-import { eq, desc, and, or, sql } from 'drizzle-orm'
+import { eq, desc, and, or, sql, gt, isNull } from 'drizzle-orm'
 
 export const notice = new Hono()
 
@@ -28,9 +28,9 @@ notice.get('/', async (c) => {
   const conditions: any[] = [
     eq(notices.isActive, true),
     or(
-      sql`${notices.expiresAt} IS NULL`,
-      sql`${notices.expiresAt} > ${now.getTime()}` // Note: SQLite stores timestamps as ms or s depending on drizzle config. Drizzle timestamp mode uses JS Date which maps to integer ms usually.
-    ) // Wait, drizzle-orm sqlite timestamp mode stores Date objects as ms. Let's use Date directly or sql wrapper carefully.
+      isNull(notices.expiresAt),
+      gt(notices.expiresAt, now)
+    )
   ]
   
   if (isUrgent === 'true') {
