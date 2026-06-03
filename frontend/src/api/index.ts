@@ -94,9 +94,9 @@ export const publishComment = (data: any) => api.post('/comments', data).then(re
 export const likeComment = (id: number) => api.post(`/comments/${id}/like`).then(res => res.data)
 export const reportComment = (id: number, data: { reason: string, description: string }) => api.post(`/comments/${id}/report`, data).then(res => res.data)
 
-export const getMyPosts = () => api.get('/posts/my').then(res => res.data)
-export const getMyCollections = () => api.get('/posts/collections').then(res => res.data)
-export const getMyReceivedComments = () => api.get('/comments/my/received').then(res => res.data)
+export const getMyPosts = (params?: any) => api.get('/posts/my', { params }).then(res => res.data)
+export const getMyCollections = (params?: any) => api.get('/posts/collections', { params }).then(res => res.data)
+export const getMyReceivedComments = (params?: any) => api.get('/comments/my/received', { params }).then(res => res.data)
 
 // Traffic APIs
 export const getStoreTraffic = (storeId: number) => api.get(`/traffic/${storeId}`).then(res => res.data)

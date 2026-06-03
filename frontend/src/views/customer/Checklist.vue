@@ -13,6 +13,7 @@ const loadList = async () => {
   try {
     list.value = await getChecklist()
   } catch(e) {
+    console.error(e)
     showToast('加载失败')
   }
 }
@@ -27,16 +28,30 @@ const onAdd = async () => {
     showToast('添加成功')
     loadList()
   } catch(e) {
+    console.error(e)
     showToast('添加失败')
   }
 }
 
 const toggleItem = async (item: any) => {
+  if (item._processing) return
+  item._processing = true
+  
+  const originalState = item.isCompleted
+  item.isCompleted = !item.isCompleted
+  
   try {
-    await updateChecklist(item.id, !item.isCompleted)
-    item.isCompleted = !item.isCompleted
+    const res = await updateChecklist(item.id, item.isCompleted)
+    if (!res.success) {
+      showToast(res.message || '更新失败')
+      item.isCompleted = originalState
+    }
   } catch(e) {
+    console.error(e)
     showToast('更新失败')
+    item.isCompleted = originalState
+  } finally {
+    item._processing = false
   }
 }
 
@@ -46,10 +61,15 @@ const onDelete = (item: any) => {
     message: '确定要删除这条购物项吗？'
   }).then(async () => {
     try {
-      await deleteChecklist(item.id)
-      showToast('删除成功')
-      loadList()
+      const res = await deleteChecklist(item.id)
+      if (res.success) {
+        showToast('删除成功')
+        loadList()
+      } else {
+        showToast(res.message || '删除失败')
+      }
     } catch(e) {
+      console.error(e)
       showToast('删除失败')
     }
   }).catch(() => {})
@@ -95,7 +115,7 @@ const groupedList = computed(() => {
         <van-cell-group inset class="!mx-0 shadow-sm">
           <van-cell v-for="item in group.items" :key="item.id" clickable @click="toggleItem(item)">
             <template #icon>
-              <van-checkbox :model-value="item.isCompleted" @click.stop="toggleItem(item)" class="mr-3" />
+              <van-checkbox :model-value="item.isCompleted" class="mr-3 pointer-events-none" />
             </template>
             <template #title>
               <span :class="{ 'line-through text-gray-400': item.isCompleted }">{{ item.title }}</span>

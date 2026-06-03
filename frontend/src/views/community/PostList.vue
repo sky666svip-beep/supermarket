@@ -17,10 +17,21 @@ const onLoad = async () => {
   try {
     const res = await getPosts({ tab: activeTab.value, page: page.value, limit: 10 })
     if (res.success) {
+      const formattedData = res.data.map((item: any) => {
+        let parsedImages = []
+        if (item.images) {
+          try {
+            parsedImages = JSON.parse(item.images)
+            if (!Array.isArray(parsedImages)) parsedImages = []
+          } catch (e) {}
+        }
+        return { ...item, parsedImages }
+      })
+      
       if (page.value === 1) {
-        posts.value = res.data
+        posts.value = formattedData
       } else {
-        posts.value.push(...res.data)
+        posts.value.push(...formattedData)
       }
       loading.value = false
       if (res.data.length < 10) {
@@ -30,19 +41,22 @@ const onLoad = async () => {
       }
     } else {
       showToast(res.message || '获取失败')
+      loading.value = false
       finished.value = true
     }
   } catch (error) {
     showToast('获取失败')
+    loading.value = false
     finished.value = true
   }
 }
 
 const onTabChange = () => {
+  posts.value = []
   page.value = 1
   finished.value = false
-  loading.value = true
-  onLoad()
+  // 将 loading 置为 false，van-list 检测到数据为空且未加载完成时，会自动触发 @load 防止重复请求
+  loading.value = false
 }
 
 const goDetail = (id: number) => {
@@ -55,7 +69,9 @@ const goPublish = () => {
 
 // 格式化时间
 const formatTime = (timeStr: string) => {
+  if (!timeStr) return ''
   const d = new Date(timeStr)
+  if (isNaN(d.getTime())) return ''
   return `${d.getMonth() + 1}-${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
 }
 </script>
@@ -93,8 +109,8 @@ const formatTime = (timeStr: string) => {
           <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-2">{{ post.title }}</h3>
           <p class="text-sm text-gray-600 mb-2 line-clamp-3">{{ post.content }}</p>
           
-          <div class="grid grid-cols-3 gap-1 mb-2" v-if="post.images && JSON.parse(post.images).length > 0">
-            <van-image v-for="(img, idx) in JSON.parse(post.images).slice(0,3)" :key="idx" fit="cover" :src="img.startsWith('/uploads') ? '/api' + img : img" class="h-24 w-full rounded" />
+          <div class="grid grid-cols-3 gap-1 mb-2" v-if="post.parsedImages && post.parsedImages.length > 0">
+            <van-image v-for="(img, idx) in post.parsedImages.slice(0,3)" :key="idx" fit="cover" :src="img.startsWith('/uploads') ? '/api' + img : img" class="h-24 w-full rounded" />
           </div>
           
           <div class="flex items-center text-xs text-gray-500 justify-between mt-2 pt-2 border-t border-gray-50">

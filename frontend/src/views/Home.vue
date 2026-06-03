@@ -17,6 +17,7 @@ export interface Notice {
   latitude?: string | number
   longitude?: string | number
   storeName?: string
+  parsedImages?: string[]
 }
 
 export interface Activity {
@@ -30,6 +31,7 @@ export interface Activity {
   isActive: boolean
   createdAt: string
   storeNames?: string[]
+  parsedImages?: string[]
 }
 
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -59,8 +61,13 @@ const normalNotices = ref<Notice[]>([])
 const activities = ref<Activity[]>([])
 const currentStoreName = ref('')
 const closestStoreId = ref<number | null>(null)
+const loading = ref(true)
+const isError = ref(false)
+const errorMsg = ref('')
 
-onMounted(async () => {
+const loadData = async () => {
+  loading.value = true
+  isError.value = false
   try {
     let loc = getCachedLocation()
     let userLat = loc?.lat
@@ -97,21 +104,34 @@ onMounted(async () => {
       }
     }
 
+    const parseImages = (item: any) => {
+      item.parsedImages = getImages(item.images)
+      return item
+    }
+
     // 2. 获取并过滤公告 (只显示当前门店及全局公告)
     let noticesRes = await getNotices()
     if (closestStoreId.value !== null) {
       noticesRes = noticesRes.filter((n: Notice) => !n.storeId || n.storeId === closestStoreId.value)
     }
-    urgentNotices.value = noticesRes.filter((n: Notice) => n.isUrgent)
-    normalNotices.value = noticesRes.filter((n: Notice) => !n.isUrgent)
+    urgentNotices.value = noticesRes.filter((n: Notice) => n.isUrgent).map(parseImages)
+    normalNotices.value = noticesRes.filter((n: Notice) => !n.isUrgent).map(parseImages)
 
     // 3. 加载热门活动（只查最近的3个门店及全局活动，防止爆满）
     const actParams = nearest3StoreIds.length > 0 ? { storeIds: nearest3StoreIds.join(',') } : undefined
     const actRes = await getActivities(actParams)
-    activities.value = actRes
-  } catch (e) {
+    activities.value = actRes.map(parseImages)
+  } catch (e: any) {
     console.error('Failed to load notices/activities', e)
+    isError.value = true
+    errorMsg.value = e.message || '加载首页数据失败'
+  } finally {
+    loading.value = false
   }
+}
+
+onMounted(() => {
+  loadData()
 })
 
 const showNoticeDialog = ref(false)
@@ -128,7 +148,7 @@ const getImages = (imagesStr: string | null) => {
 }
 
 const openActivityImages = (activity: Activity) => {
-  const imgs = getImages(activity.images)
+  const imgs = activity.parsedImages || []
   if (imgs.length > 0) {
     showImagePreview({
       images: imgs,
@@ -140,8 +160,17 @@ const openActivityImages = (activity: Activity) => {
 
 <template>
   <div class="space-y-4 pb-4">
-    <!-- 紧急横幅通知 -->
-    <van-notice-bar
+    <van-loading v-if="loading" class="mt-20 text-center block mx-auto" />
+    
+    <div v-else-if="isError" class="mt-20 text-center text-gray-400">
+      <van-empty description="加载失败" />
+      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
+      <van-button size="small" type="primary" class="mt-4" @click="loadData">重试</van-button>
+    </div>
+
+    <template v-else>
+      <!-- 紧急横幅通知 -->
+      <van-notice-bar
       v-if="urgentNotices && urgentNotices.length > 0"
       left-icon="volume-o"
       :text="urgentNotices.map((n) => (n.storeName ? `[${n.storeName}] ` : '') + n.title + ': ' + n.content).join('  |  ')"
@@ -216,15 +245,15 @@ const openActivityImages = (activity: Activity) => {
             class="relative w-full h-40 bg-gray-50 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer"
             @click="openActivityImages(act)"
           >
-            <template v-if="getImages(act.images).length > 0">
+            <template v-if="act.parsedImages && act.parsedImages.length > 0">
               <van-image
                 lazy-load
                 fit="cover"
                 class="w-full h-full"
-                :src="getImages(act.images)[0]"
+                :src="act.parsedImages[0]"
               />
               <div class="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                共 {{ getImages(act.images).length }} 张
+                共 {{ act.parsedImages.length }} 张
               </div>
             </template>
             <template v-else>
@@ -240,11 +269,12 @@ const openActivityImages = (activity: Activity) => {
     <van-dialog v-model:show="showNoticeDialog" :title="currentNotice?.title" confirm-button-text="知道了">
       <div class="p-4 max-h-[60vh] overflow-y-auto">
         <p class="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{{ currentNotice?.content }}</p>
-        <div v-if="currentNotice && getImages(currentNotice.images).length > 0" class="mt-4 space-y-2">
+        <div v-if="currentNotice && currentNotice.parsedImages && currentNotice.parsedImages.length > 0" class="mt-4 space-y-2">
           <img 
-            v-for="(img, idx) in getImages(currentNotice.images)" 
+            v-for="(img, idx) in currentNotice.parsedImages" 
             :key="idx" 
             :src="img" 
+            loading="lazy"
             class="w-full rounded-md object-cover"
           />
         </div>
@@ -253,6 +283,7 @@ const openActivityImages = (activity: Activity) => {
         </div>
       </div>
     </van-dialog>
+    </template>
   </div>
 </template>
 

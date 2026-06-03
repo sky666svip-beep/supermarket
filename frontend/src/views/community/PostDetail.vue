@@ -37,6 +37,16 @@ const isAuthor = computed(() => {
   return post.value.post.userId === currentUserId.value
 })
 
+const postImages = computed(() => {
+  if (!post.value?.post?.images) return []
+  try {
+    const parsed = JSON.parse(post.value.post.images)
+    return Array.isArray(parsed) ? parsed : []
+  } catch (e) {
+    return []
+  }
+})
+
 onMounted(async () => {
   await fetchPost()
   await fetchComments()
@@ -50,7 +60,7 @@ onMounted(async () => {
   }
   
   // 互助贴不需要点赞收藏状态查询，也防止了未登录用户的 401 报错
-  if (userStr && !isMutualHelpPost.value) {
+  if (userStr && post.value && !isMutualHelpPost.value) {
     await fetchInteraction()
   }
 })
@@ -129,16 +139,19 @@ const toggleCollect = async () => {
   }
 }
 
-const handleLikeComment = async (comment: any) => {
+const handleLikeComment = async (commentNode: any) => {
   if (!currentUserId.value) {
     showToast('请先登录再操作')
     router.push('/login')
     return
   }
   try {
-    const res = await likeComment(comment.comment.id)
+    const res = await likeComment(commentNode.comment.id)
     if (res.success) {
-      comment.comment.likeCount += res.data.liked ? 1 : -1
+      const original = comments.value.find(c => c.comment.id === commentNode.comment.id)
+      if (original) {
+        original.comment.likeCount += res.data.liked ? 1 : -1
+      }
     }
   } catch (error) {
     showToast('操作失败')
@@ -252,7 +265,7 @@ const submitReport = async () => {
 }
 
 // 简单的平铺转树形
-const getCommentTree = () => {
+const commentTree = computed(() => {
   const map = new Map()
   comments.value.forEach(item => {
     map.set(item.comment.id, { ...item, children: [] })
@@ -271,7 +284,7 @@ const getCommentTree = () => {
     }
   })
   return tree
-}
+})
 
 const formatTime = (timeStr: string) => {
   const d = new Date(timeStr)
@@ -307,15 +320,15 @@ const formatTime = (timeStr: string) => {
         <h1 class="text-lg font-bold mb-3 text-gray-900">{{ post.post.title }}</h1>
         <div class="text-base text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">{{ post.post.content }}</div>
         
-        <div class="flex flex-col gap-2 mb-4" v-if="post.post.images && JSON.parse(post.post.images).length > 0">
+        <div class="flex flex-col gap-2 mb-4" v-if="postImages.length > 0">
           <van-image 
-            v-for="(img, idx) in JSON.parse(post.post.images)" 
+            v-for="(img, idx) in postImages" 
             :key="idx" 
             :src="img.startsWith('/uploads') ? '/api' + img : img" 
             width="100%" 
             radius="8"
             class="shadow-sm block"
-            @click="previewImage(JSON.parse(post.post.images), Number(idx))"
+            @click="previewImage(postImages, Number(idx))"
           />
         </div>
         <div class="flex items-center text-xs text-gray-400 gap-4 mt-4">
@@ -334,7 +347,7 @@ const formatTime = (timeStr: string) => {
         </div>
         
         <div v-else>
-          <div v-for="node in getCommentTree()" :key="node.comment.id" class="mb-4 border-b border-gray-50 pb-4">
+          <div v-for="node in commentTree" :key="node.comment.id" class="mb-4 border-b border-gray-50 pb-4">
             <div class="flex items-start">
               <van-image round width="32" height="32" :src="node.author.avatar || 'https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg'" class="mt-1" />
               <div class="ml-2 flex-1">

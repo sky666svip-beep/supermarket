@@ -4,7 +4,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFeedbackHistory } from '../../api/index'
-import { showToast } from 'vant'
+import { showToast, showImagePreview } from 'vant'
 
 const router = useRouter()
 const records = ref<any[]>([])
@@ -37,6 +37,13 @@ const detailImages = computed(() => {
   if (!detailItem.value?.images) return []
   try { return JSON.parse(detailItem.value.images) } catch { return [] }
 })
+
+const previewImage = (images: string[], index: number) => {
+  showImagePreview({
+    images,
+    startPosition: index
+  })
+}
 
 const onDelete = async (id: number) => {
   import('vant').then(({ showConfirmDialog }) => {
@@ -127,7 +134,7 @@ const onDelete = async (id: number) => {
               height="80"
               fit="cover"
               radius="4"
-              @click="() => {}"
+              @click="previewImage(detailImages, Number(idx))"
             />
           </div>
         </div>

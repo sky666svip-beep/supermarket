@@ -1,6 +1,6 @@
 <!-- 模块：我的帖子 -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMyPosts, deletePost } from '../../api/index'
 import { showToast, showConfirmDialog } from 'vant'
@@ -18,31 +18,44 @@ interface PostItem {
 
 const router = useRouter()
 const posts = ref<PostItem[]>([])
-const loading = ref(true)
+const loading = ref(false)
+const finished = ref(false)
 const isError = ref(false)
+const errorMsg = ref('')
+const page = ref(1)
 
-const fetchPosts = async () => {
-  loading.value = true
+const onLoad = async () => {
   isError.value = false
   try {
-    const res = await getMyPosts()
+    const res = await getMyPosts({ page: page.value, limit: 10 })
     if (res.success) {
-      posts.value = res.data
+      const data = res.data || []
+      posts.value.push(...data)
+      page.value++
+      if (data.length < 10) {
+        finished.value = true
+      }
     } else {
       isError.value = true
-      showToast(res.message || '获取失败')
+      errorMsg.value = res.message || '获取失败'
+      finished.value = true
     }
-  } catch (error) {
+  } catch (error: any) {
     isError.value = true
-    showToast('获取异常')
+    errorMsg.value = error.response?.data?.error || error.message || '获取异常'
+    finished.value = true
   } finally {
     loading.value = false
   }
 }
 
-onMounted(() => {
-  fetchPosts()
-})
+const reload = () => {
+  posts.value = []
+  page.value = 1
+  finished.value = false
+  loading.value = true
+  onLoad()
+}
 
 const goDetail = (id?: number) => {
   if (!id) return showToast('无效的帖子ID')
@@ -64,12 +77,12 @@ const onDelete = (id?: number) => {
       const res = await deletePost(id)
       if (res.success) {
         showToast('删除成功')
-        fetchPosts()
+        posts.value = posts.value.filter(p => p.id !== id)
       } else {
         showToast(res.message || '删除失败')
       }
-    } catch (error) {
-      showToast('删除异常')
+    } catch (error: any) {
+      showToast(error.response?.data?.error || error.message || '删除异常')
     }
   }).catch(() => {})
 }
@@ -85,38 +98,44 @@ const formatDate = (dateStr?: string) => {
   <div class="my-posts-container min-h-screen bg-gray-50 pb-4">
     <van-nav-bar title="我的帖子" left-arrow @click-left="router.back()" fixed placeholder />
     
-    <van-loading v-if="loading" class="mt-10 text-center" />
-    
-    <div v-else-if="isError" class="mt-20 text-center text-gray-400">
+    <div v-if="isError && posts.length === 0" class="mt-20 text-center text-gray-400">
       <van-empty description="加载失败" />
-      <van-button size="small" type="primary" class="mt-4" @click="fetchPosts">重试</van-button>
+      <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
+      <van-button size="small" type="primary" class="mt-4" @click="reload">重试</van-button>
     </div>
     
-    <div v-else-if="posts.length === 0" class="mt-20 text-center text-gray-400">
+    <div v-else-if="posts.length === 0 && finished" class="mt-20 text-center text-gray-400">
       <van-empty description="还没发过帖子哦" />
       <van-button type="primary" size="small" class="mt-4" @click="router.push('/community/publish')">去发帖</van-button>
     </div>
     
     <div v-else class="p-3">
-      <div v-for="post in posts" :key="post.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(post.id)">
-        <div class="flex justify-between items-center mb-2">
-          <van-tag :type="post.status === 'approved' ? 'success' : post.status === 'rejected' ? 'danger' : 'warning'">
-            {{ post.status === 'approved' ? '已发布' : post.status === 'rejected' ? '被拒绝' : '审核中' }}
-          </van-tag>
-          <span class="text-xs text-gray-400">{{ formatDate(post.createdAt) }}</span>
+      <van-list
+        v-model:loading="loading"
+        :finished="finished"
+        finished-text="没有更多了"
+        @load="onLoad"
+      >
+        <div v-for="post in posts" :key="post.id" class="bg-white rounded-lg p-4 mb-3 shadow-sm border border-gray-100" @click="goDetail(post.id)">
+          <div class="flex justify-between items-center mb-2">
+            <van-tag :type="post.status === 'approved' ? 'success' : post.status === 'rejected' ? 'danger' : 'warning'">
+              {{ post.status === 'approved' ? '已发布' : post.status === 'rejected' ? '被拒绝' : '审核中' }}
+            </van-tag>
+            <span class="text-xs text-gray-400">{{ formatDate(post.createdAt) }}</span>
+          </div>
+          <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1">{{ post.title }}</h3>
+          <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ post.content }}</p>
+          <div class="flex items-center text-xs text-gray-500 gap-4 mt-2">
+            <span>阅读 {{ post.viewCount }}</span>
+            <span>点赞 {{ post.likeCount }}</span>
+            <span>评论 {{ post.commentCount }}</span>
+          </div>
+          <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-50" @click.stop>
+            <van-button size="mini" type="primary" plain @click="onEdit(post.id)">编辑</van-button>
+            <van-button size="mini" type="danger" plain @click="onDelete(post.id)">删除</van-button>
+          </div>
         </div>
-        <h3 class="text-base font-bold text-gray-900 mb-1 line-clamp-1">{{ post.title }}</h3>
-        <p class="text-sm text-gray-600 line-clamp-2 mb-2">{{ post.content }}</p>
-        <div class="flex items-center text-xs text-gray-500 gap-4 mt-2">
-          <span>阅读 {{ post.viewCount }}</span>
-          <span>点赞 {{ post.likeCount }}</span>
-          <span>评论 {{ post.commentCount }}</span>
-        </div>
-        <div class="flex justify-end gap-2 mt-3 pt-3 border-t border-gray-50" @click.stop>
-          <van-button size="mini" type="primary" plain @click="onEdit(post.id)">编辑</van-button>
-          <van-button size="mini" type="danger" plain @click="onDelete(post.id)">删除</van-button>
-        </div>
-      </div>
+      </van-list>
     </div>
   </div>
 </template>

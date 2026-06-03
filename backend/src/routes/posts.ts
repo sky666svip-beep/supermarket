@@ -77,8 +77,14 @@ postRouter.get('/', async (c) => {
 // 获取我的帖子
 postRouter.get('/my', authMiddleware, async (c) => {
   const user = c.get('user')
+  const page = parseInt(c.req.query('page') || '1')
+  const limit = parseInt(c.req.query('limit') || '10')
+  const offset = (page - 1) * limit
+
   try {
     const list = await db.select().from(posts).where(eq(posts.userId, user.id)).orderBy(desc(posts.createdAt))
+      .limit(limit)
+      .offset(offset)
     return c.json({ success: true, data: list, message: '获取成功' })
   } catch (error) {
     return c.json({ success: false, data: null, message: '获取失败' }, 500)
@@ -88,12 +94,17 @@ postRouter.get('/my', authMiddleware, async (c) => {
 // 获取我的收藏
 postRouter.get('/collections', authMiddleware, async (c) => {
   const user = c.get('user')
+  const page = parseInt(c.req.query('page') || '1')
+  const limit = parseInt(c.req.query('limit') || '10')
+  const offset = (page - 1) * limit
+  
   try {
     const list = await db
       .select({
         post: posts,
         author: {
           id: users.id,
+          username: users.username,
           nickname: users.nickname,
           avatar: users.avatar
         }
@@ -103,6 +114,8 @@ postRouter.get('/collections', authMiddleware, async (c) => {
       .innerJoin(users, eq(posts.userId, users.id))
       .where(eq(postCollections.userId, user.id))
       .orderBy(desc(postCollections.createdAt))
+      .limit(limit)
+      .offset(offset)
     
     return c.json({ success: true, data: list, message: '获取成功' })
   } catch (error) {
@@ -123,6 +136,7 @@ postRouter.get('/:id', async (c) => {
         storeName: stores.name,
         author: {
           id: users.id,
+          username: users.username,
           nickname: users.nickname,
           avatar: users.avatar
         }

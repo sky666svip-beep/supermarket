@@ -82,35 +82,43 @@ onMounted(async () => {
   } catch(e) {}
 
   if (route.query.id) {
-    isEdit.value = true
-    postId.value = parseInt(route.query.id as string)
-    showToast({ type: 'loading', message: '加载中...', duration: 0 })
-    try {
-      const res = await getPostDetail(postId.value)
-      if (res.success && res.data && res.data.post) {
-        const p = res.data.post
-        title.value = p.title
-        content.value = p.content
-        category.value = p.category
-        if (p.storeId) {
-          storeId.value = p.storeId
-          storeName.value = res.data.storeName || ''
+    const id = parseInt(route.query.id as string)
+    if (!isNaN(id)) {
+      isEdit.value = true
+      postId.value = id
+      showToast({ type: 'loading', message: '加载中...', duration: 0 })
+      try {
+        const res = await getPostDetail(postId.value)
+        if (res.success && res.data && res.data.post) {
+          const p = res.data.post
+          title.value = p.title
+          content.value = p.content
+          category.value = p.category
+          if (p.storeId) {
+            storeId.value = p.storeId
+            storeName.value = res.data.storeName || ''
+          }
+          if (p.images) {
+            try {
+              const imgs = JSON.parse(p.images)
+              if (Array.isArray(imgs)) {
+                fileList.value = imgs.map((url: string) => ({ url, status: 'done', isImage: true }))
+              }
+            } catch (e) {}
+          }
+        } else {
+          showToast('获取帖子失败')
         }
-        if (p.images) {
-          const imgs = JSON.parse(p.images)
-          fileList.value = imgs.map((url: string) => ({ url, status: 'done', isImage: true }))
-        }
-      } else {
-        showToast('获取帖子失败')
+      } catch(e) {
+        showToast('获取异常')
       }
-    } catch(e) {
-      showToast('获取异常')
+      closeToast()
     }
-    closeToast()
   }
 })
 
 const afterRead = async (file: any) => {
+  if (!file.file) return
   file.status = 'uploading'
   file.message = '上传中...'
   try {
@@ -147,7 +155,7 @@ const onSubmit = async () => {
   }
 
   // 提取上传成功的图片
-  const images = fileList.value.filter(item => item.status === 'done' || item.url).map(item => item.url)
+  const images = fileList.value.filter(item => item.status === 'done' && item.url).map(item => item.url)
 
   try {
     showToast({ type: 'loading', message: isEdit.value ? '保存中...' : '发布中...', forbidClick: true, duration: 0 })

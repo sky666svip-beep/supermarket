@@ -4,11 +4,12 @@
 import { ref, onMounted } from 'vue'
 import { showSuccessToast, showFailToast } from 'vant'
 import { useRouter } from 'vue-router'
-import { submitFeedback, getStores } from '../../api/index'
+import { submitFeedback, getStores, uploadImage } from '../../api/index'
 import { getCachedLocation } from '../../utils/location'
 
 const router = useRouter()
 const facilityType = ref('问题上报-设备故障')
+const pickerValue = ref(['问题上报', '设备故障'])
 const showPicker = ref(false)
 
 const storeId = ref<number | null>(null)
@@ -79,7 +80,9 @@ onMounted(async () => {
 })
 
 const onConfirm = ({ selectedOptions }: any) => {
-  facilityType.value = selectedOptions.map((o: any) => o.text).join('-')
+  if (selectedOptions) {
+    facilityType.value = selectedOptions.map((o: any) => o.text).join('-')
+  }
   showPicker.value = false
 }
 
@@ -91,12 +94,23 @@ const onStoreConfirm = ({ selectedOptions }: any) => {
   showStorePicker.value = false
 }
 
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.readAsDataURL(file)
-  })
+const afterRead = async (file: any) => {
+  if (!file.file) return
+  file.status = 'uploading'
+  file.message = '上传中...'
+  try {
+    const res = await uploadImage(file.file)
+    if (res.success) {
+      file.status = 'done'
+      file.url = res.url
+    } else {
+      file.status = 'failed'
+      file.message = '上传失败'
+    }
+  } catch (error) {
+    file.status = 'failed'
+    file.message = '上传失败'
+  }
 }
 
 const onSubmit = async () => {
@@ -106,18 +120,15 @@ const onSubmit = async () => {
   }
   
   try {
-    const images: string[] = []
-    for (const item of fileList.value) {
-      if (item.file) {
-        images.push(await fileToBase64(item.file))
-      }
-    }
+    const images = fileList.value.filter(item => item.status === 'done' && item.url).map(item => item.url)
+    
     await submitFeedback(storeId.value, facilityType.value, message.value, images)
     showSuccessToast('提交成功，感谢您的反馈')
     setTimeout(() => {
       router.back()
     }, 1500)
   } catch (error) {
+    console.error(error)
     showFailToast('提交失败，请重试')
   }
 }
@@ -156,6 +167,7 @@ const onSubmit = async () => {
         />
         <van-popup v-model:show="showPicker" position="bottom">
           <van-picker
+            v-model="pickerValue"
             :columns="columns"
             @confirm="onConfirm"
             @cancel="showPicker = false"
@@ -174,7 +186,7 @@ const onSubmit = async () => {
 
         <div class="px-4 py-3 bg-white">
           <p class="text-sm text-gray-600 mb-2">图片上传 (选填)</p>
-          <van-uploader v-model="fileList" multiple :max-count="3" />
+          <van-uploader v-model="fileList" multiple :max-count="3" :after-read="afterRead" />
         </div>
       </van-cell-group>
       

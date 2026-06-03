@@ -69,7 +69,11 @@ onMounted(async () => {
     let loc = getCachedLocation()
     if (!loc || !loc.lat || !loc.lng) {
       loc = await autoLocate()
-      if(loc) setCachedLocation(loc)
+      if(loc) {
+        setCachedLocation(loc)
+      } else {
+        showToast('定位获取失败，已为您展示默认门店')
+      }
     }
 
     if (loc && loc.lat && loc.lng && stores.value.length > 0) {
@@ -184,6 +188,10 @@ const formatTime = (timeStr: string | null) => {
   const d = new Date(timeStr)
   return d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0')
 }
+
+const currentStoreName = computed(() => {
+  return stores.value.find(s => s.id === currentStoreId.value)?.name || '请选择门店'
+})
 </script>
 
 <template>
@@ -195,7 +203,7 @@ const formatTime = (timeStr: string | null) => {
       <div class="bg-white rounded-xl shadow-sm p-2 flex flex-col gap-2">
         <van-cell title="当前门店" is-link @click="showStorePicker = true">
           <template #value>
-            <span class="text-gray-800 font-medium">{{ stores.find(s => s.id === currentStoreId)?.name || '请选择门店' }}</span>
+            <span class="text-gray-800 font-medium">{{ currentStoreName }}</span>
           </template>
         </van-cell>
         <van-cell title="选择楼层" is-link @click="showFloorPicker = true">

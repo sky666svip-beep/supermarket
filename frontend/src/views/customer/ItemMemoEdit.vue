@@ -37,7 +37,12 @@ const onSubmit = async () => {
     let uploadedUrl = ''
     if (fileList.value.length > 0 && fileList.value[0].file) {
       const res = await uploadImage(fileList.value[0].file)
-      uploadedUrl = res.url
+      if (res.success) {
+        uploadedUrl = res.url
+      } else {
+        showToast(res.message || '图片上传失败')
+        return
+      }
     }
 
     // Process tags

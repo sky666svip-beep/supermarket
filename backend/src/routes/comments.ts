@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { db } from '../db/index.js'
 import { posts, users, comments, commentLikes, reports } from '../db/schema.js'
-import { eq, desc, and, sql } from 'drizzle-orm'
+import { eq, desc, and, sql, inArray, ne } from 'drizzle-orm'
 import { authMiddleware, AuthContext } from './auth.js'
 
 export const commentRouter = new Hono<AuthContext>()
@@ -16,6 +16,7 @@ commentRouter.get('/post/:postId', async (c) => {
         comment: comments,
         author: {
           id: users.id,
+          username: users.username,
           nickname: users.nickname,
           avatar: users.avatar
         }
@@ -37,6 +38,10 @@ commentRouter.get('/post/:postId', async (c) => {
 // 我收到的评论回复
 commentRouter.get('/my/received', authMiddleware, async (c) => {
   const user = c.get('user')
+  const page = parseInt(c.req.query('page') || '1')
+  const limit = parseInt(c.req.query('limit') || '10')
+  const offset = (page - 1) * limit
+  
   try {
     // 获取别人对我发帖的评论，或者对我评论的回复
     // 简单实现：我发的帖子收到的评论
@@ -50,6 +55,7 @@ commentRouter.get('/my/received', authMiddleware, async (c) => {
         comment: comments,
         author: {
           id: users.id,
+          username: users.username,
           nickname: users.nickname,
           avatar: users.avatar
         },
@@ -61,12 +67,12 @@ commentRouter.get('/my/received', authMiddleware, async (c) => {
       .from(comments)
       .innerJoin(users, eq(comments.userId, users.id))
       .innerJoin(posts, eq(comments.postId, posts.id))
-      // .where(inArray(comments.postId, postIds)) // simplified
+      .where(and(inArray(comments.postId, postIds), ne(comments.userId, user.id)))
+      .orderBy(desc(comments.createdAt))
+      .limit(limit)
+      .offset(offset)
     
-    // 这里因为 sql 问题，自己实现一个简单的过滤
-    const result = list.filter(item => postIds.includes(item.post.id) && item.comment.userId !== user.id)
-    
-    return c.json({ success: true, data: result, message: '获取成功' })
+    return c.json({ success: true, data: list, message: '获取成功' })
   } catch (error) {
     console.error('获取收到的评论失败:', error)
     return c.json({ success: false, data: null, message: '获取失败' }, 500)

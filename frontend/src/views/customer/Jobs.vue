@@ -117,7 +117,7 @@ const previewSingleImage = (url: string) => {
               @click="isOverviewExpanded = !isOverviewExpanded"
             >
               <!-- Card Cover Gradient Header (公众号配图感) -->
-              <div class="h-28 bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-between px-6 text-white relative">
+              <div class="h-20 bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">集团概况</h3>
                   <p class="text-xs text-blue-100 mt-1">深耕零售，服务万千家庭</p>
@@ -169,7 +169,7 @@ const previewSingleImage = (url: string) => {
               @click="isBrandExpanded = !isBrandExpanded"
             >
               <!-- Card Cover Gradient Header -->
-              <div class="h-28 bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-between px-6 text-white relative">
+              <div class="h-20 bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">品牌理念</h3>
                   <p class="text-xs text-emerald-100 mt-1">品质筑基，温暖相伴</p>
@@ -236,15 +236,15 @@ const previewSingleImage = (url: string) => {
                         行深培训视频在线观看学习链接：
                       </span>
                       <div class="flex flex-col space-y-2">
-                        <a href="http://v.youku.com/v_show/id_XNDk0MzQ0NjQw.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
+                        <a href="https://v.youku.com/v_show/id_XNDk0MzQ0NjQw.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
                           <span>📽️ 行深培训视频学习课 1</span>
                           <van-icon name="arrow" />
                         </a>
-                        <a href="http://v.youku.com/v_show/id_XNDk0MzA4MDA4.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
+                        <a href="https://v.youku.com/v_show/id_XNDk0MzA4MDA4.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
                           <span>📽️ 行深培训视频学习课 2</span>
                           <van-icon name="arrow" />
                         </a>
-                        <a href="http://v.youku.com/v_show/id_XNDk0MzA4MDEy.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
+                        <a href="https://v.youku.com/v_show/id_XNDk0MzA4MDEy.html" target="_blank" class="flex items-center justify-between bg-white hover:bg-emerald-50/10 border border-emerald-100 text-xs text-emerald-700 px-3 py-2 rounded-lg transition-all duration-200">
                           <span>📽️ 行深培训视频学习课 3</span>
                           <van-icon name="arrow" />
                         </a>
@@ -271,7 +271,7 @@ const previewSingleImage = (url: string) => {
               @click="isCultureExpanded = !isCultureExpanded"
             >
               <!-- Card Cover Gradient Header -->
-              <div class="h-28 bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-between px-6 text-white relative">
+              <div class="h-20 bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">企业文化</h3>
                   <p class="text-xs text-purple-100 mt-1">开拓创新，追求卓越</p>
@@ -290,7 +290,7 @@ const previewSingleImage = (url: string) => {
                 </div>
 
                 <!-- Expanded Segment -->
-                <div v-show="isCultureExpanded" class="text-sm text-gray-600 leading-relaxed space-y-4.5 border-t border-gray-100 pt-3 text-justify">
+                <div v-show="isCultureExpanded" class="text-sm text-gray-600 leading-relaxed space-y-4 border-t border-gray-100 pt-3 text-justify">
                   <!-- Pillar 2: 企业精神 -->
                   <div class="space-y-1.5 border-b border-gray-50 pb-3">
                     <h4 class="text-sm font-bold text-purple-700 border-l-2 border-purple-500 pl-2">企业精神：自我管理，自我教育，自我承担，自我超越</h4>
@@ -313,7 +313,7 @@ const previewSingleImage = (url: string) => {
                   <!-- Pillar 4: 服务理念 -->
                   <div class="space-y-2">
                     <h4 class="text-sm font-bold text-purple-700 border-l-2 border-purple-500 pl-2">服务理念：为顾客创造价值是大张的核心理念之一</h4>
-                    <div class="space-y-1 text-xs text-gray-500 bg-gray-50 p-3 rounded-xl space-y-1.5">
+                    <div class="text-xs text-gray-500 bg-gray-50 p-3 rounded-xl space-y-1.5">
                       <p>🏬 <strong class="text-gray-700">大张超市</strong>：方便低价，百姓之家。</p>
                       <p>🥦 <strong class="text-gray-700">大张食品</strong>：保障老百姓的食品健康和生活真便利。</p>
                       <p>👗 <strong class="text-gray-700">大张服饰</strong>：穿出体面、穿出富足、穿出骄傲、穿出尊贵。</p>

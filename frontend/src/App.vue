@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { areaList } from '@vant/area-data'
 import { showToast } from 'vant'
-import { autoLocate, getCachedLocation, setCachedLocation, clearCachedLocation, type LocationInfo } from './utils/location'
+import { autoLocate, getCachedLocation, setCachedLocation, type LocationInfo } from './utils/location'
 
 const active = ref(0)
 const route = useRoute()
@@ -29,8 +29,8 @@ const onAreaConfirm = ({ selectedOptions }: any) => {
 const forceRelocate = async () => {
   if (isRelocating.value) return
   isRelocating.value = true
-  clearCachedLocation()
-  currentLocation.value = null
+  const oldLoc = currentLocation.value
+  
   try {
     const loc = await autoLocate()
     currentLocation.value = loc
@@ -38,8 +38,13 @@ const forceRelocate = async () => {
     showToast('定位更新成功')
   } catch (e) {
     console.warn('Auto locate failed', e)
-    showToast('定位失败，请手动选择')
-    showAreaPopup.value = true
+    if (!oldLoc) {
+      showToast('定位失败，请手动选择')
+      showAreaPopup.value = true
+    } else {
+      showToast('定位失败，已恢复上次位置')
+      currentLocation.value = oldLoc
+    }
   } finally {
     isRelocating.value = false
   }
@@ -55,7 +60,9 @@ onMounted(async () => {
         const loc = await autoLocate()
         currentLocation.value = loc
         setCachedLocation(loc)
-      } catch (_) {}
+      } catch (e) {
+        showToast('获取精准坐标失败，部分功能可能受限')
+      }
     }
   } else {
     try {
@@ -64,6 +71,7 @@ onMounted(async () => {
       setCachedLocation(loc)
     } catch (e) {
       console.warn('Auto locate failed, showing manual picker')
+      showToast('定位失败，请手动选择所在地区')
       showAreaPopup.value = true
     }
   }

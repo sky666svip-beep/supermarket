@@ -11,7 +11,11 @@ const memos = ref<any[]>([])
 
 const fetchMemos = async () => {
   try {
-    memos.value = await getItemMemos()
+    const data = await getItemMemos()
+    memos.value = data.map((item: any) => ({
+      ...item,
+      parsedTags: parseTags(item.tags)
+    }))
   } catch (e) {
     showToast('获取备忘录失败')
   }
@@ -74,6 +78,7 @@ const parseTags = (tagsStr: string) => {
 
 const getFullUrl = (url: string) => {
   if (!url) return ''
+  if (url.startsWith('http') || url.startsWith('/api')) return url
   return url.startsWith('/') ? `/api${url}` : url
 }
 </script>
@@ -143,8 +148,8 @@ const getFullUrl = (url: string) => {
             </div>
           </div>
           
-          <div class="flex flex-wrap gap-2 mb-4 pl-1" v-if="memo.tags && parseTags(memo.tags).length > 0">
-            <van-tag v-for="tag in parseTags(memo.tags)" :key="tag" type="primary" plain>
+          <div class="flex flex-wrap gap-2 mb-4 pl-1" v-if="memo.parsedTags && memo.parsedTags.length > 0">
+            <van-tag v-for="tag in memo.parsedTags" :key="tag" type="primary" plain>
               {{ tag }}
             </van-tag>
           </div>

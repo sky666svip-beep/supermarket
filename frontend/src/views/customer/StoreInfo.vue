@@ -1,7 +1,7 @@
 <!-- 模块：门店查询 -->
 <script setup lang="ts">
 // 模块：门店查询与展示（Leaflet 地图 + 多图源降级）
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
+import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { getStores, getRegions } from '../../api/index'
 import { showToast, showDialog } from 'vant'
 import { getCachedLocation, setCachedLocation } from '../../utils/location'
@@ -192,6 +192,12 @@ const onSearch = () => {
   fetchStores(true)
 }
 
+watch(searchValue, (val) => {
+  if (!val.trim() && hasSearched.value) {
+    fetchStores(false)
+  }
+})
+
 // 多图源瓦片图层，按优先级降级
 const tileLayers = [
   {
@@ -203,9 +209,7 @@ const tileLayers = [
     name: '腾讯地图',
     url: 'https://rt{s}.map.gtimg.com/tile?z={z}&x={x}&y={y}&type=vector&styleid=0',
     options: {
-      subdomains: '0123', maxZoom: 18, attribution: '&copy; 腾讯地图',
-      // 腾讯地图 Y 轴需要翻转
-      tms: true
+      subdomains: '0123', maxZoom: 18, attribution: '&copy; 腾讯地图'
     }
   },
   {
@@ -386,10 +390,15 @@ const initOrUpdateMap = async () => {
       <van-search 
         v-model="searchValue" 
         placeholder="全局搜索：输入门店名称或位置" 
+        show-action
         @search="onSearch" 
         @clear="fetchStores(false)" 
         class="!px-0" 
-      />
+      >
+        <template #action>
+          <div @click="onSearch" class="text-blue-500 px-2 font-medium active:opacity-70">搜索</div>
+        </template>
+      </van-search>
       <div class="px-4 pb-2 bg-white flex justify-center">
         <van-tabs v-model:active="viewMode" type="card" @change="initOrUpdateMap" class="w-full">
           <van-tab title="列表模式" name="list"></van-tab>
