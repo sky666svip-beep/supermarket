@@ -22,6 +22,11 @@ const sqlite = new Database(dbPath)
 // Enable foreign keys constraints in SQLite
 sqlite.pragma('foreign_keys = ON')
 
+// Enable high concurrency mode (WAL)
+sqlite.pragma('journal_mode = WAL')
+sqlite.pragma('synchronous = NORMAL')
+sqlite.pragma('busy_timeout = 5000')
+
 export const db = drizzle(sqlite, { schema })
 
 // Run migrations on startup

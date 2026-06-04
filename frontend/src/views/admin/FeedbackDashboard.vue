@@ -2,7 +2,7 @@
 // 模块：管理员工作台
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAdminFeedbacks, updateAdminFeedbackStatus, replyAdminFeedback, deleteAdminFeedback } from '../api'
+import { getAdminFeedbacks, updateAdminFeedbackStatus, replyAdminFeedback, deleteAdminFeedback } from '../../api'
 import { showToast } from 'vant'
 
 const router = useRouter()

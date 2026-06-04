@@ -39,7 +39,7 @@ const mimeTypes: Record<string, string> = {
 
 app.get('/api/uploads/:filename', async (c) => {
   const filename = c.req.param('filename')
-  const uploadDir = path.resolve(__dirname, '../data/uploads')
+  const uploadDir = path.resolve(process.cwd(), 'data/uploads')
   const filepath = path.join(uploadDir, filename)
 
   if (!fs.existsSync(filepath)) {
@@ -94,7 +94,7 @@ setInterval(async () => {
         // extract filename from url
         const filename = memo.imageUrl.split('/').pop()
         if (filename) {
-          const filepath = path.resolve(__dirname, '../data/uploads', filename)
+          const filepath = path.resolve(process.cwd(), 'data/uploads', filename)
           if (fs.existsSync(filepath)) {
             fs.unlinkSync(filepath)
           }

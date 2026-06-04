@@ -126,12 +126,32 @@ const loadData = async () => {
       noticesRes = noticesRes.filter((n: Notice) => !n.storeId)
     }
     urgentNotices.value = noticesRes.filter((n: Notice) => n.isUrgent).map(parseImages)
-    normalNotices.value = noticesRes.filter((n: Notice) => !n.isUrgent).map(parseImages)
+    let normal = noticesRes.filter((n: Notice) => !n.isUrgent).map(parseImages)
+    
+    // 排序：全门店通用优先，其次是发布时间
+    normal.sort((a: Notice, b: Notice) => {
+      const aGlobal = !a.storeId
+      const bGlobal = !b.storeId
+      if (aGlobal && !bGlobal) return -1
+      if (!aGlobal && bGlobal) return 1
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+    normalNotices.value = normal
 
     // 3. 加载热门活动（只查最近的3个门店及全局活动，防止爆满）
     const actParams = nearest3StoreIds.length > 0 ? { storeIds: nearest3StoreIds.join(',') } : undefined
     const actRes = await getActivities(actParams)
-    activities.value = actRes.map(parseImages)
+    let acts = actRes.map(parseImages)
+    
+    // 排序：全门店通用优先，其次是发布时间
+    acts.sort((a: Activity, b: Activity) => {
+      const aGlobal = a.isAllStores
+      const bGlobal = b.isAllStores
+      if (aGlobal && !bGlobal) return -1
+      if (!aGlobal && bGlobal) return 1
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    })
+    activities.value = acts
   } catch (e: any) {
     console.error('Failed to load notices/activities', e)
     isError.value = true
@@ -170,6 +190,9 @@ const openAreaPopup = () => {
 
 const showNoticeDialog = ref(false)
 const currentNotice = ref<Notice | null>(null)
+
+const showAllNotices = ref(false)
+const showAllActivities = ref(false)
 
 const openNotice = (notice: Notice) => {
   currentNotice.value = notice
@@ -241,49 +264,49 @@ const openActivityImages = (activity: Activity) => {
         <section class="px-margin-mobile mt-4">
           <div class="grid grid-cols-4 md:grid-cols-8 gap-y-3 gap-x-xs">
             <div @click="$router.push('/customer/stores')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">storefront</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">门店查询</span>
             </div>
             <div @click="$router.push('/customer/checklist')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">shopping_bag</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">购物清单</span>
             </div>
             <div @click="$router.push('/customer/memos')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">edit_note</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">商品备忘</span>
             </div>
             <div @click="$router.push('/customer/feedback')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">report_problem</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">问题上报</span>
             </div>
             <div @click="$router.push('/customer/traffic')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">analytics</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">客流分析</span>
             </div>
             <div @click="$router.push('/customer/parking')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">local_parking</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">停车计费</span>
             </div>
             <div @click="$router.push('/customer/mutual-help')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">diversity_3</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">同店互助</span>
             </div>
             <div @click="$router.push('/customer/jobs')" class="flex flex-col items-center gap-sm cursor-pointer group">
-              <div class="w-14 h-14 rounded-full bg-surface-container-low flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
+              <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
                 <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">handshake</span>
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">加入我们</span>
@@ -295,9 +318,9 @@ const openActivityImages = (activity: Activity) => {
         <section v-if="normalNotices.length > 0" class="px-margin-mobile mt-lg">
           <div class="flex justify-between items-center mb-md">
             <h3 class="font-headline-sm text-headline-sm text-on-background">活动快讯</h3>
-            <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
+            <span v-if="normalNotices.length > 2" @click="showAllNotices = true" class="font-label-md text-label-md text-red-400 cursor-pointer hover:underline">更多</span>
           </div>
-          <div v-for="notice in normalNotices.slice(0, 3)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
+          <div v-for="notice in normalNotices.slice(0, 2)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
             <div class="bg-error-container text-on-error-container p-2 rounded-lg flex-shrink-0">
               <span class="material-symbols-outlined">campaign</span>
             </div>
@@ -314,22 +337,23 @@ const openActivityImages = (activity: Activity) => {
         <section v-if="activities.length > 0" class="px-margin-mobile mt-lg">
           <div class="flex justify-between items-center mb-md">
             <h3 class="font-headline-sm text-headline-sm text-on-background">热门活动</h3>
-            <span class="font-label-md text-label-md text-primary cursor-pointer hover:underline">View All</span>
+            <span v-if="activities.length > 2" @click="showAllActivities = true" class="font-label-md text-label-md text-red-500 cursor-pointer hover:underline">更多</span>
           </div>
-          <div v-for="act in activities" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4">
-            <div class="h-40 w-full relative bg-surface-container">
-              <img v-if="act.parsedImages && act.parsedImages.length > 0" :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              <div v-else class="w-full h-full flex flex-col items-center justify-center text-gray-400">
-                <span class="material-symbols-outlined text-4xl mb-2">image</span>
-                <span class="text-sm">暂无图片</span>
-              </div>
+          <div v-for="act in activities.slice(0, 2)" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4 relative">
+            <div v-if="act.parsedImages && act.parsedImages.length > 0" class="h-40 w-full relative bg-surface-container">
+              <img :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div class="absolute top-md right-md bg-tertiary-container/90 backdrop-blur text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md">
                   Hot
               </div>
             </div>
             <div class="p-md">
-              <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-2">{{ act.title }}</h4>
-              <div class="flex items-center gap-xs text-secondary font-body-md text-body-md">
+              <div class="flex justify-between items-start gap-2 mb-2">
+                <h4 class="font-body-lg text-body-lg font-semibold text-on-surface line-clamp-2">{{ act.title }}</h4>
+                <div v-if="!act.parsedImages || act.parsedImages.length === 0" class="bg-tertiary-container/90 text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md shrink-0">
+                  Hot
+                </div>
+              </div>
+              <div class="flex items-center gap-xs text-secondary font-body-md text-body-md mt-1">
                 <span class="material-symbols-outlined text-sm">location_on</span>
                 <span>{{ (act.storeNames && act.storeNames.length > 0) ? act.storeNames.join('、') : '全局活动' }}</span>
               </div>
@@ -338,6 +362,59 @@ const openActivityImages = (activity: Activity) => {
         </section>
       </template>
     </main>
+
+    <!-- 活动快讯 全部列表弹窗 -->
+    <van-popup v-model:show="showAllNotices" position="bottom" :style="{ height: '80%' }" round closeable>
+      <div class="p-4 flex flex-col h-full bg-background rounded-t-xl">
+        <h3 class="text-xl font-bold mb-4 mt-2 text-center">更多活动快讯</h3>
+        <div class="flex-1 overflow-y-auto pb-8 hide-scrollbar">
+          <div v-for="notice in normalNotices.slice(2)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
+            <div class="bg-error-container text-on-error-container p-2 rounded-lg flex-shrink-0">
+              <span class="material-symbols-outlined">campaign</span>
+            </div>
+            <div class="flex-1">
+              <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1 truncate">{{ notice.title }}</h4>
+              <p class="font-body-md text-body-md text-secondary line-clamp-2">
+                  {{ notice.content }}
+              </p>
+              <div class="mt-2 text-xs text-secondary flex items-center gap-1">
+                <span class="material-symbols-outlined" style="font-size: 14px;">storefront</span>
+                {{ notice.storeName }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 热门活动 全部列表弹窗 -->
+    <van-popup v-model:show="showAllActivities" position="bottom" :style="{ height: '80%' }" round closeable>
+      <div class="p-4 flex flex-col h-full bg-background rounded-t-xl">
+        <h3 class="text-xl font-bold mb-4 mt-2 text-center">更多热门活动</h3>
+        <div class="flex-1 overflow-y-auto pb-8 hide-scrollbar">
+          <div v-for="act in activities.slice(2)" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4 relative">
+            <div v-if="act.parsedImages && act.parsedImages.length > 0" class="h-40 w-full relative bg-surface-container">
+              <img :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <div class="absolute top-md right-md bg-tertiary-container/90 backdrop-blur text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md">
+                  Hot
+              </div>
+            </div>
+            <div class="p-md">
+              <div class="flex justify-between items-start gap-2 mb-2">
+                <h4 class="font-body-lg text-body-lg font-semibold text-on-surface line-clamp-2">{{ act.title }}</h4>
+                <div v-if="!act.parsedImages || act.parsedImages.length === 0" class="bg-tertiary-container/90 text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md shrink-0">
+                  Hot
+                </div>
+              </div>
+              <div class="flex items-center gap-xs text-secondary font-body-md text-body-md mt-1">
+                <span class="material-symbols-outlined text-sm">location_on</span>
+                <span>{{ (act.storeNames && act.storeNames.length > 0) ? act.storeNames.join('、') : '全局活动' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </van-popup>
 
     <!-- 公告详情弹窗 -->
     <van-dialog v-model:show="showNoticeDialog" :title="currentNotice?.title" confirm-button-text="知道了">

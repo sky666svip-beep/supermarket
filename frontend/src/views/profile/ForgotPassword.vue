@@ -128,7 +128,7 @@ const onSubmit = async () => {
                 type="button"
                 :disabled="countdown > 0" 
                 @click.prevent="onSendCode"
-                class="bg-primary/10 text-primary font-bold text-sm px-4 py-3.5 rounded-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/20 transition-colors"
+                class="bg-blue-500/10 text-primary font-bold text-sm px-4 py-3.5 rounded-xl whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/20 transition-colors"
               >
                 {{ countdown > 0 ? `${countdown}s` : '获取验证码' }}
               </button>
@@ -153,7 +153,7 @@ const onSubmit = async () => {
         <div class="mt-4 flex flex-col gap-4">
           <button 
             type="submit" 
-            class="w-full bg-primary text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+            class="w-full bg-blue-500 text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
             style="font-size: 19px !important; color: #ffffff !important;"
           >
             重置密码
@@ -161,7 +161,7 @@ const onSubmit = async () => {
           
           <div class="flex items-center justify-center mt-2">
             <button type="button" @click="router.push('/login')" class="text-sm text-on-surface-variant font-medium hover:text-primary transition-colors">
-              <span class="text-primary hover:underline underline-offset-4">返回登录</span>
+              <span class="text-blue hover:underline underline-offset-4">返回登录</span>
             </button>
           </div>
         </div>

@@ -153,7 +153,7 @@ const onSubmit = async () => {
         <div class="mt-4 flex flex-col gap-4">
           <button 
             type="submit" 
-            class="w-full bg-primary text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+            class="w-full bg-blue-500 text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
             style="font-size: 19px !important; color: #ffffff !important;"
           >
             注册
@@ -161,7 +161,7 @@ const onSubmit = async () => {
           
           <div class="flex items-center justify-center mt-2">
             <button type="button" @click="router.push('/login')" class="text-sm text-on-surface-variant font-medium hover:text-primary transition-colors">
-              已有账号？<span class="text-primary hover:underline underline-offset-4">去登录</span>
+              已有账号？<span class="text-blue-500 hover:underline underline-offset-4">去登录</span>
             </button>
           </div>
         </div>

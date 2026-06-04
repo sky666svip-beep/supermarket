@@ -130,9 +130,9 @@ const afterRead = async (file: any) => {
       file.status = 'failed'
       file.message = '上传失败'
     }
-  } catch (error) {
+  } catch (error: any) {
     file.status = 'failed'
-    file.message = '上传失败'
+    file.message = error?.response?.data?.error || '上传失败'
   }
 }
 
@@ -280,7 +280,7 @@ const onSubmit = async () => {
             v-model="fileList" 
             :after-read="afterRead" 
             multiple 
-            :max-count="9"
+            :max-count="3"
           />
         </div>
 

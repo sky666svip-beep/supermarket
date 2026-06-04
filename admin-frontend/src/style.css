@@ -1,9 +1,0 @@
-@import "tailwindcss";
-
-body .van-toast {
-  background-color: rgba(0, 0, 0, 0.7) !important;
-  color: #fff !important;
-}
-body .van-toast__text {
-  color: #fff !important;
-}

@@ -107,9 +107,9 @@ const afterRead = async (file: any) => {
       file.status = 'failed'
       file.message = '上传失败'
     }
-  } catch (error) {
+  } catch (error: any) {
     file.status = 'failed'
-    file.message = '上传失败'
+    file.message = error?.response?.data?.error || '上传失败'
   }
 }
 

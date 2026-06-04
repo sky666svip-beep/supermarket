@@ -77,7 +77,7 @@ const onSubmit = async () => {
         <div class="mt-4 flex flex-col gap-4">
           <button 
             type="submit" 
-            class="w-full bg-primary text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
+            class="w-full bg-blue-500 text-white py-4 rounded-full font-bold shadow-md hover:bg-primary/90 active:scale-[0.98] transition-all"
             style="font-size: 19px !important; color: #ffffff !important;"
           >
             登录

@@ -138,6 +138,7 @@ const onShowAbout = () => {
     confirmButtonText: '知道了',
   }).catch(() => {})
 }
+
 </script>
 
 <template>
@@ -229,8 +230,7 @@ const onShowAbout = () => {
         <h3 class="font-label-md text-label-md text-secondary uppercase tracking-wider pl-xs">账号管理</h3>
         <div class="bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden flex flex-col">
           <template v-if="user">
-            <!-- Admin Manage -->
-            <a v-if="user.role === 'admin'" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/admin/feedbacks')">
+            <a v-if="user.role === 'admin'" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="$router.push('/admin')">
               <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">admin_panel_settings</span>
                 <span class="font-body-lg text-body-lg text-on-surface">管理员后台管理</span>

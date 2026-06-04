@@ -26,7 +26,15 @@ const router = createRouter({
     { path: '/profile/posts', name: 'my-posts', component: () => import('../views/user/MyPosts.vue'), meta: { customNav: true, requiresAuth: true } },
     { path: '/profile/comments', name: 'my-comments', component: () => import('../views/user/MyComments.vue'), meta: { customNav: true, requiresAuth: true } },
     { path: '/profile/collections', name: 'my-collections', component: () => import('../views/user/MyCollections.vue'), meta: { customNav: true, requiresAuth: true } },
-    { path: '/profile/messages', name: 'my-messages', component: () => import('../views/user/MyMessages.vue'), meta: { customNav: true, requiresAuth: true } }
+    { path: '/profile/messages', name: 'my-messages', component: () => import('../views/user/MyMessages.vue'), meta: { customNav: true, requiresAuth: true } },
+    
+    // Admin Routes
+    { path: '/admin', name: 'admin-home', component: () => import('../views/admin/Home.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/notices', name: 'admin-notices', component: () => import('../views/admin/NoticeManager.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/feedbacks', name: 'admin-feedbacks', component: () => import('../views/admin/FeedbackDashboard.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/activities', name: 'admin-activities', component: () => import('../views/admin/ActivityManager.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/community/posts', name: 'admin-community-posts', component: () => import('../views/admin/CommunityPosts.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/community/reports', name: 'admin-community-reports', component: () => import('../views/admin/CommunityReports.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } }
   ]
 })
 
@@ -40,6 +48,10 @@ router.beforeEach((to, _from) => {
         const user = JSON.parse(userStr)
         // 后端未使用 JWT，因此仅校验 user.id
         if (user && user.id) {
+          if (to.meta.requiresAdmin && user.role !== 'admin') {
+            showToast('非管理员无法访问')
+            return '/'
+          }
           isValid = true
         } else {
           // 登录态非法，清理本地无用缓存

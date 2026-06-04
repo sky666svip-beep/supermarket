@@ -3,7 +3,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showConfirmDialog } from 'vant'
-import api from '../api'
+import api from '../../api'
 
 const router = useRouter()
 
@@ -210,7 +210,7 @@ const toggleActive = async (notice: Notice) => {
     <van-nav-bar 
       title="公告管理" 
       left-arrow 
-      @click-left="router.push('/')" 
+      @click-left="router.push('/admin')" 
     />
     
     <div style="margin: 16px 0;">

@@ -2,7 +2,7 @@
 // 模块：社区举报处理
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAdminReports, updateReportStatus, deleteAdminReport } from '../api'
+import { getAdminReports, updateReportStatus, deleteAdminReport } from '../../api'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()

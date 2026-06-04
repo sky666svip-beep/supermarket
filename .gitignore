@@ -18,6 +18,7 @@ build/
 *.swp
 *.swo
 *~
+*.exe
 
 # OS
 .DS_Store

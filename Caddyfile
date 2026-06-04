@@ -1,0 +1,16 @@
+# 监听本地 8080 端口，Cloudflare Tunnel 将连接到这个端口
+:8080 {
+    # 处理前端 API 请求，代理给 Hono 后端
+    handle /api/* {
+        reverse_proxy localhost:3000
+    }
+
+
+
+    # 处理用户前端请求
+    handle {
+        root * d:/Projects/supermarket/frontend/dist
+        file_server
+        try_files {path} {path}/ /index.html
+    }
+}

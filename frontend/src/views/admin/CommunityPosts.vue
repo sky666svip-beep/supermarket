@@ -2,7 +2,7 @@
 // 模块：社区帖子管理
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { getAdminPosts, updatePostStatus, updatePostAttributes } from '../api'
+import { getAdminPosts, updatePostStatus, updatePostAttributes } from '../../api'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()
