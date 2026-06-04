@@ -17,6 +17,8 @@ export const users = sqliteTable('users', {
   nickname: text('nickname'),
   avatar: text('avatar'),
   role: text('role', { enum: ['customer', 'staff', 'admin'] }).notNull().default('customer'),
+  isBanned: integer('is_banned', { mode: 'boolean' }).default(false),
+  bannedUntil: sqliteTimestamp('banned_until'),
   nicknameUpdatedAt: sqliteTimestamp('nickname_updated_at'),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 })
@@ -33,7 +35,7 @@ export const verificationCodes = sqliteTable('verification_codes', {
 // Customer: Shopping Checklist
 export const checklists = sqliteTable('checklists', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
@@ -57,7 +59,7 @@ export const stores = sqliteTable('stores', {
 // Customer: Feedback
 export const feedbacks = sqliteTable('feedbacks', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   storeId: integer('store_id').references(() => stores.id),
   facilityType: text('facility_type').notNull(),
   message: text('message').notNull(),
@@ -71,7 +73,7 @@ export const feedbacks = sqliteTable('feedbacks', {
 // Staff: Maintenance
 export const maintenance = sqliteTable('maintenance', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  reporterId: integer('reporter_id').references(() => users.id),
+  reporterId: integer('reporter_id').references(() => users.id, { onDelete: 'cascade' }),
   location: text('location').notNull(),
   message: text('message').notNull(),
   status: text('status', { enum: ['pending', 'in_progress', 'completed'] }).default('pending'),
@@ -81,7 +83,7 @@ export const maintenance = sqliteTable('maintenance', {
 // Staff: Patrol
 export const patrols = sqliteTable('patrols', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  staffId: integer('staff_id').references(() => users.id),
+  staffId: integer('staff_id').references(() => users.id, { onDelete: 'cascade' }),
   area: text('area').notNull(),
   status: text('status', { enum: ['normal', 'abnormal'] }).notNull(),
   message: text('message'),
@@ -91,7 +93,7 @@ export const patrols = sqliteTable('patrols', {
 // Customer: Item Memos
 export const itemMemos = sqliteTable('item_memos', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   location: text('location'),
   price: text('price'),
   style: text('style'),
@@ -120,7 +122,7 @@ export const notices = sqliteTable('notices', {
 // Community: Posts
 export const posts = sqliteTable('posts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   storeId: integer('store_id').references(() => stores.id),
   title: text('title').notNull(),
   content: text('content').notNull(),
@@ -142,7 +144,7 @@ export const posts = sqliteTable('posts', {
 export const comments = sqliteTable('comments', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   postId: integer('post_id').references(() => posts.id).notNull(),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   parentId: integer('parent_id').references((): AnySQLiteColumn => comments.id), // Self-referencing for replies
   content: text('content').notNull(),
   images: text('images'), // JSON array string
@@ -155,7 +157,7 @@ export const comments = sqliteTable('comments', {
 // Community: Post Likes
 export const postLikes = sqliteTable('post_likes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   postId: integer('post_id').references(() => posts.id).notNull(),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
@@ -165,7 +167,7 @@ export const postLikes = sqliteTable('post_likes', {
 // Community: Comment Likes
 export const commentLikes = sqliteTable('comment_likes', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   commentId: integer('comment_id').references(() => comments.id).notNull(),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
@@ -175,7 +177,7 @@ export const commentLikes = sqliteTable('comment_likes', {
 // Community: Post Collections
 export const postCollections = sqliteTable('post_collections', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   postId: integer('post_id').references(() => posts.id).notNull(),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
@@ -185,7 +187,7 @@ export const postCollections = sqliteTable('post_collections', {
 // Community: Reports
 export const reports = sqliteTable('reports', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  userId: integer('user_id').references(() => users.id).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
   targetType: text('target_type', { enum: ['post', 'comment'] }).notNull(), // post / comment
   targetId: integer('target_id').notNull(),
   reason: text('reason').notNull(),
@@ -225,7 +227,7 @@ export const storeTraffic = sqliteTable('store_traffic', {
   storeId: integer('store_id').references(() => stores.id, { onDelete: 'cascade' }).notNull(),
   floor: integer('floor'), // -3 to 8
   level: integer('level').notNull(), // 1: green, 2: yellow, 3: orange, 4: red
-  userId: integer('user_id').references(() => users.id).notNull(), // To restrict 1 submission per hour
+  userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(), // To restrict 1 submission per hour
   dateHour: text('date_hour').notNull(), // format YYYY-MM-DD-HH
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({

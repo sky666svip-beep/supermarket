@@ -1,9 +1,4 @@
-
-
-# 五、项目目录结构（规则文件）
-
-当前项目的核心目录结构规范如下，所有后续的新功能开发均须严格遵守此结构划分：
-
+项目的目录结构规范如下，所有后续的新功能开发均须严格遵守此结构划分:
 ```text
 supermarket/
 ├── frontend/                 # 移动端顾客与员工界面 (Vue3 + Vite + Vant)
@@ -59,5 +54,3 @@ supermarket/
     ├── package.json          
     └── tsconfig.json         # TypeScript 配置文件
 ```
-
-

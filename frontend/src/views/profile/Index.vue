@@ -134,7 +134,7 @@ const onBindEmail = async () => {
 const onShowAbout = () => {
   showDialog({
     title: '关于大张助手',
-    message: '版本：v2.6.0\n\n联系方式：19937141560\n\n如有任何问题或建议，欢迎联系我们。',
+    message: '版本：v2.6.3\n\n联系方式：19937141560\n\n如有任何问题或建议，欢迎联系我们。',
     confirmButtonText: '知道了',
   }).catch(() => {})
 }
@@ -233,7 +233,7 @@ const onShowAbout = () => {
             <a v-if="user.role === 'admin'" class="flex items-center justify-between p-md hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="$router.push('/admin')">
               <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
                 <span class="material-symbols-outlined">admin_panel_settings</span>
-                <span class="font-body-lg text-body-lg text-on-surface">管理员后台管理</span>
+                <span class="font-body-lg text-body-lg text-on-surface">管理员后台</span>
               </div>
               <div class="flex items-center gap-xs">
                 <span class="font-body-md text-body-md text-outline">工单处理</span>

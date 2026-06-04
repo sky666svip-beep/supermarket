@@ -106,7 +106,12 @@ onMounted(async () => {
     </van-nav-bar>
     
     <main :class="(route.meta && !route.meta.customNav) ? 'p-4' : ''">
-      <router-view />
+      <router-view v-slot="{ Component, route }">
+        <keep-alive>
+          <component :is="Component" v-if="route.meta.keepAlive" :key="route.name" />
+        </keep-alive>
+        <component :is="Component" v-if="!route.meta.keepAlive" :key="route.name" />
+      </router-view>
     </main>
     
     <nav v-if="['home', 'community', 'profile'].includes(String(route.name))" class="fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">

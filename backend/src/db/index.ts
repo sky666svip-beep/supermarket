@@ -29,7 +29,7 @@ sqlite.pragma('busy_timeout = 5000')
 
 export const db = drizzle(sqlite, { schema })
 
-// Run migrations on startup
+// Run migrations on startup (re-triggered)
 try {
   console.log('[DB] Running migrations...')
   const migrationsFolder = path.resolve(process.cwd(), 'drizzle')

@@ -9,9 +9,11 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
     "@vant/area-data": "^2.1.0",
     "axios": "^1.16.1",
     "leaflet": "^1.9.4",
+    "material-symbols": "^0.44.12",
     "pinia": "^3.0.4",
     "vant": "^4.9.24",
     "vue": "^3.5.34",

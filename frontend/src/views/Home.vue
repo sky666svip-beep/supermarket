@@ -218,15 +218,22 @@ const openActivityImages = (activity: Activity) => {
 <template>
   <div class="bg-background text-on-background antialiased min-h-screen flex flex-col font-body-lg">
     <!-- TopAppBar -->
-    <header class="docked full-width top-0 bg-surface shadow-sm z-50 flex items-center px-margin-mobile h-14 w-full relative">
+    <header class="docked full-width top-0 bg-surface shadow-sm z-50 flex items-center justify-between px-margin-mobile h-14 w-full relative">
+      <!-- Left side: Location selector -->
       <div class="flex items-center gap-1 z-10">
         <div @click="openAreaPopup" class="flex items-center gap-1 text-[#FF7070] cursor-pointer active:scale-95 transition-transform duration-200">
           <span class="material-symbols-outlined">location_on</span>
           <span class="font-body-md text-body-md font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
           <span class="material-symbols-outlined text-sm">expand_more</span>
         </div>
-        <span @click="manualRefreshLocation" class="material-symbols-outlined text-[#FF7070] text-[18px] cursor-pointer ml-1 active:scale-95 bg-surface-container-low rounded-full p-1 hover:bg-primary-container hover:text-white transition-colors" title="重新定位">my_location</span>
       </div>
+      
+      <!-- Right side: Relocate button -->
+      <div class="z-10 flex items-center">
+        <span @click="manualRefreshLocation" class="material-symbols-outlined text-[#FF7070] text-[20px] cursor-pointer active:scale-95 bg-surface-container-low rounded-full p-1.5 hover:bg-primary-container hover:text-white transition-colors" title="重新定位">my_location</span>
+      </div>
+
+      <!-- Center absolute title -->
       <h1 class="font-headline-sm text-headline-sm font-semibold text-[#EB4C4C] absolute left-1/2 -translate-x-1/2 w-full text-center pointer-events-none">
         大张助手
       </h1>

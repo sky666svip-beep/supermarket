@@ -5,17 +5,17 @@ import Home from '../views/Home.vue'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-    { path: '/', name: 'home', component: Home, meta: { customNav: true } },
-    { path: '/customer/stores', name: 'store-info', component: () => import('../views/customer/StoreInfo.vue') },
-    { path: '/customer/mutual-help', name: 'mutual-help', component: () => import('../views/customer/MutualHelp.vue'), meta: { customNav: true } },
-    { path: '/customer/checklist', name: 'checklist', component: () => import('../views/customer/Checklist.vue'), meta: { customNav: true, requiresAuth: true } },
-    { path: '/customer/feedback', name: 'feedback-history', component: () => import('../views/customer/FeedbackHistory.vue'), meta: { customNav: true, requiresAuth: true } },
+    { path: '/', name: 'home', component: Home, meta: { customNav: true, keepAlive: true } },
+    { path: '/customer/stores', name: 'store-info', component: () => import('../views/customer/StoreInfo.vue'), meta: { customNav: true, keepAlive: true } },
+    { path: '/customer/mutual-help', name: 'mutual-help', component: () => import('../views/customer/MutualHelp.vue'), meta: { customNav: true, keepAlive: true } },
+    { path: '/customer/checklist', name: 'checklist', component: () => import('../views/customer/Checklist.vue'), meta: { customNav: true, requiresAuth: true, keepAlive: true } },
+    { path: '/customer/feedback', name: 'feedback-history', component: () => import('../views/customer/FeedbackHistory.vue'), meta: { customNav: true, requiresAuth: true, keepAlive: true } },
     { path: '/customer/feedback/new', name: 'feedback', component: () => import('../views/customer/Feedback.vue'), meta: { requiresAuth: true } },
-    { path: '/customer/memos', name: 'memos', component: () => import('../views/customer/ItemMemoList.vue'), meta: { customNav: true, requiresAuth: true } },
+    { path: '/customer/memos', name: 'memos', component: () => import('../views/customer/ItemMemoList.vue'), meta: { customNav: true, requiresAuth: true, keepAlive: true } },
     { path: '/customer/memos/edit', name: 'memos-edit', component: () => import('../views/customer/ItemMemoEdit.vue'), meta: { customNav: true, requiresAuth: true } },
-    { path: '/customer/traffic', name: 'traffic-analysis', component: () => import('../views/customer/TrafficAnalysis.vue'), meta: { customNav: true } },
-    { path: '/customer/parking', name: 'parking-fee', component: () => import('../views/customer/ParkingFee.vue'), meta: { customNav: true } },
-    { path: '/customer/jobs', name: 'jobs', component: () => import('../views/customer/Jobs.vue'), meta: { customNav: true } },
+    { path: '/customer/traffic', name: 'traffic-analysis', component: () => import('../views/customer/TrafficAnalysis.vue'), meta: { customNav: true, keepAlive: true } },
+    { path: '/customer/parking', name: 'parking-fee', component: () => import('../views/customer/ParkingFee.vue'), meta: { customNav: true, keepAlive: true } },
+    { path: '/customer/jobs', name: 'jobs', component: () => import('../views/customer/Jobs.vue'), meta: { customNav: true, keepAlive: true } },
     { path: '/profile', name: 'profile', component: () => import('../views/profile/Index.vue') },
     { path: '/login', name: 'login', component: () => import('../views/profile/Login.vue') },
     { path: '/register', name: 'register', component: () => import('../views/profile/Register.vue') },
@@ -34,7 +34,8 @@ const router = createRouter({
     { path: '/admin/feedbacks', name: 'admin-feedbacks', component: () => import('../views/admin/FeedbackDashboard.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
     { path: '/admin/activities', name: 'admin-activities', component: () => import('../views/admin/ActivityManager.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
     { path: '/admin/community/posts', name: 'admin-community-posts', component: () => import('../views/admin/CommunityPosts.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
-    { path: '/admin/community/reports', name: 'admin-community-reports', component: () => import('../views/admin/CommunityReports.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } }
+    { path: '/admin/community/reports', name: 'admin-community-reports', component: () => import('../views/admin/CommunityReports.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } },
+    { path: '/admin/users', name: 'admin-users', component: () => import('../views/admin/UserManager.vue'), meta: { customNav: true, requiresAuth: true, requiresAdmin: true } }
   ]
 })
 

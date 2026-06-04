@@ -2,6 +2,7 @@
 <script setup lang="ts">
 // 模块：门店查询与展示（Leaflet 地图 + 多图源降级）
 import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { getStores, getRegions } from '../../api/index'
 import { showToast, showDialog } from 'vant'
 import { getCachedLocation, setCachedLocation } from '../../utils/location'
@@ -9,6 +10,7 @@ import { wgs84togcj02, gcj02towgs84 } from '../../utils/coordTransform'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
+const router = useRouter()
 const selectedRegion = ref('')
 const showPicker = ref(false)
 const stores = ref<any[]>([])
@@ -361,6 +363,15 @@ const initOrUpdateMap = async () => {
 <template>
   <div class="flex-grow w-full max-w-screen-md mx-auto flex flex-col bg-background font-body-md text-on-background min-h-screen">
     
+    <!-- TopAppBar -->
+    <header class="flex items-center justify-between px-margin-mobile h-16 w-full bg-surface top-0 sticky z-20 shadow-sm">
+      <button @click="router.back()" class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+      <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface flex-1 text-center truncate px-2">门店查询</h1>
+      <div class="w-10 h-10"></div>
+    </header>
+
     <!-- Popups/Overlays -->
     <van-popup v-model:show="showPicker" position="bottom" teleport="body">
       <van-picker
@@ -381,7 +392,7 @@ const initOrUpdateMap = async () => {
     />
 
     <!-- Fixed Header & Controls -->
-    <div class="bg-surface shadow-sm z-10 sticky top-0 px-margin-mobile pt-4 pb-4">
+    <div class="bg-surface shadow-sm z-10 sticky top-16 px-margin-mobile pt-4 pb-4">
       <section class="bg-surface-container-lowest rounded-xl p-4 shadow-sm border border-surface-variant flex flex-col gap-4">
         <!-- Region Selector -->
         <div @click="showPicker = true" class="flex items-center justify-between py-2 border-b border-surface-variant cursor-pointer active:bg-surface-container-low transition-colors rounded-lg px-2">

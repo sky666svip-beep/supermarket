@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>商场后台管理</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#0e768a',
+            surface: '#f9f9fc',
+            'surface-container-lowest': '#ffffff',
+            'on-surface': '#191c1d',
+            'on-surface-variant': '#40484b',
+            outline: '#70787b',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          borderRadius: {
+            'xl': '8px',
+          }
+        }
+      }
+    }
+  </script>
+<style data-purpose="typography">
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: theme('colors.surface');
+      color: theme('colors.on-surface');
+      -webkit-font-smoothing: antialiased;
+    }
+  </style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="min-h-screen bg-surface flex flex-col max-w-md mx-auto relative shadow-lg">
+<!-- BEGIN: Header -->
+<header class="bg-surface-container-lowest border-b border-surface/10 px-4 py-3 flex items-center justify-center relative shadow-sm sticky top-0 z-10">
+<!-- Back Button -->
+<button aria-label="Go back" class="absolute left-4 p-2 text-primary hover:bg-surface-container-low rounded-full transition-colors">
+<i class="fa-solid fa-chevron-left text-lg"></i>
+</button>
+<!-- Title -->
+<h1 class="text-lg font-semibold text-on-surface">商场后台管理</h1>
+</header>
+<!-- END: Header -->
+<!-- BEGIN: Main Content -->
+<main class="flex-1 overflow-y-auto pb-8">
+<!-- BEGIN: Welcome Section -->
+<section class="px-5 py-6 bg-surface-container-lowest mb-3 shadow-sm border-b border-surface/5">
+<h2 class="text-xl font-bold text-on-surface mb-2">商场后台管理</h2>
+<p class="text-sm text-on-surface-variant/80 font-medium">欢迎来到管理系统，请选择您要处理的模块。</p>
+</section>
+<!-- END: Welcome Section -->
+<!-- BEGIN: Grid Menu -->
+<section class="px-4">
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-surface/10 p-2">
+<div class="grid grid-cols-2 gap-y-6 gap-x-2 py-4">
+<!-- Announcement Management -->
+<a class="flex flex-col items-center justify-center p-4 hover:bg-surface-container-low/50 rounded-xl transition-colors group" href="#">
+<div class="w-12 h-12 flex items-center justify-center mb-3 text-on-surface group-hover:text-primary transition-colors">
+<i class="fa-solid fa-bullhorn text-2xl"></i>
+</div>
+<span class="text-sm font-medium text-on-surface">公告管理</span>
+</a>
+<!-- Activity Management -->
+<a class="flex flex-col items-center justify-center p-4 hover:bg-surface-container-low/50 rounded-xl transition-colors group" href="#">
+<div class="w-12 h-12 flex items-center justify-center mb-3 text-on-surface group-hover:text-primary transition-colors">
+<i class="fa-regular fa-flag text-2xl"></i>
+</div>
+<span class="text-sm font-medium text-on-surface">活动管理</span>
+</a>
+<!-- Work Order Management -->
+<a class="flex flex-col items-center justify-center p-4 hover:bg-surface-container-low/50 rounded-xl transition-colors group" href="#">
+<div class="w-12 h-12 flex items-center justify-center mb-3 text-on-surface group-hover:text-primary transition-colors">
+<i class="fa-regular fa-file-lines text-2xl"></i>
+</div>
+<span class="text-sm font-medium text-on-surface">工单管理</span>
+</a>
+<!-- Post Audit -->
+<a class="flex flex-col items-center justify-center p-4 hover:bg-surface-container-low/50 rounded-xl transition-colors group" href="#">
+<div class="w-12 h-12 flex items-center justify-center mb-3 text-on-surface group-hover:text-primary transition-colors">
+<i class="fa-regular fa-calendar-check text-2xl"></i>
+</div>
+<span class="text-sm font-medium text-on-surface">帖子审核</span>
+</a>
+<!-- Report Management -->
+<a class="flex flex-col items-center justify-center p-4 hover:bg-surface-container-low/50 rounded-xl transition-colors group" href="#">
+<div class="w-12 h-12 flex items-center justify-center mb-3 text-on-surface group-hover:text-primary transition-colors">
+<i class="fa-solid fa-circle-exclamation text-2xl"></i>
+</div>
+<span class="text-sm font-medium text-on-surface">举报管理</span>
+</a>
+</div>
+</div>
+</section>
+<!-- END: Grid Menu -->
+</main>
+<!-- END: Main Content -->
+</body></html>

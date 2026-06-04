@@ -178,6 +178,24 @@ auth.post('/login', async (c) => {
     }
     
     const user = userList[0]
+    
+    // Check ban status
+    if (user.isBanned) {
+      if (user.bannedUntil) {
+        if (user.bannedUntil.getTime() > Date.now()) {
+          const formattedDate = user.bannedUntil.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })
+          return c.json({ error: `您的账号已被封禁至 ${formattedDate}` }, 403)
+        } else {
+          // Ban expired, unban
+          await db.update(users).set({ isBanned: false, bannedUntil: null }).where(eq(users.id, user.id))
+          user.isBanned = false
+          user.bannedUntil = null
+        }
+      } else {
+        return c.json({ error: '您的账号已被永久封禁' }, 403)
+      }
+    }
+
     return c.json({ 
       success: true, 
       user: { 
@@ -343,7 +361,18 @@ export const authMiddleware = async (c: Context<AuthContext>, next: Next) => {
   if (userList.length === 0) {
     return c.json({ success: false, data: null, message: '用户不存在' }, 401)
   }
+  const user = userList[0]
   
-  c.set('user', userList[0])
+  if (user.isBanned) {
+    if (!user.bannedUntil || user.bannedUntil.getTime() > Date.now()) {
+      return c.json({ success: false, data: null, message: '您的账号已被封禁，暂无权限操作' }, 403)
+    } else {
+      await db.update(users).set({ isBanned: false, bannedUntil: null }).where(eq(users.id, user.id))
+      user.isBanned = false
+      user.bannedUntil = null
+    }
+  }
+  
+  c.set('user', user)
   await next()
 }

@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { showToast } from 'vant'
 
 const api = axios.create({
   baseURL: '/api',
@@ -34,6 +35,24 @@ api.interceptors.request.use((config) => {
   }
   return config
 })
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && (error.response.status === 401 || error.response.status === 403)) {
+      localStorage.removeItem('user')
+      const msg = error.response.data?.message || error.response.data?.error || '登录已失效，请重新登录'
+      showToast(msg)
+      
+      if (!window.location.pathname.includes('/login')) {
+        setTimeout(() => {
+          window.location.href = '/login'
+        }, 1500)
+      }
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Auth APIs
 export const login = (data: any) => api.post('/auth/login', data).then(res => res.data)

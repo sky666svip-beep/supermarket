@@ -23,6 +23,7 @@ import { activityRouter } from './routes/activities.js'
 import { adminActivityRouter } from './routes/admin-activities.js'
 import { trafficRouter } from './routes/traffic.js'
 import { parkingRouter } from './routes/parking.js'
+import { adminUsersRouter } from './routes/admin-users.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
@@ -69,6 +70,7 @@ app.route('/api/activities', activityRouter)
 app.route('/api/admin/activities', adminActivityRouter)
 app.route('/api/traffic', trafficRouter)
 app.route('/api/parking', parkingRouter)
+app.route('/api/admin/users', adminUsersRouter)
 app.get('/', (c) => {
   return c.json({ message: 'Welcome to Supermarket API' })
 })
