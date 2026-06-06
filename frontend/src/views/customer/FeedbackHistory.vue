@@ -4,6 +4,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFeedbackHistory } from '../../api/index'
+import { getThumbnailUrl } from '../../utils/image'
 import { showToast, showImagePreview } from 'vant'
 
 const router = useRouter()
@@ -75,13 +76,13 @@ const onDelete = async (id: number) => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
           我的反馈记录
         </h1>
         <button type="button" @click="router.push('/customer/feedback/new')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">add</span>
+          <i-material-symbols-add></i-material-symbols-add>
         </button>
       </div>
     </header>
@@ -112,7 +113,7 @@ const onDelete = async (id: number) => {
         
         <div class="flex justify-between items-center mt-1 pt-3 border-t border-surface-variant/30 pl-2">
           <span class="text-xs text-on-surface-variant/70 font-medium">{{ new Date(item.createdAt).toLocaleString() }}</span>
-          <span class="material-symbols-outlined text-[16px] text-on-surface-variant">chevron_right</span>
+          <i-material-symbols-chevron-right  class="text-[16px] text-on-surface-variant"></i-material-symbols-chevron-right>
         </div>
       </div>
 
@@ -143,14 +144,14 @@ const onDelete = async (id: number) => {
 
         <div class="flex flex-col gap-3">
           <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
-            <span class="material-symbols-outlined text-[18px] text-primary">description</span> 反馈内容
+            <i-material-symbols-description-outline  class="text-[18px] text-primary"></i-material-symbols-description-outline> 反馈内容
           </h4>
           <p class="text-sm text-on-surface leading-relaxed whitespace-pre-wrap bg-surface-container-lowest p-4 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.02)] border border-surface-variant/50">{{ detailItem.message }}</p>
         </div>
 
         <div v-if="detailImages.length > 0" class="flex flex-col gap-3">
           <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
-            <span class="material-symbols-outlined text-[18px] text-primary">image</span> 附带图片
+            <i-material-symbols-image-outline  class="text-[18px] text-primary"></i-material-symbols-image-outline> 附带图片
           </h4>
           <div class="flex gap-3 flex-wrap">
             <div 
@@ -159,14 +160,14 @@ const onDelete = async (id: number) => {
               class="w-20 h-20 rounded-xl overflow-hidden shadow-sm border border-surface-variant/50 cursor-pointer active:scale-95 transition-transform"
               @click="previewImage(detailImages, Number(idx))"
             >
-              <van-image :src="img" width="100%" height="100%" fit="cover" />
+              <van-image :src="getThumbnailUrl(img)" width="100%" height="100%" fit="cover" />
             </div>
           </div>
         </div>
 
         <div class="flex flex-col gap-3">
           <h4 class="font-title-sm text-sm font-bold text-on-surface flex items-center gap-1.5 border-b border-surface-variant/30 pb-2">
-            <span class="material-symbols-outlined text-[18px] text-primary">forum</span> 管理员回复
+            <i-material-symbols-forum-outline  class="text-[18px] text-primary"></i-material-symbols-forum-outline> 管理员回复
           </h4>
           <div v-if="detailItem.adminReply" class="bg-primary/5 border border-primary/20 p-4 rounded-xl text-sm text-on-surface shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
             {{ detailItem.adminReply }}

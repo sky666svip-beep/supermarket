@@ -29,7 +29,7 @@ const onSubmit = async () => {
     <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.push('/profile')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">close</span>
+          <i-material-symbols-close></i-material-symbols-close>
         </button>
       </div>
     </header>
@@ -37,7 +37,7 @@ const onSubmit = async () => {
     <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile flex flex-col pt-5 pb-20">
       <div class="flex flex-col items-center mb-10">
         <div class="w-20 h-20 bg-primary-container text-white rounded-3xl flex items-center justify-center mb-6 shadow-sm rotate-3">
-          <span class="material-symbols-outlined text-[40px]">storefront</span>
+          <i-material-symbols-storefront-outline  class="text-[40px]"></i-material-symbols-storefront-outline>
         </div>
         <h1 class="font-headline-md text-2xl font-bold text-on-surface mb-2">欢迎回来</h1>
         <p class="text-base text-on-surface-variant">登录以继续使用您的账号</p>
@@ -48,7 +48,7 @@ const onSubmit = async () => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-base text-on-surface-variant px-1">用户名</label>
             <div class="relative flex items-center">
-              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">person</span>
+              <i-material-symbols-person-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-person-outline>
               <input 
                 v-model="username"
                 type="text"
@@ -62,7 +62,7 @@ const onSubmit = async () => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-base text-on-surface-variant px-1">密码</label>
             <div class="relative flex items-center">
-              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">lock</span>
+              <i-material-symbols-lock-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-lock-outline>
               <input 
                 v-model="password"
                 type="password"

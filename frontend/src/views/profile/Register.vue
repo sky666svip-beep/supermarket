@@ -44,6 +44,11 @@ const onSendCode = async () => {
 }
 
 const onSubmit = async () => {
+  const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u
+  if (emojiRegex.test(username.value)) {
+    return showToast({ message: '用户名不能包含表情符号', duration: 4000 })
+  }
+
   try {
     const res = await register({ 
       username: username.value, 
@@ -56,7 +61,7 @@ const onSubmit = async () => {
       router.push('/login')
     }
   } catch (error: any) {
-    showToast(error.response?.data?.error || '注册失败')
+    showToast({ message: error.response?.data?.error || '注册失败', duration: 4000 })
   }
 }
 </script>
@@ -67,7 +72,7 @@ const onSubmit = async () => {
     <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.push('/login')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
       </div>
     </header>
@@ -75,7 +80,7 @@ const onSubmit = async () => {
     <main class="flex-1 w-full max-w-2xl mx-auto px-margin-mobile flex flex-col pt-5 pb-20">
       <div class="flex flex-col items-center mb-8">
         <div class="w-16 h-16 bg-primary-container text-white rounded-3xl flex items-center justify-center mb-4 shadow-sm -rotate-3">
-          <span class="material-symbols-outlined text-[32px]">person_add</span>
+          <i-material-symbols-person-add-outline  class="text-[32px]"></i-material-symbols-person-add-outline>
         </div>
         <h1 class="font-headline-md text-2xl font-bold text-on-surface mb-2">创建新账号</h1>
         <p class="text-base text-on-surface-variant">填写以下信息以注册</p>
@@ -87,7 +92,7 @@ const onSubmit = async () => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-sm text-on-surface-variant px-1">用户名</label>
             <div class="relative flex items-center">
-              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">person</span>
+              <i-material-symbols-person-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-person-outline>
               <input 
                 v-model="username"
                 type="text"
@@ -101,7 +106,7 @@ const onSubmit = async () => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-sm text-on-surface-variant px-1">密码</label>
             <div class="relative flex items-center">
-              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">lock</span>
+              <i-material-symbols-lock-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-lock-outline>
               <input 
                 v-model="password"
                 type="password"
@@ -115,7 +120,7 @@ const onSubmit = async () => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-sm text-on-surface-variant px-1">邮箱 (可选)</label>
             <div class="relative flex items-center">
-              <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">mail</span>
+              <i-material-symbols-mail-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-mail-outline>
               <input 
                 v-model="email"
                 type="email"
@@ -129,7 +134,7 @@ const onSubmit = async () => {
             <label class="font-label-md text-sm text-on-surface-variant px-1">验证码</label>
             <div class="relative flex items-center gap-3">
               <div class="relative flex items-center flex-1">
-                <span class="material-symbols-outlined absolute left-4 text-on-surface-variant/70">verified</span>
+                <i-material-symbols-verified-outline  class="absolute left-4 text-on-surface-variant/70"></i-material-symbols-verified-outline>
                 <input 
                   v-model="code"
                   type="text"

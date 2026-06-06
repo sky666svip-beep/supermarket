@@ -117,21 +117,21 @@ onMounted(async () => {
     <nav v-if="['home', 'community', 'profile'].includes(String(route.name))" class="fixed bottom-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-surface/70 dark:bg-inverse-surface/70 backdrop-blur-md shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
       <router-link to="/" custom v-slot="{ navigate, isActive }">
         <div @click="navigate" :class="isActive ? 'bg-[#FF7070] text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
-          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">home</span>
+          <i-material-symbols-home-outline :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''"></i-material-symbols-home-outline>
           <span class="font-label-md text-label-md mt-1">顾客服务</span>
         </div>
       </router-link>
       
       <router-link to="/community" custom v-slot="{ navigate, isActive }">
         <div @click="navigate" :class="isActive ? 'bg-[#FF7070] text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
-          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">forum</span>
+          <i-material-symbols-forum-outline :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''"></i-material-symbols-forum-outline>
           <span class="font-label-md text-label-md mt-1">社区</span>
         </div>
       </router-link>
 
       <router-link to="/profile" custom v-slot="{ navigate, isActive }">
         <div @click="navigate" :class="isActive ? 'bg-[#FF7070] text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
-          <span class="material-symbols-outlined" :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''">person</span>
+          <i-material-symbols-person-outline :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''"></i-material-symbols-person-outline>
           <span class="font-label-md text-label-md mt-1">我的</span>
         </div>
       </router-link>

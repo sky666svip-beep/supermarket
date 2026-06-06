@@ -3,6 +3,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminPosts, updatePostStatus, updatePostAttributes } from '../../api'
+import { getThumbnailUrl, SMALL_THUMB_PARAMS } from '../../utils/image'
 import { showToast, showConfirmDialog } from 'vant'
 
 const router = useRouter()
@@ -135,7 +136,7 @@ const toggleElite = async (item: any) => {
           <van-image 
             v-for="(img, idx) in item.post.parsedImages.slice(0,3)" 
             :key="idx" 
-            :src="img.startsWith('/uploads') ? '/api' + img : img" 
+            :src="getThumbnailUrl(img, SMALL_THUMB_PARAMS)" 
             width="60" 
             height="60" 
             class="rounded"

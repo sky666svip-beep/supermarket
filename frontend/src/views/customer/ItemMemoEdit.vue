@@ -75,7 +75,7 @@ const onSubmit = async () => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
           新增商品备忘
@@ -91,7 +91,7 @@ const onSubmit = async () => {
         <section class="flex flex-col gap-3 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
           <div class="flex items-center justify-between">
             <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2">
-              <span class="material-symbols-outlined text-primary text-[20px]">image</span>实拍图
+              <i-material-symbols-image-outline  class="text-primary text-[20px]"></i-material-symbols-image-outline>实拍图
             </h3>
             <span class="text-xs text-on-surface-variant">最多1张</span>
           </div>
@@ -101,7 +101,7 @@ const onSubmit = async () => {
         <!-- Basic Info Section -->
         <section class="flex flex-col gap-4 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
           <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2 mb-1">
-            <span class="material-symbols-outlined text-primary text-[20px]">info</span>基础信息
+            <i-material-symbols-info-outline  class="text-primary text-[20px]"></i-material-symbols-info-outline>基础信息
           </h3>
           
           <!-- Category -->
@@ -157,7 +157,7 @@ const onSubmit = async () => {
         <!-- Location & Contact Section -->
         <section class="flex flex-col gap-4 bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
           <h3 class="font-headline-sm text-base font-bold text-on-surface flex items-center gap-2 mb-1">
-            <span class="material-symbols-outlined text-primary text-[20px]">location_on</span>购买指引
+            <i-material-symbols-location-on-outline  class="text-primary text-[20px]"></i-material-symbols-location-on-outline>购买指引
           </h3>
           
           <!-- Location -->

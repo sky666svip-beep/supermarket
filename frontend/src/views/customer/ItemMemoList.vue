@@ -1,13 +1,20 @@
 <!-- 模块：商品备忘列表 -->
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onActivated, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { getItemMemos, updateItemMemo, deleteItemMemo } from '../../api/index'
+import { getThumbnailUrl } from '../../utils/image'
 
 const router = useRouter()
 const activeTab = ref('全部')
 const memos = ref<any[]>([])
+const refreshing = ref(false)
+
+const onRefresh = async () => {
+  await fetchMemos()
+  refreshing.value = false
+}
 
 const fetchMemos = async () => {
   try {
@@ -22,6 +29,10 @@ const fetchMemos = async () => {
 }
 
 onMounted(() => {
+  fetchMemos()
+})
+
+onActivated(() => {
   fetchMemos()
 })
 
@@ -75,12 +86,6 @@ const parseTags = (tagsStr: string) => {
     return []
   }
 }
-
-const getFullUrl = (url: string) => {
-  if (!url) return ''
-  if (url.startsWith('http') || url.startsWith('/api')) return url
-  return url.startsWith('/') ? `/api${url}` : url
-}
 </script>
 
 <template>
@@ -89,13 +94,13 @@ const getFullUrl = (url: string) => {
     <header class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto bg-surface top-0 sticky z-20 shadow-sm">
       <!-- Leading Action (Back) -->
       <button @click="router.back()" class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-        <span class="material-symbols-outlined">chevron_left</span>
+        <i-material-symbols-chevron-left></i-material-symbols-chevron-left>
       </button>
       <!-- Headline -->
       <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface flex-1 text-center truncate px-2">商品备忘本</h1>
       <!-- Trailing Action (Add) -->
       <button @click="router.push('/customer/memos/edit')" class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-        <span class="material-symbols-outlined">add</span>
+        <i-material-symbols-add></i-material-symbols-add>
       </button>
     </header>
 
@@ -114,7 +119,8 @@ const getFullUrl = (url: string) => {
     </div>
 
     <!-- Main Content Canvas -->
-    <main class="flex-1 overflow-y-auto p-margin-mobile flex flex-col items-center md:max-w-2xl md:mx-auto md:w-full">
+    <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-[calc(100vh-128px)] w-full">
+      <main class="p-margin-mobile flex flex-col items-center md:max-w-2xl md:mx-auto w-full">
       
       <!-- Empty State -->
       <div v-if="filteredMemos.length === 0" class="flex-1 flex flex-col items-center justify-center min-h-[400px]">
@@ -134,7 +140,7 @@ const getFullUrl = (url: string) => {
           </div>
           <!-- Secondary floating element (subtle) -->
           <div class="absolute right-4 bottom-4 w-12 h-12 bg-surface-container-lowest rounded-lg shadow-sm border border-surface-variant/40 flex items-center justify-center -rotate-6 z-0">
-            <span class="material-symbols-outlined text-surface-variant opacity-50">description</span>
+            <i-material-symbols-description-outline  class="text-surface-variant opacity-50"></i-material-symbols-description-outline>
           </div>
         </div>
         <!-- Empty State Message -->
@@ -151,19 +157,19 @@ const getFullUrl = (url: string) => {
           <div class="relative h-36 bg-surface-container-high w-full overflow-hidden">
             <img 
               v-if="memo.imageUrl"
-              :src="getFullUrl(memo.imageUrl)"
+              :src="getThumbnailUrl(memo.imageUrl)"
               class="w-full h-full object-cover transition-transform hover:scale-105 duration-500"
               alt="Memo Image"
             />
             <div v-else class="w-full h-full flex items-center justify-center text-surface-variant">
-              <span class="material-symbols-outlined text-4xl">image</span>
+              <i-material-symbols-image-outline  class="text-4xl"></i-material-symbols-image-outline>
             </div>
             <!-- Completed Overlay -->
             <div 
               v-if="memo.isCompleted" 
               class="absolute inset-0 bg-inverse-surface/40 backdrop-blur-[2px] flex items-center justify-center z-10 transition-all"
             >
-              <span class="material-symbols-outlined text-white text-5xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+              <i-material-symbols-check-circle-outline style="font-variation-settings: 'FILL' 1;" class="text-white text-5xl"></i-material-symbols-check-circle-outline>
             </div>
           </div>
           
@@ -182,11 +188,11 @@ const getFullUrl = (url: string) => {
             <!-- Address & Phone -->
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
               <div class="flex items-center text-on-surface-variant" v-if="memo.location">
-                <span class="material-symbols-outlined text-[18px] mr-1">location_on</span>
+                <i-material-symbols-location-on-outline  class="text-[18px] mr-1"></i-material-symbols-location-on-outline>
                 <span class="font-body-md text-sm">{{ memo.location }}</span>
               </div>
               <div class="flex items-center text-on-surface-variant" v-if="memo.contact">
-                <span class="material-symbols-outlined text-[18px] mr-1">phone</span>
+                <i-material-symbols-call-outline class="text-[18px] mr-1" />
                 <span class="font-body-md text-sm">{{ memo.contact }}</span>
               </div>
             </div>
@@ -218,7 +224,8 @@ const getFullUrl = (url: string) => {
           </div>
         </article>
       </div>
-    </main>
+      </main>
+    </van-pull-refresh>
   </div>
 </template>
 

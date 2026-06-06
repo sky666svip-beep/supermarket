@@ -118,19 +118,23 @@ const openEdit = (act: Activity) => {
 
 const afterRead = async (file: any) => {
   file.status = 'uploading'
-  file.message = '上传中...'
-  const uploadFormData = new FormData()
-  uploadFormData.append('file', file.file)
+  file.message = '压缩中...'
 
   try {
-    const res = await api.post('/upload', uploadFormData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    })
+    const { compressImage } = await import('../../utils/compress')
+    const compressed = await compressImage(file.file)
+
+    file.message = '上传中...'
+    const uploadFormData = new FormData()
+    uploadFormData.append('file', compressed)
+
+    const res = await api.post('/upload', uploadFormData, { timeout: 40000 })
     file.status = 'done'
     file.url = res.data.url
   } catch (error: any) {
     file.status = 'failed'
-    file.message = error?.response?.data?.error || '上传失败'
+    file.message = error?.response?.data?.error || error?.message || '上传失败'
+    showToast(file.message)
   }
 }
 

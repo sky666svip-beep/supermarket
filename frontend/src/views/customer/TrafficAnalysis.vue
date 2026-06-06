@@ -20,6 +20,12 @@ const trafficData = ref<any[]>([])
 const lastUpdatedAt = ref<string | null>(null)
 const totalSubmissions = ref<number>(0)
 const loadingTraffic = ref(false)
+const refreshing = ref(false)
+
+const onRefresh = async () => {
+  await getTraffic()
+  refreshing.value = false
+}
 
 const loadStores = async () => {
   try {
@@ -198,6 +204,7 @@ const currentStoreName = computed(() => {
   <div class="min-h-screen bg-gray-50 pb-20">
     <van-nav-bar title="客流量分析" left-arrow @click-left="router.back()" fixed placeholder />
 
+    <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-[calc(100vh-46px)]">
     <div class="p-4 space-y-4">
       <!-- 选择区域 -->
       <div class="bg-white rounded-xl shadow-sm p-2 flex flex-col gap-2">
@@ -279,6 +286,7 @@ const currentStoreName = computed(() => {
         </p>
       </div>
     </div>
+    </van-pull-refresh>
 
     <!-- Pickers -->
     <van-popup v-model:show="showStorePicker" position="bottom" round>

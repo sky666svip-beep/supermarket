@@ -298,7 +298,7 @@ const formatTime = (timeStr: string) => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
           帖子详情
@@ -323,7 +323,7 @@ const formatTime = (timeStr: string) => {
           <div class="flex items-center gap-3">
             <span class="px-2 py-0.5 rounded border border-primary/30 text-primary font-label-md text-xs bg-primary/5">{{ post.post.category }}</span>
             <button @click="openReport('post', post.post.id)" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded-full active:bg-surface-variant">
-              <span class="material-symbols-outlined text-[20px]">warning</span>
+              <i-material-symbols-warning-outline  class="text-[20px]"></i-material-symbols-warning-outline>
             </button>
           </div>
         </div>
@@ -342,7 +342,7 @@ const formatTime = (timeStr: string) => {
         </div>
         
         <div class="flex items-center text-xs text-outline mt-2 gap-1">
-          <span class="material-symbols-outlined text-[16px]">visibility</span>
+          <i-material-symbols-visibility-outline  class="text-[16px]"></i-material-symbols-visibility-outline>
           <span>阅读 {{ post.post.viewCount }}</span>
         </div>
       </article>
@@ -355,7 +355,7 @@ const formatTime = (timeStr: string) => {
         </h3>
         
         <div v-if="comments.length === 0" class="flex flex-col items-center justify-center py-8 text-on-surface-variant opacity-60">
-          <span class="material-symbols-outlined text-4xl mb-2">forum</span>
+          <i-material-symbols-forum-outline  class="text-4xl mb-2"></i-material-symbols-forum-outline>
           <p class="font-body-md text-sm">暂无评论，快来抢沙发吧~</p>
         </div>
         
@@ -368,7 +368,7 @@ const formatTime = (timeStr: string) => {
                   <span class="font-label-md text-sm text-on-surface-variant">{{ node.author.nickname || node.author.username }}</span>
                   <button @click="handleLikeComment(node)" class="flex items-center gap-1 text-on-surface-variant hover:text-primary transition-colors active:scale-95">
                     <span class="text-xs">{{ node.comment.likeCount || '' }}</span>
-                    <span class="material-symbols-outlined text-[18px]">thumb_up</span>
+                    <i-material-symbols-thumb-up-outline  class="text-[18px]"></i-material-symbols-thumb-up-outline>
                   </button>
                 </div>
                 <p class="font-body-md text-sm text-on-surface whitespace-pre-wrap">{{ node.comment.content }}</p>
@@ -403,24 +403,24 @@ const formatTime = (timeStr: string) => {
     <div v-if="post" class="fixed bottom-0 left-0 w-full z-20 backdrop-blur-md bg-surface/80 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] border-t border-surface-variant/30 pb-safe">
       <div class="max-w-2xl mx-auto h-14 px-4 flex items-center gap-4">
         <div @click="openComment()" class="flex-1 bg-surface-container-low hover:bg-surface-variant transition-colors rounded-full py-2 px-4 flex items-center gap-2 cursor-pointer active:scale-[0.98]">
-          <span class="material-symbols-outlined text-outline text-[18px]">edit</span>
+          <i-material-symbols-edit-outline  class="text-outline text-[18px]"></i-material-symbols-edit-outline>
           <span class="font-body-md text-sm text-outline">说点什么...</span>
         </div>
         
         <div v-if="isMutualHelpPost" class="flex items-center">
           <button v-if="isAuthor" @click="handleMarkSolved" class="bg-primary text-white px-4 py-1.5 rounded-full font-label-md text-sm shadow-sm active:scale-95 flex items-center gap-1 transition-colors">
-            <span class="material-symbols-outlined text-[18px]">check_circle</span>
+            <i-material-symbols-check-circle-outline  class="text-[18px]"></i-material-symbols-check-circle-outline>
             已解决
           </button>
         </div>
         
         <div v-else class="flex items-center gap-6 pr-2">
           <button @click="toggleLike" class="flex flex-col items-center justify-center gap-0.5 group active:scale-90 transition-transform">
-            <span class="material-symbols-outlined transition-colors text-[24px]" :class="interaction.liked ? 'text-error fill' : 'text-on-surface-variant group-hover:text-error'" :style="interaction.liked ? 'font-variation-settings: \'FILL\' 1;' : ''">favorite</span>
+            <i-material-symbols-favorite-outline :class="interaction.liked ? 'text-error fill' : 'text-on-surface-variant group-hover:text-error'" :style="interaction.liked ? 'font-variation-settings: \'FILL\' 1;' : ''" class="transition-colors text-[24px]"></i-material-symbols-favorite-outline>
             <span class="font-label-md text-[10px]" :class="interaction.liked ? 'text-error' : 'text-on-surface-variant'">{{ post.post.likeCount || '点赞' }}</span>
           </button>
           <button @click="toggleCollect" class="flex flex-col items-center justify-center gap-0.5 group active:scale-90 transition-transform">
-            <span class="material-symbols-outlined transition-colors text-[24px]" :class="interaction.collected ? 'text-[#f59e0b] fill' : 'text-on-surface-variant group-hover:text-[#f59e0b]'" :style="interaction.collected ? 'font-variation-settings: \'FILL\' 1;' : ''">star</span>
+            <i-material-symbols-star-outline :class="interaction.collected ? 'text-[#f59e0b] fill' : 'text-on-surface-variant group-hover:text-[#f59e0b]'" :style="interaction.collected ? 'font-variation-settings: \'FILL\' 1;' : ''" class="transition-colors text-[24px]"></i-material-symbols-star-outline>
             <span class="font-label-md text-[10px]" :class="interaction.collected ? 'text-[#f59e0b]' : 'text-on-surface-variant'">收藏</span>
           </button>
         </div>
@@ -454,7 +454,7 @@ const formatTime = (timeStr: string) => {
         <div class="flex justify-between items-center mb-4 border-b border-surface-variant pb-2">
           <span class="font-headline-sm text-base font-bold text-on-surface">举报{{ reportTarget === 'post' ? '帖子' : '评论' }}</span>
           <button @click="showReportPopup = false" class="text-on-surface-variant hover:text-on-surface p-1 rounded-full active:bg-surface-variant transition-colors">
-            <span class="material-symbols-outlined text-[20px]">close</span>
+            <i-material-symbols-close  class="text-[20px]"></i-material-symbols-close>
           </button>
         </div>
         

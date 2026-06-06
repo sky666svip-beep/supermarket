@@ -5,7 +5,7 @@ import { ref, onMounted } from 'vue'
 import { showSuccessToast, showFailToast } from 'vant'
 import { useRouter } from 'vue-router'
 import { submitFeedback, getStores, uploadImage } from '../../api/index'
-import { getCachedLocation } from '../../utils/location'
+import { autoLocate, getCachedLocation, setCachedLocation } from '../../utils/location'
 
 const router = useRouter()
 const facilityType = ref('问题上报-设备故障')
@@ -56,7 +56,18 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
 
 onMounted(async () => {
   try {
-    const loc = getCachedLocation()
+    let loc = getCachedLocation()
+    if (!loc || !loc.lat || !loc.lng) {
+      try {
+        const newLoc = await autoLocate()
+        if (newLoc) {
+          loc = newLoc
+          setCachedLocation(loc)
+        }
+      } catch (e) {
+        console.warn('Auto locate failed', e)
+      }
+    }
     const stores = await getStores(loc?.city ? { city: loc.city } : undefined)
     let processedStores = stores
     if (loc && loc.lat && loc.lng) {
@@ -139,7 +150,7 @@ const onSubmit = async () => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
           问题上报
@@ -162,7 +173,7 @@ const onSubmit = async () => {
             <span :class="storeName ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
               {{ storeName || '点击选择门店' }}
             </span>
-            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            <i-material-symbols-chevron-right  class="text-on-surface-variant"></i-material-symbols-chevron-right>
           </button>
         </div>
         <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
@@ -180,7 +191,7 @@ const onSubmit = async () => {
             <span :class="facilityType ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
               {{ facilityType || '点击选择分类' }}
             </span>
-            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            <i-material-symbols-chevron-right  class="text-on-surface-variant"></i-material-symbols-chevron-right>
           </button>
         </div>
         <van-popup v-model:show="showPicker" position="bottom" round safe-area-inset-bottom>

@@ -100,7 +100,7 @@ const formatDate = (dateStr?: string) => {
     <header class="bg-surface/80 backdrop-blur-md w-full top-0 sticky flex flex-col z-20 transition-colors border-b border-surface-variant/20">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.back()" class="flex items-center justify-center text-on-surface hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-lg font-bold text-on-surface">我的帖子</h1>
         <div class="w-10 h-10"></div> <!-- Placeholder to balance flex -->
@@ -111,7 +111,7 @@ const formatDate = (dateStr?: string) => {
       
       <div v-if="isError && posts.length === 0" class="flex flex-col items-center justify-center h-64 gap-4">
         <div class="w-16 h-16 bg-error-container text-on-error-container rounded-full flex items-center justify-center mb-2 shadow-sm">
-          <span class="material-symbols-outlined text-[32px]">error</span>
+          <i-material-symbols-error-outline  class="text-[32px]"></i-material-symbols-error-outline>
         </div>
         <p class="text-on-surface font-medium">加载失败</p>
         <p class="text-error text-xs px-4 text-center">{{ errorMsg }}</p>
@@ -122,7 +122,7 @@ const formatDate = (dateStr?: string) => {
       
       <div v-else-if="posts.length === 0 && finished" class="flex flex-col items-center justify-center h-64 gap-4">
         <div class="w-16 h-16 bg-surface-container-high text-on-surface-variant rounded-full flex items-center justify-center mb-2 shadow-sm">
-          <span class="material-symbols-outlined text-[32px]">post_add</span>
+          <i-material-symbols-post-add  class="text-[32px]"></i-material-symbols-post-add>
         </div>
         <p class="text-on-surface-variant text-sm">还没发过帖子哦</p>
         <button @click="router.push('/community/publish')" class="mt-2 bg-primary text-white font-bold text-sm px-6 py-2.5 rounded-full shadow-sm hover:bg-primary/90 transition-colors" style="color: #ffffff !important;">
@@ -168,15 +168,15 @@ const formatDate = (dateStr?: string) => {
             <!-- Stats -->
             <div class="flex items-center gap-5 mt-1">
               <div class="flex items-center gap-1.5 text-on-surface-variant/70">
-                <span class="material-symbols-outlined text-[14px]">visibility</span>
+                <i-material-symbols-visibility-outline  class="text-[14px]"></i-material-symbols-visibility-outline>
                 <span class="text-[11px] font-medium">{{ post.viewCount }}</span>
               </div>
               <div class="flex items-center gap-1.5 text-on-surface-variant/70">
-                <span class="material-symbols-outlined text-[14px]">favorite</span>
+                <i-material-symbols-favorite-outline  class="text-[14px]"></i-material-symbols-favorite-outline>
                 <span class="text-[11px] font-medium">{{ post.likeCount }}</span>
               </div>
               <div class="flex items-center gap-1.5 text-on-surface-variant/70">
-                <span class="material-symbols-outlined text-[14px]">chat_bubble</span>
+                <i-material-symbols-chat-bubble-outline  class="text-[14px]"></i-material-symbols-chat-bubble-outline>
                 <span class="text-[11px] font-medium">{{ post.commentCount }}</span>
               </div>
             </div>
@@ -188,14 +188,14 @@ const formatDate = (dateStr?: string) => {
                 class="flex items-center justify-center gap-1.5 bg-primary-container text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-primary-container/80"
                 style="color: #ffffff !important;"
               >
-                <span class="material-symbols-outlined text-[14px]">edit</span>
+                <i-material-symbols-edit-outline  class="text-[14px]"></i-material-symbols-edit-outline>
                 编辑
               </button>
               <button 
                 @click="onDelete(post.id)"
                 class="flex items-center justify-center gap-1.5 bg-error-container text-on-error-container px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-error-container/80"
               >
-                <span class="material-symbols-outlined text-[14px]">delete</span>
+                <i-material-symbols-delete-outline  class="text-[14px]"></i-material-symbols-delete-outline>
                 删除
               </button>
             </div>

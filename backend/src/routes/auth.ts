@@ -126,13 +126,17 @@ auth.post('/register', async (c) => {
     const { username, password, email, code } = body
     
     if (!username || !password) {
-      return c.json({ error: '参数不完整' }, 400)
+      return c.json({ error: '请提供完整的用户名和密码' }, 400)
     }
-    
-    const cleanUser = username.trim()
-    
-    if (!isValidUsername(cleanUser)) {
-      return c.json({ error: '用户名必须是3到20个字符' }, 400)
+
+    const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u
+    if (emojiRegex.test(username)) {
+      return c.json({ error: '用户名不能包含表情符号' }, 400)
+    }
+
+    let cleanUser = username.trim()
+    if (cleanUser.length < 3 || cleanUser.length > 20) {
+      return c.json({ error: '用户名长度需在3到20个字符之间' }, 400)
     }
     if (!isValidPassword(password)) {
       return c.json({ error: '密码至少6位，且必须包含字母和数字' }, 400)
@@ -251,6 +255,10 @@ auth.put('/profile', async (c) => {
     const updateData: any = { avatar: cleanAvatar }
     
     if (cleanNickname) {
+      const emojiRegex = /[\p{Emoji_Presentation}\p{Extended_Pictographic}]/u
+      if (emojiRegex.test(cleanNickname)) {
+        return c.json({ error: '昵称不能包含表情符号' }, 400)
+      }
       if (!isValidNickname(cleanNickname)) {
         return c.json({ error: '昵称必须是3到10个字符' }, 400)
       }

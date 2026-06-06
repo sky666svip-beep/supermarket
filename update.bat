@@ -16,9 +16,6 @@ call npm run build
 cd ..
 echo.
 
-echo [*] Restarting Backend Service...
-call pm2 restart supermarket-backend
-echo.
 
 echo ==========================================
 echo Update Complete! Please refresh your browser.

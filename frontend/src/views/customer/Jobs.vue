@@ -67,8 +67,8 @@ const previewSingleImage = (url: string) => {
       <h1 class="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent tracking-wide">
         探索无限机遇 · 共创美好未来
       </h1>
-      <p class="mt-2 text-xs text-gray-500 font-medium">
-        无论您是行家里手，还是初出茅庐，这里都有您施展才华的黄金舞台
+      <p class="mt-2 text-sm text-gray-500 font-medium">
+        无论您是行家里手，还是初出茅庐，这里都欢迎您加入
       </p>
     </div>
 
@@ -91,7 +91,7 @@ const previewSingleImage = (url: string) => {
           <div class="space-y-3">
             <div class="flex items-center space-x-2">
               <span class="w-1.5 h-5 bg-blue-600 rounded-full"></span>
-              <h2 class="text-base font-bold text-gray-800">集团宣传片</h2>
+              <h2 class="text-lg font-bold text-gray-800">集团宣传片</h2>
             </div>
             
             <!-- Video Container -->
@@ -120,7 +120,7 @@ const previewSingleImage = (url: string) => {
               <div class="h-20 bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">集团概况</h3>
-                  <p class="text-xs text-blue-100 mt-1">深耕零售，服务万千家庭</p>
+                  <p class="text-base text-blue-100 mt-1">深耕零售，服务万千家庭</p>
                 </div>
                 <van-icon name="wap-home-o" class="text-4xl text-white/20 absolute right-4 bottom-2" />
               </div>
@@ -172,7 +172,7 @@ const previewSingleImage = (url: string) => {
               <div class="h-20 bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">品牌理念</h3>
-                  <p class="text-xs text-emerald-100 mt-1">品质筑基，温暖相伴</p>
+                  <p class="text-base text-emerald-100 mt-1">品质筑基，温暖相伴</p>
                 </div>
                 <van-icon name="like-o" class="text-4xl text-white/20 absolute right-4 bottom-2" />
               </div>
@@ -274,7 +274,7 @@ const previewSingleImage = (url: string) => {
               <div class="h-20 bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-between px-6 text-white relative">
                 <div>
                   <h3 class="text-lg font-bold">企业文化</h3>
-                  <p class="text-xs text-purple-100 mt-1">开拓创新，追求卓越</p>
+                  <p class="text-base text-purple-100 mt-1">开拓创新，追求卓越</p>
                 </div>
                 <van-icon name="gold-coin-o" class="text-4xl text-white/20 absolute right-4 bottom-2" />
               </div>
@@ -323,7 +323,7 @@ const previewSingleImage = (url: string) => {
                 </div>
 
                 <!-- Read More Toggle -->
-                <div class="flex justify-center items-center text-xs text-purple-600 font-semibold pt-1 border-t border-gray-50 mt-2">
+                <div class="flex justify-center items-center text-sm text-purple-600 font-semibold pt-1 border-t border-gray-50 mt-2">
                   <span>{{ isCultureExpanded ? '收起详情' : '展开阅读全文' }}</span>
                   <van-icon :name="isCultureExpanded ? 'arrow-up' : 'arrow-down'" class="ml-1 text-purple-600" />
                 </div>

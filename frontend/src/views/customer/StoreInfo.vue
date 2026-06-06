@@ -5,7 +5,7 @@ import { ref, onMounted, nextTick, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getStores, getRegions } from '../../api/index'
 import { showToast, showDialog } from 'vant'
-import { getCachedLocation, setCachedLocation } from '../../utils/location'
+import { autoLocate, getCachedLocation, setCachedLocation } from '../../utils/location'
 import { wgs84togcj02, gcj02towgs84 } from '../../utils/coordTransform'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -32,6 +32,12 @@ const isExplicitRegion = ref(false)
 const userLocation = ref<{ lat: number; lng: number } | null>(null)
 const viewMode = ref<'list' | 'map'>('list')
 const loading = ref(false)
+const refreshing = ref(false)
+
+const onRefresh = async () => {
+  await fetchStores(!!searchValue.value)
+  refreshing.value = false
+}
 let mapInstance: L.Map | null = null
 let isDestroyed = false
 
@@ -54,48 +60,39 @@ const blueIcon = L.icon({
   popupAnchor: [1, -44]
 })
 
-// 尝试用浏览器 Geolocation 获取精确坐标
-const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> => {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 5000, maximumAge: 60000 }
-    )
-  })
-}
 
 onMounted(async () => {
   try {
     columns.value = await getRegions()
     if (isDestroyed) return
     
-    const loc = getCachedLocation()
+    let loc = getCachedLocation()
+    if (!loc || !loc.lat || !loc.lng) {
+      try {
+        const newLoc = await autoLocate()
+        if (newLoc) {
+          loc = newLoc
+          setCachedLocation(loc)
+        }
+      } catch (e) {
+        console.warn('Auto locate failed', e)
+      }
+    }
+
+    if (isDestroyed) return
+
     if (loc) {
       if (loc.lat && loc.lng) {
         userLocation.value = { lat: loc.lat, lng: loc.lng }
-      } else {
-        const coords = await tryBrowserGeolocation()
-        if (isDestroyed) return
-        if (coords) {
-          userLocation.value = coords
-          setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng })
-        }
       }
-      if (loc.city) {
+      if (loc.city && !isExplicitRegion.value) {
         currentQuery.value = { city: loc.city, district: loc.district || '' }
         selectedRegion.value = `${loc.city} ${loc.district || ''}`.trim()
       }
     } else {
-      const coords = await tryBrowserGeolocation()
-      if (isDestroyed) return
-      if (coords) {
-        userLocation.value = coords
-      }
       showDialog({
         title: "提示",
-        message: "未能获取到您的位置信息，暂不能查询门店信息。为了更好的体验，请开启定位权限。",
+        message: "未能获取到您的位置信息，将展示全局数据。为了更好的体验，请开启定位权限。",
         confirmButtonText: "我知道了"
       })
     }
@@ -366,7 +363,7 @@ const initOrUpdateMap = async () => {
     <!-- TopAppBar -->
     <header class="flex items-center justify-between px-margin-mobile h-16 w-full bg-surface top-0 sticky z-20 shadow-sm">
       <button @click="router.back()" class="w-10 h-10 flex items-center justify-center text-primary hover:bg-surface-container-low rounded-full transition-colors active:scale-95">
-        <span class="material-symbols-outlined">chevron_left</span>
+        <i-material-symbols-chevron-left></i-material-symbols-chevron-left>
       </button>
       <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface flex-1 text-center truncate px-2">门店查询</h1>
       <div class="w-10 h-10"></div>
@@ -399,7 +396,7 @@ const initOrUpdateMap = async () => {
           <span class="font-body-md text-on-surface-variant">选择区域</span>
           <div class="flex items-center gap-2 text-on-surface">
             <span class="font-body-md font-medium">{{ selectedRegion || '请选择省市区' }}</span>
-            <span class="material-symbols-outlined text-outline">chevron_right</span>
+            <i-material-symbols-chevron-right  class="text-outline"></i-material-symbols-chevron-right>
           </div>
         </div>
         
@@ -415,11 +412,11 @@ const initOrUpdateMap = async () => {
               type="text"
             />
             <div v-show="searchValue" @click="searchValue = ''; fetchStores(false)" class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-outline hover:text-on-surface">
-              <span class="material-symbols-outlined text-sm">close</span>
+              <i-material-symbols-close  class="text-sm"></i-material-symbols-close>
             </div>
           </div>
           <button @click="onSearch" class="flex-shrink-0 text-white w-10 h-10 flex items-center justify-center rounded-lg hover:bg-primary-container transition-colors active:scale-95">
-            <span class="material-symbols-outlined text-[30px]">search</span></button>
+            <i-material-symbols-search  class="text-[30px]"></i-material-symbols-search></button>
         </div>
 
         <!-- Mode Toggle -->
@@ -452,6 +449,8 @@ const initOrUpdateMap = async () => {
 
     <!-- Store List -->
     <main v-else-if="viewMode === 'list'" class="flex-grow w-full max-w-screen-md mx-auto px-margin-mobile pt-2 pb-24 flex flex-col gap-4">
+      <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-full w-full">
+        <div class="flex flex-col gap-4">
       <article v-for="store in stores" :key="store.id" class="bg-surface-container-lowest rounded-xl p-md shadow-[0px_4px_12px_rgba(0,0,0,0.05)] border border-surface-variant hover:border-primary-fixed-dim transition-colors cursor-pointer group">
         <div class="flex justify-between items-start mb-4">
           <h2 class="font-headline-sm text-headline-sm text-on-surface group-hover:text-primary transition-colors">{{ store.name }}</h2>
@@ -462,19 +461,21 @@ const initOrUpdateMap = async () => {
         </div>
         <div class="flex flex-col gap-2">
           <div class="flex items-start gap-2 text-on-surface-variant">
-            <span class="material-symbols-outlined text-[18px] mt-0.5" style="font-variation-settings: 'FILL' 1;">location_on</span>
+            <i-material-symbols-location-on-outline style="font-variation-settings: 'FILL' 1;" class="text-[18px] mt-0.5"></i-material-symbols-location-on-outline>
             <span class="font-body-md text-sm">地址: {{ store.location }}</span>
           </div>
           <div class="flex items-center gap-2 text-on-surface-variant">
-            <span class="material-symbols-outlined text-[18px]">schedule</span>
+            <i-material-symbols-schedule-outline  class="text-[18px]"></i-material-symbols-schedule-outline>
             <span class="font-body-md text-sm">营业时间: {{ store.time }}</span>
           </div>
           <div class="flex items-center gap-2 text-on-surface-variant">
-            <span class="material-symbols-outlined text-[18px]">call</span>
+            <i-material-symbols-call-outline  class="text-[18px]"></i-material-symbols-call-outline>
             <span class="font-body-md text-sm">联系电话: {{ store.phone }}</span>
           </div>
         </div>
       </article>
+        </div>
+      </van-pull-refresh>
     </main>
 
     <!-- Map View -->

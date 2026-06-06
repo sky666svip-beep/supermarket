@@ -85,12 +85,21 @@ export const getItemMemos = () => api.get('/customer/memos').then(res => res.dat
 export const createItemMemo = (data: any) => api.post('/customer/memos', data).then(res => res.data)
 export const updateItemMemo = (id: number, data: any) => api.put(`/customer/memos/${id}`, data).then(res => res.data)
 export const deleteItemMemo = (id: number) => api.delete(`/customer/memos/${id}`).then(res => res.data)
-export const uploadImage = (file: File) => {
+export const uploadImage = async (file: File) => {
+  // 上传前压缩图片
+  const { compressImage } = await import('../utils/compress')
+  const compressed = await compressImage(file)
+
   const formData = new FormData()
-  formData.append('file', file)
-  return api.post('/upload', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' }
-  }).then(res => res.data)
+  formData.append('file', compressed)
+  try {
+    const res = await api.post('/upload', formData, { timeout: 30000 })
+    return res.data
+  } catch (error: any) {
+    const msg = error?.response?.data?.error || error?.message || '上传失败，请检查网络'
+    showToast(msg)
+    throw error
+  }
 }
 
 // Notice & Activity APIs

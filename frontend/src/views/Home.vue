@@ -4,6 +4,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { showImagePreview } from 'vant'
 import { getNotices, getActivities, getStores } from '../api'
 import { getCachedLocation, setCachedLocation, autoLocate, clearCachedLocation } from '../utils/location'
+import { getThumbnailUrl } from '../utils/image'
 
 export interface Notice {
   id: number
@@ -53,6 +54,7 @@ const currentStoreName = ref('')
 const currentAreaName = ref('')
 const closestStoreId = ref<number | null>(null)
 const loading = ref(true)
+const refreshing = ref(false)
 const isError = ref(false)
 const errorMsg = ref('')
 
@@ -161,6 +163,11 @@ const loadData = async () => {
   }
 }
 
+const onRefresh = async () => {
+  await loadData()
+  refreshing.value = false
+}
+
 onMounted(() => {
   loadData()
   window.addEventListener('location-updated', loadData)
@@ -222,15 +229,15 @@ const openActivityImages = (activity: Activity) => {
       <!-- Left side: Location selector -->
       <div class="flex items-center gap-1 z-10">
         <div @click="openAreaPopup" class="flex items-center gap-1 text-[#FF7070] cursor-pointer active:scale-95 transition-transform duration-200">
-          <span class="material-symbols-outlined">location_on</span>
-          <span class="font-body-md text-body-md font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
-          <span class="material-symbols-outlined text-sm">expand_more</span>
+          <i-material-symbols-location-on-outline class="text-[22px] text-[#FF7070] text-[10]px]"></i-material-symbols-location-on-outline>
+          <span class="text-[18px] font-semibold max-w-[120px] truncate block">{{ currentAreaName || '定位中...' }}</span>
+          <i-material-symbols-expand-more class="text-[22px]"></i-material-symbols-expand-more>
         </div>
       </div>
       
       <!-- Right side: Relocate button -->
       <div class="z-10 flex items-center">
-        <span @click="manualRefreshLocation" class="material-symbols-outlined text-[#FF7070] text-[20px] cursor-pointer active:scale-95 bg-surface-container-low rounded-full p-1.5 hover:bg-primary-container hover:text-white transition-colors" title="重新定位">my_location</span>
+        <i-material-symbols-my-location-outline @click="manualRefreshLocation"   title="重新定位" class="text-[#FF7070] text-[30px] cursor-pointer active:scale-95 bg-surface-container-low rounded-full p-1.5 hover:bg-primary-container hover:text-white transition-colors"></i-material-symbols-my-location-outline>
       </div>
 
       <!-- Center absolute title -->
@@ -241,9 +248,10 @@ const openActivityImages = (activity: Activity) => {
 
     <!-- Main Content Canvas -->
     <main class="flex-1 overflow-y-auto hide-scrollbar pb-24 md:pb-8 md:pt-6 w-full max-w-7xl mx-auto md:px-margin-desktop">
-      <van-loading v-if="loading" class="mt-20 text-center block mx-auto" />
-    
-      <div v-else-if="isError" class="mt-20 text-center text-gray-400">
+      <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-full">
+        <van-loading v-if="loading && !refreshing" class="mt-20 text-center block mx-auto" />
+      
+        <div v-else-if="isError && !refreshing" class="mt-20 text-center text-gray-400">
         <van-empty description="加载失败" />
         <div class="text-xs text-red-400 mt-2 px-4">{{ errorMsg }}</div>
         <van-button size="small" type="primary" class="mt-4" @click="loadData">重试</van-button>
@@ -272,49 +280,57 @@ const openActivityImages = (activity: Activity) => {
           <div class="grid grid-cols-4 md:grid-cols-8 gap-y-3 gap-x-xs">
             <div @click="$router.push('/customer/stores')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">storefront</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-storefront-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">门店查询</span>
             </div>
             <div @click="$router.push('/customer/checklist')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">shopping_bag</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-shopping-bag-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">购物清单</span>
             </div>
             <div @click="$router.push('/customer/memos')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">edit_note</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-edit-note-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">商品备忘</span>
             </div>
             <div @click="$router.push('/customer/feedback')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">report_problem</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-warning-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">问题上报</span>
             </div>
             <div @click="$router.push('/customer/traffic')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">analytics</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-analytics-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">客流分析</span>
             </div>
             <div @click="$router.push('/customer/parking')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">local_parking</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-local-parking style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">停车计费</span>
             </div>
             <div @click="$router.push('/customer/mutual-help')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">diversity_3</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-diversity-3 style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">同店互助</span>
             </div>
             <div @click="$router.push('/customer/jobs')" class="flex flex-col items-center gap-sm cursor-pointer group">
               <div class="w-14 h-14 rounded-full bg-background flex items-center justify-center text-primary group-hover:bg-primary-container group-hover:text-white transition-colors duration-200">
-                <span class="material-symbols-outlined" style="font-size: 35px; font-variation-settings: 'wght' 200;">handshake</span>
+                <!-- Option 2: SVG Icon -->
+                <i-material-symbols-handshake-outline style="font-size: 32px;" />
               </div>
               <span class="font-body-md text-body-lg font-medium text-on-surface-variant text-center whitespace-nowrap">加入我们</span>
             </div>
@@ -329,7 +345,7 @@ const openActivityImages = (activity: Activity) => {
           </div>
           <div v-for="notice in normalNotices.slice(0, 2)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
             <div class="bg-error-container text-on-error-container p-2 rounded-lg flex-shrink-0">
-              <span class="material-symbols-outlined">campaign</span>
+              <i-material-symbols-campaign-outline></i-material-symbols-campaign-outline>
             </div>
             <div class="flex-1">
               <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1 truncate">{{ notice.title }}</h4>
@@ -348,7 +364,7 @@ const openActivityImages = (activity: Activity) => {
           </div>
           <div v-for="act in activities.slice(0, 2)" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4 relative">
             <div v-if="act.parsedImages && act.parsedImages.length > 0" class="h-40 w-full relative bg-surface-container">
-              <img :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img :src="getThumbnailUrl(act.parsedImages[0])" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div class="absolute top-md right-md bg-tertiary-container/90 backdrop-blur text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md">
                   Hot
               </div>
@@ -361,13 +377,14 @@ const openActivityImages = (activity: Activity) => {
                 </div>
               </div>
               <div class="flex items-center gap-xs text-secondary font-body-md text-body-md mt-1">
-                <span class="material-symbols-outlined text-sm">location_on</span>
+                <i-material-symbols-location-on-outline  class="text-sm"></i-material-symbols-location-on-outline>
                 <span>{{ (act.storeNames && act.storeNames.length > 0) ? act.storeNames.join('、') : '全局活动' }}</span>
               </div>
             </div>
           </div>
         </section>
-      </template>
+        </template>
+      </van-pull-refresh>
     </main>
 
     <!-- 活动快讯 全部列表弹窗 -->
@@ -377,7 +394,7 @@ const openActivityImages = (activity: Activity) => {
         <div class="flex-1 overflow-y-auto pb-8 hide-scrollbar">
           <div v-for="notice in normalNotices.slice(2)" :key="notice.id" @click="openNotice(notice)" class="bg-surface-container-lowest rounded-xl p-md shadow-sm border border-surface-variant flex items-start gap-md cursor-pointer hover:bg-surface-container-low transition-colors mb-3">
             <div class="bg-error-container text-on-error-container p-2 rounded-lg flex-shrink-0">
-              <span class="material-symbols-outlined">campaign</span>
+              <i-material-symbols-campaign-outline></i-material-symbols-campaign-outline>
             </div>
             <div class="flex-1">
               <h4 class="font-body-lg text-body-lg font-semibold text-on-surface mb-1 truncate">{{ notice.title }}</h4>
@@ -385,7 +402,7 @@ const openActivityImages = (activity: Activity) => {
                   {{ notice.content }}
               </p>
               <div class="mt-2 text-xs text-secondary flex items-center gap-1">
-                <span class="material-symbols-outlined" style="font-size: 14px;">storefront</span>
+                <i-material-symbols-storefront-outline style="font-size: 14px;"></i-material-symbols-storefront-outline>
                 {{ notice.storeName }}
               </div>
             </div>
@@ -401,7 +418,7 @@ const openActivityImages = (activity: Activity) => {
         <div class="flex-1 overflow-y-auto pb-8 hide-scrollbar">
           <div v-for="act in activities.slice(2)" :key="act.id" @click="openActivityImages(act)" class="bg-surface-container-lowest rounded-xl overflow-hidden shadow-sm border border-surface-variant group cursor-pointer mb-4 relative">
             <div v-if="act.parsedImages && act.parsedImages.length > 0" class="h-40 w-full relative bg-surface-container">
-              <img :src="act.parsedImages[0]" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              <img :src="getThumbnailUrl(act.parsedImages[0])" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
               <div class="absolute top-md right-md bg-tertiary-container/90 backdrop-blur text-on-tertiary-container px-3 py-1 rounded-full font-label-md text-label-md">
                   Hot
               </div>
@@ -414,7 +431,7 @@ const openActivityImages = (activity: Activity) => {
                 </div>
               </div>
               <div class="flex items-center gap-xs text-secondary font-body-md text-body-md mt-1">
-                <span class="material-symbols-outlined text-sm">location_on</span>
+                <i-material-symbols-location-on-outline  class="text-sm"></i-material-symbols-location-on-outline>
                 <span>{{ (act.storeNames && act.storeNames.length > 0) ? act.storeNames.join('、') : '全局活动' }}</span>
               </div>
             </div>

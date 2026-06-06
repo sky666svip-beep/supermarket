@@ -3,6 +3,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getAdminFeedbacks, updateAdminFeedbackStatus, replyAdminFeedback, deleteAdminFeedback } from '../../api'
+import { getThumbnailUrl } from '../../utils/image'
 import { showToast } from 'vant'
 
 const router = useRouter()
@@ -162,7 +163,7 @@ const onDelete = (id: number) => {
             <van-image
               v-for="(img, idx) in item.parsedImages"
               :key="idx"
-              :src="img"
+              :src="getThumbnailUrl(img)"
               width="60"
               height="60"
               fit="cover"

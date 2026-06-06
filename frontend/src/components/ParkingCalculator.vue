@@ -106,7 +106,7 @@ watch(() => props.initialStoreId, (newId) => {
           <option v-for="rule in rules" :key="rule.id" :value="rule.storeId">{{ rule.storeName }}</option>
         </select>
         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-on-surface-variant">
-          <span class="material-symbols-outlined">expand_more</span>
+          <i-material-symbols-expand-more></i-material-symbols-expand-more>
         </div>
       </div>
     </section>

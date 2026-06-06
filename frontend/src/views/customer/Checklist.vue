@@ -97,7 +97,7 @@ const groupedList = computed(() => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-40 transition-colors shadow-sm">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button @click="router.back()" class="flex items-center text-primary font-body-md hover:bg-surface-container-low p-2 -ml-2 rounded-lg transition-colors active:scale-95">
-          <span class="material-symbols-outlined mr-1" style="font-size: 20px;">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new style="font-size: 20px;" class="mr-1"></i-material-symbols-arrow-back-ios-new>
           返回
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2">
@@ -140,26 +140,26 @@ const groupedList = computed(() => {
               :class="{ 'opacity-60': item.isCompleted }"
             >
               <div @click="toggleItem(item)" class="flex items-center gap-md flex-1 cursor-pointer">
-                <span 
-                  class="material-symbols-outlined transition-colors"
-                  :class="item.isCompleted ? 'text-primary fill' : 'text-secondary/50 group-hover:text-primary'"
-                  :style="item.isCompleted ? 'font-variation-settings: \'FILL\' 1;' : ''"
+                <div 
+                  class="transition-colors flex items-center justify-center text-[24px]"
+                  :class="item.isCompleted ? 'text-primary' : 'text-secondary/50 group-hover:text-primary'"
                 >
-                  {{ item.isCompleted ? 'check_circle' : 'radio_button_unchecked' }}
-                </span>
+                  <i-material-symbols-check-circle v-if="item.isCompleted"></i-material-symbols-check-circle>
+                  <i-material-symbols-radio-button-unchecked v-else></i-material-symbols-radio-button-unchecked>
+                </div>
                 <span class="font-body-md transition-colors text-lg" :class="item.isCompleted ? 'line-through text-secondary' : 'text-on-surface'">
                   {{ item.title }}
                 </span>
               </div>
               <button @click="onDelete(item)" class="text-error/60 hover:text-error hover:bg-error-container/50 p-sm rounded-full transition-all active:scale-90">
-                <span class="material-symbols-outlined" style="font-size: 21px;">delete_outline</span>
+                <i-material-symbols-delete-outline style="font-size: 21px;"></i-material-symbols-delete-outline>
               </button>
             </div>
           </div>
         </div>
 
         <div v-if="list.length === 0" class="py-12 flex flex-col items-center justify-center opacity-50">
-          <span class="material-symbols-outlined text-6xl text-surface-variant mb-4">list_alt</span>
+          <i-material-symbols-list-alt-outline  class="text-6xl text-surface-variant mb-4"></i-material-symbols-list-alt-outline>
           <p class="font-body-md text-secondary">清单空空如也，添加点什么吧</p>
         </div>
       </section>

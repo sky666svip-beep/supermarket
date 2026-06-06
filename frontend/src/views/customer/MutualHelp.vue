@@ -4,7 +4,8 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast, showLoadingToast, showImagePreview } from 'vant'
 import { getStores, getPosts, publishPost, uploadImage } from '../../api/index'
-import { getCachedLocation, setCachedLocation } from '../../utils/location'
+import { autoLocate, getCachedLocation, setCachedLocation } from '../../utils/location'
+import { getThumbnailUrl } from '../../utils/image'
 
 const router = useRouter()
 const stores = ref<any[]>([])
@@ -14,6 +15,12 @@ const activeTab = ref<string>('全部') // '全部', '寻物问答', '拼车互�
 const posts = ref<any[]>([])
 const loading = ref(false)
 const locating = ref(false)
+const refreshing = ref(false)
+
+const onRefresh = async () => {
+  await fetchPosts()
+  refreshing.value = false
+}
 
 // Selectors and Popups
 const showStorePicker = ref(false)
@@ -70,16 +77,7 @@ const fetchPosts = async () => {
   }
 }
 
-const tryBrowserGeolocation = (): Promise<{ lat: number; lng: number } | null> => {
-  return new Promise((resolve) => {
-    if (!navigator.geolocation) return resolve(null)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => resolve(null),
-      { timeout: 5000, maximumAge: 60000 }
-    )
-  })
-}
+
 
 // Trigger initial location binding
 const handleLocationAndInit = async () => {
@@ -92,17 +90,20 @@ const handleLocationAndInit = async () => {
 
   try {
     let loc = getCachedLocation()
-    let userLat = loc?.lat
-    let userLng = loc?.lng
-
-    if (!userLat || !userLng) {
-      const coords = await tryBrowserGeolocation()
-      if (coords) {
-        userLat = coords.lat
-        userLng = coords.lng
-        setCachedLocation({ ...loc, lat: coords.lat, lng: coords.lng } as any)
+    if (!loc || !loc.lat || !loc.lng) {
+      try {
+        const newLoc = await autoLocate()
+        if (newLoc) {
+          loc = newLoc
+          setCachedLocation(loc)
+        }
+      } catch (e) {
+        console.warn('Auto locate failed', e)
       }
     }
+    
+    let userLat = loc?.lat
+    let userLng = loc?.lng
 
     if (userLat && userLng && stores.value.length > 0) {
       // Calculate distances for all stores
@@ -289,15 +290,15 @@ const formatTime = (timeStr: string) => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto relative">
         <button type="button" @click="router.push('/')" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 whitespace-nowrap text-center">
           互助广场
         </h1>
         <div @click="showStorePicker = true" class="flex items-center gap-1 text-primary bg-primary/10 px-2.5 py-1.5 rounded-full cursor-pointer hover:bg-primary/20 transition-colors max-w-[160px]">
-          <span class="material-symbols-outlined text-[16px] shrink-0">location_on</span>
+          <i-material-symbols-location-on-outline  class="text-[16px] shrink-0"></i-material-symbols-location-on-outline>
           <span class="text-xs font-bold truncate">{{ currentStoreName }}</span>
-          <span class="material-symbols-outlined text-[16px] shrink-0">arrow_drop_down</span>
+          <i-material-symbols-arrow-drop-down  class="text-[16px] shrink-0"></i-material-symbols-arrow-drop-down>
         </div>
       </div>
     </header>
@@ -310,8 +311,9 @@ const formatTime = (timeStr: string) => {
     </van-tabs>
 
     <main class="flex-1 w-full max-w-2xl mx-auto">
+      <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-full">
       <!-- Loading state -->
-      <div v-if="loading" class="flex justify-center items-center py-20">
+      <div v-if="loading && !refreshing" class="flex justify-center items-center py-20">
         <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
 
@@ -374,19 +376,20 @@ const formatTime = (timeStr: string) => {
               class="aspect-square rounded-xl overflow-hidden shadow-sm border border-surface-variant/30 cursor-pointer active:scale-95 transition-transform"
               @click="previewImage(parseImages(post.images), Number(idx))"
             >
-              <van-image :src="img.startsWith('/uploads') ? '/api' + img : img" width="100%" height="100%" fit="cover" />
+              <van-image :src="getThumbnailUrl(img)" width="100%" height="100%" fit="cover" />
             </div>
           </div>
 
           <div class="flex items-center justify-between text-xs text-on-surface-variant font-medium pt-3 border-t border-surface-variant/30 mt-1">
             <div class="flex items-center gap-4">
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">visibility</span> {{ post.viewCount || 0 }}</span>
-              <span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat_bubble</span> {{ post.commentCount || 0 }}</span>
+              <span class="flex items-center gap-1"><i-material-symbols-visibility-outline  class="text-[14px]"></i-material-symbols-visibility-outline> {{ post.viewCount || 0 }}</span>
+              <span class="flex items-center gap-1"><i-material-symbols-chat-bubble-outline  class="text-[14px]"></i-material-symbols-chat-bubble-outline> {{ post.commentCount || 0 }}</span>
             </div>
-            <span class="flex items-center gap-1 text-primary"><span class="material-symbols-outlined text-[14px]">thumb_up</span> {{ post.likeCount || 0 }}</span>
+            <span class="flex items-center gap-1 text-primary"><i-material-symbols-thumb-up-outline  class="text-[14px]"></i-material-symbols-thumb-up-outline> {{ post.likeCount || 0 }}</span>
           </div>
         </article>
       </div>
+      </van-pull-refresh>
     </main>
 
     <button 
@@ -394,7 +397,7 @@ const formatTime = (timeStr: string) => {
       class="fixed bottom-20 right-6 w-14 h-14 rounded-2xl bg-primary text-white shadow-[0_4px_12px_rgba(0,92,108,0.3)] flex items-center justify-center hover:bg-primary/90 active:scale-95 transition-all z-40"
       style="color: #ffffff !important;"
     >
-      <span class="material-symbols-outlined text-[28px]">edit_square</span>
+      <i-material-symbols-edit-square-outline  class="text-[28px]"></i-material-symbols-edit-square-outline>
     </button>
 
     <!-- Store Picker Popup -->
@@ -408,7 +411,7 @@ const formatTime = (timeStr: string) => {
         <div class="flex justify-between items-center mb-6 pb-3 border-b border-surface-variant/30">
           <h2 class="font-headline-sm text-lg font-bold text-on-surface">发布互助信息</h2>
           <button @click="showPublishPopup = false" class="text-on-surface-variant hover:text-on-surface p-1 rounded-full active:bg-surface-variant/20 transition-colors">
-            <span class="material-symbols-outlined">close</span>
+            <i-material-symbols-close></i-material-symbols-close>
           </button>
         </div>
 
@@ -417,7 +420,7 @@ const formatTime = (timeStr: string) => {
           <div class="flex flex-col gap-1.5">
             <label class="font-label-md text-sm text-on-surface-variant px-1">关联门店</label>
             <div class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 flex items-center gap-2 shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
-              <span class="material-symbols-outlined text-primary">location_on</span>
+              <i-material-symbols-location-on-outline  class="text-primary"></i-material-symbols-location-on-outline>
               <span class="text-on-surface font-bold">{{ currentStoreName }}</span>
             </div>
           </div>
@@ -433,7 +436,7 @@ const formatTime = (timeStr: string) => {
                 :class="newCategory === '寻物问答' ? 'bg-primary text-white border-primary shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-primary/50'"
                 :style="newCategory === '寻物问答' ? 'color: #ffffff !important;' : ''"
               >
-                <span class="material-symbols-outlined text-[18px]">search</span> 寻物问答
+                <i-material-symbols-search  class="text-[18px]"></i-material-symbols-search> 寻物问答
               </button>
               <button 
                 type="button" 
@@ -442,7 +445,7 @@ const formatTime = (timeStr: string) => {
                 :class="newCategory === '拼车互助' ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-surface-container-lowest border-surface-variant/50 text-on-surface-variant hover:border-[#10b981]/50'"
                 :style="newCategory === '拼车互助' ? 'color: #ffffff !important;' : ''"
               >
-                <span class="material-symbols-outlined text-[18px]">directions_car</span> 拼车互助
+                <i-material-symbols-directions-car-outline  class="text-[18px]"></i-material-symbols-directions-car-outline> 拼车互助
               </button>
             </div>
           </div>

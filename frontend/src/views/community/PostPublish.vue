@@ -4,7 +4,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { publishPost, updatePost, getPostDetail, uploadImage, getStores } from '../../api/index'
-import { getCachedLocation } from '../../utils/location'
+import { autoLocate, getCachedLocation, setCachedLocation } from '../../utils/location'
 import { showToast, closeToast } from 'vant'
 
 const router = useRouter()
@@ -59,7 +59,18 @@ const onStoreConfirm = ({ selectedOptions }: any) => {
 onMounted(async () => {
   // Fetch Stores
   try {
-    const loc = getCachedLocation()
+    let loc = getCachedLocation()
+    if (!loc || !loc.lat || !loc.lng) {
+      try {
+        const newLoc = await autoLocate()
+        if (newLoc) {
+          loc = newLoc
+          setCachedLocation(loc)
+        }
+      } catch (e) {
+        console.warn('Auto locate failed', e)
+      }
+    }
     const stores = await getStores(loc?.city ? { city: loc.city } : undefined)
     let processedStores = stores
     if (loc && loc.lat && loc.lng) {
@@ -198,7 +209,7 @@ const onSubmit = async () => {
     <header class="bg-surface w-full top-0 sticky flex flex-col z-20 shadow-sm transition-colors">
       <div class="flex items-center justify-between px-margin-mobile h-16 w-full max-w-2xl mx-auto">
         <button type="button" @click="router.back()" class="flex items-center justify-center text-primary hover:bg-surface-container-low w-10 h-10 rounded-full transition-colors active:scale-95">
-          <span class="material-symbols-outlined">arrow_back_ios_new</span>
+          <i-material-symbols-arrow-back-ios-new></i-material-symbols-arrow-back-ios-new>
         </button>
         <h1 class="font-headline-sm text-headline-sm font-bold text-on-surface absolute left-1/2 transform -translate-x-1/2 truncate max-w-[50%] text-center">
           {{ isEdit ? '编辑帖子' : '发布帖子' }}
@@ -221,7 +232,7 @@ const onSubmit = async () => {
             <span :class="storeName ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
               {{ storeName || '选择相关门店' }}
             </span>
-            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            <i-material-symbols-chevron-right  class="text-on-surface-variant"></i-material-symbols-chevron-right>
           </button>
         </div>
         <van-popup v-model:show="showStorePicker" position="bottom" round safe-area-inset-bottom>
@@ -239,7 +250,7 @@ const onSubmit = async () => {
             <span :class="category ? 'text-on-surface' : 'text-on-surface-variant opacity-70'">
               {{ category || '选择帖子分类' }}
             </span>
-            <span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+            <i-material-symbols-chevron-right  class="text-on-surface-variant"></i-material-symbols-chevron-right>
           </button>
         </div>
         <van-popup v-model:show="showPicker" position="bottom" round safe-area-inset-bottom>
