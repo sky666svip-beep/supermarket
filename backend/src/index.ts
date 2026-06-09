@@ -4,13 +4,11 @@ import { getRequestListener } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
-import * as fs from 'fs'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
-import sharp from 'sharp'
-import { db } from './db/index.js'
-import { itemMemos } from './db/schema.js'
-import { and, eq, lte } from 'drizzle-orm'
+
+import { uploadsServingRouter } from './routes/uploads-serving.js'
+import { startCleanupJobs } from './jobs/cleanup.js'
 
 import customer from './routes/customer.js'
 import { auth } from './routes/auth.js'
@@ -33,111 +31,8 @@ const app = new Hono()
 app.use('*', logger())
 app.use('*', cors())
 
-// Serve uploaded files manually (avoid serveStatic compatibility issues with tsx watch)
-const mimeTypes: Record<string, string> = {
-  '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
-  '.gif': 'image/gif', '.webp': 'image/webp', '.svg': 'image/svg+xml',
-}
-
-app.get('/api/uploads/:filename', async (c) => {
-  const filename = c.req.param('filename')
-  const uploadDir = path.resolve(process.cwd(), 'data/uploads')
-  const filepath = path.join(uploadDir, filename)
-
-  const exists = await fs.promises.access(filepath).then(() => true).catch(() => false)
-  if (!exists) {
-    return c.json({ error: 'File not found' }, 404)
-  }
-
-  // 动态缩略图处理
-  let targetFilepath = filepath
-  let targetExt = path.extname(filename).toLowerCase()
-
-  const widthParam = c.req.query('w')
-  const width = widthParam ? parseInt(widthParam, 10) : null
-
-  const qParam = c.req.query('q')
-  const quality = qParam && !isNaN(parseInt(qParam, 10)) ? Math.max(1, Math.min(100, parseInt(qParam, 10))) : 80
-
-  const formatParam = c.req.query('format')?.toLowerCase()
-  const validFormats = ['webp', 'jpeg', 'png', 'avif']
-  const format = validFormats.includes(formatParam || '') ? formatParam : 'webp'
-  const outExt = `.${format}`
-  
-  if (width && !isNaN(width) && width > 0 && width <= 2000) {
-    const cacheDir = path.join(uploadDir, '.cache')
-    const cacheDirExists = await fs.promises.access(cacheDir).then(() => true).catch(() => false)
-    if (!cacheDirExists) {
-      await fs.promises.mkdir(cacheDir, { recursive: true })
-    }
-    
-    const cacheFilename = `${filename}_w${width}_q${quality}.${format}`
-    const cacheFilepath = path.join(cacheDir, cacheFilename)
-
-    const cacheExists = await fs.promises.access(cacheFilepath).then(() => true).catch(() => false)
-    let needGenerate = !cacheExists
-    if (!needGenerate) {
-      const origStat = await fs.promises.stat(filepath)
-      const cacheStat = await fs.promises.stat(cacheFilepath)
-      if (origStat.mtimeMs > cacheStat.mtimeMs) {
-        needGenerate = true
-      }
-    }
-
-    if (needGenerate) {
-      try {
-        let pipeline = sharp(filepath).resize({ width, withoutEnlargement: true })
-        if (format === 'webp') pipeline = pipeline.webp({ quality })
-        else if (format === 'jpeg') pipeline = pipeline.jpeg({ quality })
-        else if (format === 'png') pipeline = pipeline.png({ quality })
-        else if (format === 'avif') pipeline = pipeline.avif({ quality })
-        
-        await pipeline.toFile(cacheFilepath)
-        targetFilepath = cacheFilepath
-        targetExt = outExt
-      } catch (err) {
-        console.error('[Sharp] Failed to generate thumbnail:', err)
-        // 出错则回退到原图
-      }
-    } else {
-      targetFilepath = cacheFilepath
-      targetExt = outExt
-    }
-  }
-
-  const stats = await fs.promises.stat(targetFilepath)
-  const lastModified = stats.mtime.toUTCString()
-  
-  // 处理协商缓存 304 Not Modified
-  const ifModifiedSince = c.req.header('if-modified-since')
-  if (ifModifiedSince && ifModifiedSince === lastModified) {
-    return new Response(null, { status: 304 })
-  }
-
-  const contentType = mimeTypes[targetExt] || 'application/octet-stream'
-  
-  // 使用 Node.js 可读流并转换为 ReadableStream 以减少内存占用
-  const nodeStream = fs.createReadStream(targetFilepath)
-  const webStream = new ReadableStream({
-    start(controller) {
-      nodeStream.on('data', (chunk) => controller.enqueue(chunk))
-      nodeStream.on('end', () => controller.close())
-      nodeStream.on('error', (err) => controller.error(err))
-    },
-    cancel() {
-      nodeStream.destroy()
-    }
-  })
-
-  return new Response(webStream, {
-    headers: { 
-      'Content-Type': contentType, 
-      // 恢复为 1 天缓存，后续依赖 304 协商缓存即可
-      'Cache-Control': 'public, max-age=86400',
-      'Last-Modified': lastModified
-    }
-  })
-})
+// Serve uploaded files
+app.route('/api/uploads', uploadsServingRouter)
 
 // Routes
 app.route('/api/customer', customer)
@@ -187,55 +82,5 @@ server.listen(port, () => {
   console.log(`Server is running on port ${port}`)
 })
 
-// Auto cleanup job: runs every hour to delete memos completed > 24h ago
-setInterval(async () => {
-  try {
-    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000)
-    const oldMemos = await db.select().from(itemMemos)
-      .where(and(eq(itemMemos.isCompleted, true), lte(itemMemos.completedAt, cutoff)))
-      
-    for (const memo of oldMemos) {
-      // 1. Delete record first to ensure DB consistency
-      await db.delete(itemMemos).where(eq(itemMemos.id, memo.id))
-      
-      // 2. Delete file only if DB deletion succeeded
-      if (memo.imageUrl) {
-        // extract filename from url
-        const filename = memo.imageUrl.split('/').pop()
-        if (filename) {
-          const filepath = path.resolve(process.cwd(), 'data/uploads', filename)
-          const exists = await fs.promises.access(filepath).then(() => true).catch(() => false)
-          if (exists) {
-            await fs.promises.unlink(filepath)
-          }
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Memo cleanup job error:', error)
-  }
-}, 60 * 60 * 1000)
-
-// Auto cleanup job for thumbnails cache: runs every 12 hours
-setInterval(async () => {
-  try {
-    const cacheDir = path.resolve(process.cwd(), 'data/uploads/.cache')
-    const cacheDirExists = await fs.promises.access(cacheDir).then(() => true).catch(() => false)
-    if (!cacheDirExists) return
-
-    const now = Date.now()
-    const maxAgeMs = 7 * 24 * 60 * 60 * 1000 // 7 days
-
-    const files = await fs.promises.readdir(cacheDir)
-    for (const file of files) {
-      const filepath = path.join(cacheDir, file)
-      const stats = await fs.promises.stat(filepath)
-      // 如果文件超过 7 天未被修改（或访问），则清理
-      if (now - stats.mtimeMs > maxAgeMs) {
-        await fs.promises.unlink(filepath)
-      }
-    }
-  } catch (error) {
-    console.error('Thumbnail cache cleanup error:', error)
-  }
-}, 12 * 60 * 60 * 1000)
+// Start background cleanup jobs
+startCleanupJobs()

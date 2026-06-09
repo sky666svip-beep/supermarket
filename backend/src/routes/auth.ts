@@ -8,6 +8,19 @@ import bcrypt from 'bcryptjs'
 
 export const auth = new Hono()
 
+// authMiddleware 专用内存缓存，避免高并发下每次请求查库
+interface AuthCacheEntry {
+  user: any;
+  expiresAt: number;
+}
+const authCache = new Map<number, AuthCacheEntry>()
+const AUTH_CACHE_TTL = 5 * 60 * 1000 // 5 分钟
+
+export const clearAuthCache = (userId: number) => {
+  authCache.delete(userId)
+}
+
+
 const transporter = nodemailer.createTransport({
   host: 'smtp.qq.com',
   port: 465,
@@ -236,6 +249,7 @@ auth.put('/password', async (c) => {
     }
     
     await db.update(users).set({ password: bcrypt.hashSync(newPassword, 10) }).where(eq(users.id, userId))
+    clearAuthCache(userId)
     return c.json({ success: true })
   } catch (err) {
     return handleError(c, err)
@@ -291,6 +305,7 @@ auth.put('/profile', async (c) => {
     }
     
     await db.update(users).set(updateData).where(eq(users.id, userId))
+    clearAuthCache(userId)
     
     return c.json({ success: true, user: { nickname: cleanNickname, avatar: cleanAvatar } })
   } catch (err) {
@@ -316,6 +331,7 @@ auth.put('/email', async (c) => {
     if (existing.length > 0) return c.json({ error: '该邮箱已被其他账号绑定' }, 400)
     
     await db.update(users).set({ email: email.trim() }).where(eq(users.id, userId))
+    clearAuthCache(userId)
     return c.json({ success: true })
   } catch (err) {
     return handleError(c, err)
@@ -342,6 +358,7 @@ auth.post('/forgot-password', async (c) => {
     }
     
     await db.update(users).set({ password: bcrypt.hashSync(newPassword, 10) }).where(eq(users.id, user.id))
+    clearAuthCache(user.id)
     return c.json({ success: true })
   } catch (err) {
     return handleError(c, err)
@@ -365,6 +382,13 @@ export const authMiddleware = async (c: Context<AuthContext>, next: Next) => {
     return c.json({ success: false, data: null, message: '无效的用户ID' }, 401)
   }
   
+  const now = Date.now()
+  const cached = authCache.get(userId)
+  if (cached && cached.expiresAt > now) {
+    c.set('user', cached.user)
+    return await next()
+  }
+
   const userList = await db.select().from(users).where(eq(users.id, userId)).limit(1)
   if (userList.length === 0) {
     return c.json({ success: false, data: null, message: '用户不存在' }, 401)
@@ -381,6 +405,7 @@ export const authMiddleware = async (c: Context<AuthContext>, next: Next) => {
     }
   }
   
+  authCache.set(userId, { user, expiresAt: now + AUTH_CACHE_TTL })
   c.set('user', user)
   await next()
 }

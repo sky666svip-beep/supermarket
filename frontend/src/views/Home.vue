@@ -4,7 +4,7 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { showImagePreview } from 'vant'
 import { getNotices, getActivities, getStores } from '../api'
 import { getCachedLocation, setCachedLocation, autoLocate, clearCachedLocation } from '../utils/location'
-import { getThumbnailUrl } from '../utils/image'
+import { getThumbnailUrl, getFullUrl } from '../utils/image'
 
 export interface Notice {
   id: number
@@ -448,7 +448,7 @@ const openActivityImages = (activity: Activity) => {
           <img 
             v-for="(img, idx) in currentNotice.parsedImages" 
             :key="idx" 
-            :src="img" 
+            :src="getFullUrl(img)" 
             loading="lazy"
             class="w-full rounded-md object-cover"
           />

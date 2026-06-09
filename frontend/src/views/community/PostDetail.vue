@@ -4,6 +4,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getPostDetail, getComments, publishComment, likePost, collectPost, getPostInteraction, likeComment, reportPost, reportComment, deletePost } from '../../api/index'
+import { getFullUrl } from '../../utils/image'
 import { showToast, showImagePreview, showConfirmDialog } from 'vant'
 
 const route = useRoute()
@@ -48,8 +49,9 @@ const postImages = computed(() => {
 })
 
 onMounted(async () => {
-  await fetchPost()
-  await fetchComments()
+  // 并行发起无依赖的请求
+  const postPromise = fetchPost()
+  fetchComments()
   
   const userStr = localStorage.getItem('user')
   if (userStr) {
@@ -59,9 +61,12 @@ onMounted(async () => {
     } catch (e) {}
   }
   
+  // 等待主帖子详情返回，因为 interaction 判断需要依赖帖子类型
+  await postPromise
+  
   // 互助贴不需要点赞收藏状态查询，也防止了未登录用户的 401 报错
   if (userStr && post.value && !isMutualHelpPost.value) {
-    await fetchInteraction()
+    fetchInteraction() // 异步获取，不阻塞主线程
   }
 })
 
@@ -201,7 +206,7 @@ const onSubmitComment = async () => {
 
 const previewImage = (images: string[], startPosition: number) => {
   showImagePreview({
-    images,
+    images: images.map(img => getFullUrl(img)),
     startPosition,
   })
 }
@@ -335,7 +340,7 @@ const formatTime = (timeStr: string) => {
           <img 
             v-for="(img, idx) in postImages" 
             :key="idx" 
-            :src="img.startsWith('/uploads') ? '/api' + img : img" 
+            :src="getFullUrl(img)" 
             class="w-full object-cover shadow-sm rounded-lg"
             @click="previewImage(postImages, Number(idx))"
           />

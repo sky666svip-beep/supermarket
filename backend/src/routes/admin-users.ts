@@ -3,6 +3,7 @@ import { db } from '../db/index.js'
 import { users } from '../db/schema.js'
 import { eq, like, or, count, desc } from 'drizzle-orm'
 import bcrypt from 'bcryptjs'
+import { clearAuthCache } from './auth.js'
 
 export const adminUsersRouter = new Hono()
 
@@ -79,6 +80,7 @@ adminUsersRouter.put('/:id', async (c) => {
     }
 
     await db.update(users).set(updates).where(eq(users.id, id))
+    clearAuthCache(id)
 
     return c.json({ success: true, message: '更新成功' })
   } catch (error: any) {
@@ -108,6 +110,7 @@ adminUsersRouter.post('/:id/ban', async (c) => {
     }
     
     await db.update(users).set({ isBanned, bannedUntil }).where(eq(users.id, id))
+    clearAuthCache(id)
     
     return c.json({ success: true, message: isBanned ? '已封禁' : '已解封' })
   } catch (error) {
@@ -125,6 +128,7 @@ adminUsersRouter.delete('/:id', async (c) => {
     // Physical delete (Cascade delete is handled by DB). 
     // Idempotent delete: returns 200 OK even if the user didn't exist.
     await db.delete(users).where(eq(users.id, id))
+    clearAuthCache(id)
     
     return c.json({ success: true, message: '删除成功' })
   } catch (error) {
