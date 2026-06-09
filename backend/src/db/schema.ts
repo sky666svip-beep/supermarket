@@ -39,7 +39,9 @@ export const checklists = sqliteTable('checklists', {
   title: text('title').notNull(),
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
+}, (table) => ({
+  userIdx: index('checklists_user_idx').on(table.userId)
+}))
 
 // Stores
 export const stores = sqliteTable('stores', {
@@ -68,27 +70,12 @@ export const feedbacks = sqliteTable('feedbacks', {
   adminReply: text('admin_reply'),
   resolvedAt: sqliteTimestamp('resolved_at'),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
+}, (table) => ({
+  userIdx: index('feedbacks_user_idx').on(table.userId),
+  storeIdx: index('feedbacks_store_idx').on(table.storeId)
+}))
 
-// Staff: Maintenance
-export const maintenance = sqliteTable('maintenance', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  reporterId: integer('reporter_id').references(() => users.id, { onDelete: 'cascade' }),
-  location: text('location').notNull(),
-  message: text('message').notNull(),
-  status: text('status', { enum: ['pending', 'in_progress', 'completed'] }).default('pending'),
-  createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
 
-// Staff: Patrol
-export const patrols = sqliteTable('patrols', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  staffId: integer('staff_id').references(() => users.id, { onDelete: 'cascade' }),
-  area: text('area').notNull(),
-  status: text('status', { enum: ['normal', 'abnormal'] }).notNull(),
-  message: text('message'),
-  createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
 
 // Customer: Item Memos
 export const itemMemos = sqliteTable('item_memos', {
@@ -104,7 +91,9 @@ export const itemMemos = sqliteTable('item_memos', {
   isCompleted: integer('is_completed', { mode: 'boolean' }).default(false),
   completedAt: sqliteTimestamp('completed_at'),
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
-})
+}, (table) => ({
+  userIdx: index('item_memos_user_idx').on(table.userId)
+}))
 
 // Notices for fragmented info
 export const notices = sqliteTable('notices', {
@@ -137,7 +126,8 @@ export const posts = sqliteTable('posts', {
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
   updatedAt: sqliteTimestamp('updated_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
-  userCatStatusIdx: index('posts_user_category_status_idx').on(table.userId, table.category, table.status)
+  userCatStatusIdx: index('posts_user_category_status_idx').on(table.userId, table.category, table.status),
+  storeCreatedAtIdx: index('posts_store_created_idx').on(table.storeId, table.createdAt)
 }))
 
 // Community: Comments
@@ -231,7 +221,8 @@ export const storeTraffic = sqliteTable('store_traffic', {
   dateHour: text('date_hour').notNull(), // format YYYY-MM-DD-HH
   createdAt: sqliteTimestamp('created_at').default(sql`CURRENT_TIMESTAMP`),
 }, (table) => ({
-  uniqueStoreFloorUserHour: uniqueIndex('store_traffic_unique_idx').on(table.storeId, table.floor, table.userId, table.dateHour)
+  uniqueStoreFloorUserHour: uniqueIndex('store_traffic_unique_idx').on(table.storeId, table.floor, table.userId, table.dateHour),
+  storeCreatedAtIdx: index('store_traffic_store_created_idx').on(table.storeId, table.createdAt)
 }))
 
 // Store Parking Rules

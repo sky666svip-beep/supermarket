@@ -458,7 +458,7 @@ const formatTime = (timeStr: string) => {
               type="text"
               maxlength="40"
               required
-              placeholder="核心问题 (如: 今天有大白菜特价么)"
+              placeholder="问题 (如: 今天有特价商品么)"
               class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors"
             />
           </div>
@@ -474,7 +474,7 @@ const formatTime = (timeStr: string) => {
               rows="5"
               maxlength="300"
               required
-              placeholder="严禁带有商业引流链接，发布后实时对同店邻里展现。"
+              placeholder="严禁带有商业引流链接，发布后实时对同店顾客展现。"
               class="w-full bg-surface-container-lowest border border-surface-variant/50 rounded-xl p-4 text-on-surface font-body-md placeholder:text-on-surface-variant/50 shadow-[0_2px_8px_rgba(0,0,0,0.02)] focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-colors resize-none"
             ></textarea>
           </div>
@@ -493,7 +493,8 @@ const formatTime = (timeStr: string) => {
             <button 
               type="submit" 
               class="w-full bg-primary text-white py-3.5 rounded-full font-headline-sm text-base font-bold shadow-md active:scale-[0.98] transition-transform"
-            >
+              style="color: #ffffff !important;"
+              >
               立刻发布上线
             </button>
           </div>

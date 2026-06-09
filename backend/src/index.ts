@@ -13,7 +13,6 @@ import { itemMemos } from './db/schema.js'
 import { and, eq, lte } from 'drizzle-orm'
 
 import customer from './routes/customer.js'
-import staff from './routes/staff.js'
 import { auth } from './routes/auth.js'
 import { admin } from './routes/admin.js'
 import { handleUpload, handleUploadCors } from './routes/upload-handler.js'
@@ -45,7 +44,8 @@ app.get('/api/uploads/:filename', async (c) => {
   const uploadDir = path.resolve(process.cwd(), 'data/uploads')
   const filepath = path.join(uploadDir, filename)
 
-  if (!fs.existsSync(filepath)) {
+  const exists = await fs.promises.access(filepath).then(() => true).catch(() => false)
+  if (!exists) {
     return c.json({ error: 'File not found' }, 404)
   }
 
@@ -66,17 +66,19 @@ app.get('/api/uploads/:filename', async (c) => {
   
   if (width && !isNaN(width) && width > 0 && width <= 2000) {
     const cacheDir = path.join(uploadDir, '.cache')
-    if (!fs.existsSync(cacheDir)) {
-      fs.mkdirSync(cacheDir, { recursive: true })
+    const cacheDirExists = await fs.promises.access(cacheDir).then(() => true).catch(() => false)
+    if (!cacheDirExists) {
+      await fs.promises.mkdir(cacheDir, { recursive: true })
     }
     
     const cacheFilename = `${filename}_w${width}_q${quality}.${format}`
     const cacheFilepath = path.join(cacheDir, cacheFilename)
 
-    let needGenerate = !fs.existsSync(cacheFilepath)
+    const cacheExists = await fs.promises.access(cacheFilepath).then(() => true).catch(() => false)
+    let needGenerate = !cacheExists
     if (!needGenerate) {
-      const origStat = fs.statSync(filepath)
-      const cacheStat = fs.statSync(cacheFilepath)
+      const origStat = await fs.promises.stat(filepath)
+      const cacheStat = await fs.promises.stat(cacheFilepath)
       if (origStat.mtimeMs > cacheStat.mtimeMs) {
         needGenerate = true
       }
@@ -103,7 +105,7 @@ app.get('/api/uploads/:filename', async (c) => {
     }
   }
 
-  const stats = fs.statSync(targetFilepath)
+  const stats = await fs.promises.stat(targetFilepath)
   const lastModified = stats.mtime.toUTCString()
   
   // 处理协商缓存 304 Not Modified
@@ -139,7 +141,6 @@ app.get('/api/uploads/:filename', async (c) => {
 
 // Routes
 app.route('/api/customer', customer)
-app.route('/api/staff', staff)
 app.route('/api/auth', auth)
 app.route('/api/admin', admin)
 // /api/upload 在 HTTP server 层处理，见下方 createServer
@@ -154,6 +155,19 @@ app.route('/api/parking', parkingRouter)
 app.route('/api/admin/users', adminUsersRouter)
 app.get('/', (c) => {
   return c.json({ message: 'Welcome to Supermarket API' })
+})
+
+// Internal endpoint for scripts to invalidate cache
+import { invalidateStoresCache } from './routes/customer.js'
+app.post('/api/internal/clear-cache', async (c) => {
+  // Simple protection: can check if request is local if needed
+  invalidateStoresCache()
+  return c.json({ success: true })
+})
+
+// Health check endpoint for PM2, Caddy, or Kubernetes liveness probes
+app.get('/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000
@@ -190,8 +204,9 @@ setInterval(async () => {
         const filename = memo.imageUrl.split('/').pop()
         if (filename) {
           const filepath = path.resolve(process.cwd(), 'data/uploads', filename)
-          if (fs.existsSync(filepath)) {
-            fs.unlinkSync(filepath)
+          const exists = await fs.promises.access(filepath).then(() => true).catch(() => false)
+          if (exists) {
+            await fs.promises.unlink(filepath)
           }
         }
       }
@@ -202,21 +217,22 @@ setInterval(async () => {
 }, 60 * 60 * 1000)
 
 // Auto cleanup job for thumbnails cache: runs every 12 hours
-setInterval(() => {
+setInterval(async () => {
   try {
     const cacheDir = path.resolve(process.cwd(), 'data/uploads/.cache')
-    if (!fs.existsSync(cacheDir)) return
+    const cacheDirExists = await fs.promises.access(cacheDir).then(() => true).catch(() => false)
+    if (!cacheDirExists) return
 
     const now = Date.now()
     const maxAgeMs = 7 * 24 * 60 * 60 * 1000 // 7 days
 
-    const files = fs.readdirSync(cacheDir)
+    const files = await fs.promises.readdir(cacheDir)
     for (const file of files) {
       const filepath = path.join(cacheDir, file)
-      const stats = fs.statSync(filepath)
+      const stats = await fs.promises.stat(filepath)
       // 如果文件超过 7 天未被修改（或访问），则清理
       if (now - stats.mtimeMs > maxAgeMs) {
-        fs.unlinkSync(filepath)
+        await fs.promises.unlink(filepath)
       }
     }
   } catch (error) {

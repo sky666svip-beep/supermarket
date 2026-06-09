@@ -81,6 +81,18 @@ async function main() {
   }
   
   console.log('Import complete!')
+  
+  // Notify running server to clear caches (if server is running)
+  try {
+    const res = await fetch('http://localhost:3000/api/internal/clear-cache', { method: 'POST' })
+    if (res.ok) {
+      console.log('Server cache invalidated successfully.')
+    } else {
+      console.log('Failed to invalidate server cache: API returned non-OK status.')
+    }
+  } catch (err) {
+    console.log('Server cache invalidation skipped (server might not be running locally).')
+  }
   process.exit(0)
 }
 

@@ -75,32 +75,49 @@ const bd09togcj02 = (bd_lat: number, bd_lon: number) => {
 }
 
 const getAmapIpLocation = async (): Promise<LocationInfo> => {
-  const res = await fetch(`https://restapi.amap.com/v3/ip?key=${amapWebKey}`)
-  const data = await res.json()
-  if (data.status === '1' && data.city && typeof data.city === 'string') {
-    // 高德 IP 定位不返回坐标，尝试用腾讯补充经纬度
-    let lat: number | undefined
-    let lng: number | undefined
-    try {
-      const tencentData = await jsonp('https://apis.map.qq.com/ws/location/v1/ip', { key: tencentKey, output: 'jsonp' })
-      if (tencentData.status === 0 && tencentData.result?.location) {
-        lat = tencentData.result.location.lat
-        lng = tencentData.result.location.lng
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const res = await fetch(`https://restapi.amap.com/v3/ip?key=${amapWebKey}`, { signal: controller.signal })
+    const data = await res.json()
+    clearTimeout(timeoutId)
+
+    const city = (Array.isArray(data.city) ? '' : data.city) || data.province
+    if (data.status === '1' && city) {
+      let lat: number | undefined
+      let lng: number | undefined
+      
+      if (data.rectangle && typeof data.rectangle === 'string') {
+        const parts = data.rectangle.split(';')
+        if (parts.length === 2) {
+          const [lng1, lat1] = parts[0].split(',').map(Number)
+          const [lng2, lat2] = parts[1].split(',').map(Number)
+          if (!isNaN(lat1) && !isNaN(lng1) && !isNaN(lat2) && !isNaN(lng2)) {
+            lat = (lat1 + lat2) / 2
+            lng = (lng1 + lng2) / 2
+          }
+        }
       }
-    } catch (_) {}
-    if (!lat || !lng) {
-      throw new Error(`Amap IP location lacks coordinates, triggering fallback.`)
+
+      if (!lat || !lng) {
+        throw new Error(`Amap IP location lacks rectangle coordinates.`)
+      }
+
+      return {
+        province: typeof data.province === 'string' ? data.province : '',
+        city,
+        district: '',
+        source: 'amap-ip',
+        lat,
+        lng
+      }
     }
-    return {
-      province: data.province,
-      city: data.city,
-      district: '',
-      source: 'amap-ip',
-      lat,
-      lng
-    }
+    throw new Error(`Amap IP location API error: ${JSON.stringify(data)}`)
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
   }
-  throw new Error(`Amap IP location API error: ${JSON.stringify(data)}`)
 }
 
 const getTencentIpLocation = async (): Promise<LocationInfo> => {
@@ -147,21 +164,31 @@ const getBaiduIpLocation = async (): Promise<LocationInfo> => {
 
 // lat, lng are expected to be GCJ02
 const getAmapRegeo = async (lat: number, lng: number): Promise<LocationInfo> => {
-  const res = await fetch(`https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=${amapWebKey}`)
-  const data = await res.json()
-  if (data.status === '1' && data.regeocode) {
-    const component = data.regeocode.addressComponent
-    const city = (Array.isArray(component.city) ? '' : component.city) || component.province
-    return {
-      province: typeof component.province === 'string' ? component.province : '',
-      city,
-      district: typeof component.district === 'string' ? component.district : '',
-      source: 'amap-regeo',
-      lat,
-      lng
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+  try {
+    const res = await fetch(`https://restapi.amap.com/v3/geocode/regeo?location=${lng},${lat}&key=${amapWebKey}`, { signal: controller.signal })
+    const data = await res.json()
+    clearTimeout(timeoutId)
+
+    if (data.status === '1' && data.regeocode) {
+      const component = data.regeocode.addressComponent
+      const city = (Array.isArray(component.city) ? '' : component.city) || component.province
+      return {
+        province: typeof component.province === 'string' ? component.province : '',
+        city,
+        district: typeof component.district === 'string' ? component.district : '',
+        source: 'amap-regeo',
+        lat,
+        lng
+      }
     }
+    throw new Error(`Amap Regeo API error: ${JSON.stringify(data)}`)
+  } catch (error) {
+    clearTimeout(timeoutId)
+    throw error
   }
-  throw new Error(`Amap Regeo API error: ${JSON.stringify(data)}`)
 }
 
 const getTencentRegeo = async (lat: number, lng: number): Promise<LocationInfo> => {
@@ -224,12 +251,12 @@ export const clearCachedLocation = () => {
   localStorage.removeItem('user_location')
 }
 
-export const autoLocate = async (): Promise<LocationInfo> => {
+export const autoLocate = async (silent = false): Promise<LocationInfo> => {
   const getCoords = () => new Promise<GeolocationPosition>((resolve, reject) => {
     if (!navigator.geolocation) {
       reject(new Error('Geolocation not supported'))
     } else {
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000, maximumAge: 60000 })
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, maximumAge: 60000 })
     }
   })
 
@@ -245,7 +272,7 @@ export const autoLocate = async (): Promise<LocationInfo> => {
     coordsFound = true
   } catch (e: any) {
     if (e && e.code === 1) { // PERMISSION_DENIED
-      showToast('您拒绝了位置权限，将使用IP大致定位')
+      if (!silent) showToast('未开启或拒绝了位置权限，当前为大致定位')
       console.warn('Geolocation permission denied:', e)
     } else {
       console.log('HTML5 Geolocation unavailable or timeout, falling back to IP location.')

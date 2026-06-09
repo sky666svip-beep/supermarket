@@ -408,8 +408,8 @@ const formatTime = (timeStr: string) => {
         </div>
         
         <div v-if="isMutualHelpPost" class="flex items-center">
-          <button v-if="isAuthor" @click="handleMarkSolved" class="bg-primary text-white px-4 py-1.5 rounded-full font-label-md text-sm shadow-sm active:scale-95 flex items-center gap-1 transition-colors">
-            <i-material-symbols-check-circle-outline  class="text-[18px]"></i-material-symbols-check-circle-outline>
+          <button v-if="isAuthor" @click="handleMarkSolved" class="bg-primary text-white px-4 py-1.5 rounded-full font-label-md text-sm shadow-sm active:scale-95 flex items-center gap-1 transition-colors" style="color: #ffffff !important;">
+            <i-material-symbols-check-circle-outline  class="text-[18px]" style="color: #ffffff !important;"></i-material-symbols-check-circle-outline>
             已解决
           </button>
         </div>
@@ -434,7 +434,7 @@ const formatTime = (timeStr: string) => {
           <span class="font-label-md text-sm text-on-surface-variant">
             {{ replyTo ? `回复 ${replyTo.author.nickname || replyTo.author.username}` : '发表评论' }}
           </span>
-          <button @click="onSubmitComment" class="bg-primary text-white px-4 py-1.5 rounded-lg font-label-md text-sm active:scale-95 transition-transform shadow-sm">发布</button>
+          <button @click="onSubmitComment" class="bg-primary text-white px-4 py-1.5 rounded-lg font-label-md text-sm active:scale-95 transition-transform shadow-sm" style="color: #ffffff !important;">发布</button>
         </div>
         <van-field
           v-model="commentContent"
@@ -483,7 +483,7 @@ const formatTime = (timeStr: string) => {
           />
         </div>
         
-        <button @click="submitReport" class="w-full bg-error text-on-error py-3 rounded-xl font-label-md font-bold shadow-sm active:scale-[0.98] transition-transform">提交举报</button>
+        <button @click="submitReport" class="w-full bg-error text-on-error py-3 rounded-xl font-label-md font-bold shadow-sm active:scale-[0.98] transition-transform" style="color: #ffffff !important;">提交举报</button>
       </div>
     </van-popup>
   </div>

@@ -157,7 +157,7 @@ const onShowAbout = () => {
 <template>
   <div class="bg-surface text-on-surface font-body-md antialiased min-h-screen">
     <van-pull-refresh v-model="refreshing" @refresh="onRefresh" class="min-h-screen">
-    <main class="px-0 md:px-1 py-lg max-w-3xl mx-auto space-y-lg pb-24">
+    <main class="px-0 md:px-1 pt-0 pb-lg max-w-3xl mx-auto space-y-lg pb-24">
       
       <!-- User Profile Card (Logged In) -->
       <div v-if="user" class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md">
@@ -173,7 +173,7 @@ const onShowAbout = () => {
       </div>
 
       <!-- User Profile Card (Not Logged In) -->
-      <div v-else class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md cursor-pointer hover:bg-surface-container-low transition-colors" @click="router.push('/login')">
+      <div v-else class="bg-surface-container-lowest rounded-xl shadow-sm p-md flex items-center gap-md cursor-pointer hover:bg-surface-container-low transition-colors " @click="router.push('/login')">
         <div class="w-20 h-20 rounded-full overflow-hidden shrink-0 border-2 border-surface-container opacity-50">
           <img alt="User Avatar" class="w-full h-full object-cover grayscale" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
         </div>
@@ -224,7 +224,7 @@ const onShowAbout = () => {
           </a>
           <a class="flex items-center justify-between px-4 py-3.5 hover:bg-surface-container-low transition-colors border-b border-surface-variant last:border-0 group cursor-pointer" @click.prevent="router.push('/profile/collections')">
             <div class="flex items-center gap-3 text-on-surface-variant group-hover:text-primary transition-colors">
-              <i-material-symbols-star-outline class="text-[24px]" />
+              <i-material-symbols-star-outline></i-material-symbols-star-outline>
               <span class="font-body-lg text-body-lg text-on-surface">我的收藏</span>
             </div>
             <i-material-symbols-chevron-right  class="text-outline-variant group-hover:text-primary transition-colors"></i-material-symbols-chevron-right>

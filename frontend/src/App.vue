@@ -76,6 +76,24 @@ onMounted(async () => {
     }
   }
 
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      const loc = currentLocation.value
+      // 如果当前定位是IP大致定位或缺少经纬度，当页面重新可见时静默重新尝试精确定位
+      if (!loc || loc.source?.includes('ip') || !loc.lat) {
+        autoLocate(true).then(newLoc => {
+          if (newLoc.lat && (!loc || newLoc.source !== loc.source)) {
+            currentLocation.value = newLoc
+            setCachedLocation(newLoc)
+            window.dispatchEvent(new CustomEvent('location-updated'))
+          }
+        }).catch(() => {})
+      }
+    }
+  }
+
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+
   // Listen for event from Home.vue or other components to manually open popup
   window.addEventListener('open-area-popup', () => {
     showAreaPopup.value = true
@@ -118,7 +136,7 @@ onMounted(async () => {
       <router-link to="/" custom v-slot="{ navigate, isActive }">
         <div @click="navigate" :class="isActive ? 'bg-[#FF7070] text-white shadow-sm' : 'text-secondary hover:bg-surface-container-high'" class="flex flex-col items-center justify-center rounded-full px-6 py-1.5 active:scale-90 transition-all duration-150 cursor-pointer">
           <i-material-symbols-home-outline :style="isActive ? 'font-variation-settings: \'FILL\' 1;' : ''"></i-material-symbols-home-outline>
-          <span class="font-label-md text-label-md mt-1">顾客服务</span>
+          <span class="font-label-md text-label-md mt-1">服务</span>
         </div>
       </router-link>
       

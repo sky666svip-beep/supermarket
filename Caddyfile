@@ -2,7 +2,12 @@
 :8080 {
     # 处理前端 API 请求，代理给 Hono 后端
     handle /api/* {
-        reverse_proxy localhost:3000
+        reverse_proxy localhost:3000 {
+            health_uri /health
+            health_port 3000
+            health_interval 10s
+            health_timeout 2s
+        }
     }
 
 

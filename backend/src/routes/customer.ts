@@ -7,25 +7,73 @@ import { authMiddleware, AuthContext } from './auth.js'
 
 const customer = new Hono<AuthContext>()
 
-// ---- Stores ----
+// ---- Stores & Regions Cache ----
+let storesCache: any[] | null = null
+let storesCacheExpiry = 0
+let storesFetchPromise: Promise<any[]> | null = null
+
+let regionsCache: any = null
+let regionsCacheSourceRef: any[] | null = null
+
+const CACHE_TTL = 1000 * 60 * 60 // 1小时缓存
+
+// 暴露缓存清理方法，供后续管理员操作（增删改门店）时调用
+export function invalidateStoresCache() {
+  storesCache = null
+  storesCacheExpiry = 0
+  regionsCache = null
+  regionsCacheSourceRef = null
+}
+
+// 获取门店数据（防缓存击穿/并发重复查询）
+async function getStores() {
+  if (storesCache && Date.now() < storesCacheExpiry) {
+    return storesCache
+  }
+  
+  if (storesFetchPromise) {
+    return storesFetchPromise
+  }
+  
+  storesFetchPromise = db.select().from(stores).then(res => {
+    storesCache = res
+    storesCacheExpiry = Date.now() + CACHE_TTL
+    storesFetchPromise = null
+    return res
+  }).catch(err => {
+    storesFetchPromise = null
+    throw err
+  })
+  
+  return storesFetchPromise
+}
+
 customer.get('/stores', async (c) => {
   const city = c.req.query('city')
   const district = c.req.query('district')
   
-  const conditions = []
-  if (city) conditions.push(eq(stores.city, city))
-  if (district) conditions.push(eq(stores.district, district))
+  // 1. 获取全量门店数据
+  let allStores = await getStores()
   
-  const result = await db.select().from(stores).where(conditions.length > 0 ? and(...conditions) : undefined)
+  // 2. 内存过滤
+  let result = allStores
+  if (city) {
+    result = result.filter(s => s.city === city)
+  }
+  if (district) {
+    result = result.filter(s => s.district === district)
+  }
+  
   return c.json(result)
 })
 
 customer.get('/regions', async (c) => {
-  const allStores = await db.select({
-    province: stores.province,
-    city: stores.city,
-    district: stores.district
-  }).from(stores)
+  let allStores = await getStores()
+
+  // 通过引用比对防止漂移：只有基于最新的 storesCache 计算出的 regionsCache 才是有效的
+  if (regionsCache && regionsCacheSourceRef === allStores) {
+    return c.json(regionsCache)
+  }
   
   const tree: any = {}
   
@@ -52,6 +100,9 @@ customer.get('/regions', async (c) => {
     }
   })
   
+  regionsCache = columns
+  regionsCacheSourceRef = allStores
+
   return c.json(columns)
 })
 

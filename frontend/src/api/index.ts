@@ -75,10 +75,7 @@ export const submitFeedback = (storeId: number, facilityType: string, message: s
 export const getFeedbackHistory = () => api.get('/customer/feedback').then(res => res.data)
 export const deleteFeedback = (id: number) => api.delete(`/customer/feedback/${id}`).then(res => res.data)
 
-// Staff APIs
-export const getTodos = () => api.get('/staff/todos').then(res => res.data)
-export const submitMaintenance = (location: string, message: string) => api.post('/staff/maintenance', { location, message }).then(res => res.data)
-export const submitPatrol = (area: string, status: string, message: string) => api.post('/staff/patrol', { area, status, message }).then(res => res.data)
+
 
 // Item Memos APIs
 export const getItemMemos = () => api.get('/customer/memos').then(res => res.data)
@@ -125,6 +122,9 @@ export const reportComment = (id: number, data: { reason: string, description: s
 export const getMyPosts = (params?: any) => api.get('/posts/my', { params }).then(res => res.data)
 export const getMyCollections = (params?: any) => api.get('/posts/collections', { params }).then(res => res.data)
 export const getMyReceivedComments = (params?: any) => api.get('/comments/my/received', { params }).then(res => res.data)
+export const getMySentComments = (params?: any) => api.get('/comments/my/sent', { params }).then(res => res.data)
+export const deleteComment = (id: number) => api.delete(`/comments/${id}`).then(res => res.data)
+
 
 // Traffic APIs
 export const getStoreTraffic = (storeId: number) => api.get(`/traffic/${storeId}`).then(res => res.data)

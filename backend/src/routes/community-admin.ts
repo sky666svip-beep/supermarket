@@ -115,8 +115,9 @@ communityAdminRouter.put('/reports/:id/status', async (c) => {
             tx.delete(postCollections).where(eq(postCollections.postId, report.targetId)).run()
             
             const postComments = tx.select({ id: comments.id }).from(comments).where(eq(comments.postId, report.targetId)).all()
-            for (const comment of postComments) {
-              tx.delete(commentLikes).where(eq(commentLikes.commentId, comment.id)).run()
+            if (postComments.length > 0) {
+              const commentIds = postComments.map(c => c.id)
+              tx.delete(commentLikes).where(inArray(commentLikes.commentId, commentIds)).run()
             }
             tx.delete(comments).where(eq(comments.postId, report.targetId)).run()
             tx.delete(posts).where(eq(posts.id, report.targetId)).run()

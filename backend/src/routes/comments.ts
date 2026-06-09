@@ -79,6 +79,36 @@ commentRouter.get('/my/received', authMiddleware, async (c) => {
   }
 })
 
+// 我发出的评论
+commentRouter.get('/my/sent', authMiddleware, async (c) => {
+  const user = c.get('user')
+  const page = parseInt(c.req.query('page') || '1')
+  const limit = parseInt(c.req.query('limit') || '10')
+  const offset = (page - 1) * limit
+  
+  try {
+    const list = await db
+      .select({
+        comment: comments,
+        post: {
+          id: posts.id,
+          title: posts.title
+        }
+      })
+      .from(comments)
+      .innerJoin(posts, eq(comments.postId, posts.id))
+      .where(eq(comments.userId, user.id))
+      .orderBy(desc(comments.createdAt))
+      .limit(limit)
+      .offset(offset)
+    
+    return c.json({ success: true, data: list, message: '获取成功' })
+  } catch (error) {
+    console.error('获取发出的评论失败:', error)
+    return c.json({ success: false, data: null, message: '获取失败' }, 500)
+  }
+})
+
 // 发布评论
 commentRouter.post('/', authMiddleware, async (c) => {
   const user = c.get('user')

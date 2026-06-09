@@ -124,3 +124,16 @@ admin.get('/stores', async (c) => {
     return c.json({ error: '获取店铺列表失败' }, 500)
   }
 })
+
+import { invalidateStoresCache } from './customer.js'
+
+// Admin: Clear server memory caches
+admin.post('/clear-cache', async (c) => {
+  try {
+    invalidateStoresCache()
+    return c.json({ success: true, message: '缓存已清理' })
+  } catch (error) {
+    console.error('Clear cache error:', error)
+    return c.json({ error: '清理缓存失败' }, 500)
+  }
+})

@@ -1,7 +1,7 @@
 <!-- 模块：问题上报历史 -->
 <script setup lang="ts">
 // 模块：我的反馈记录（历史查看）
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, onActivated, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { getFeedbackHistory } from '../../api/index'
 import { getThumbnailUrl } from '../../utils/image'
@@ -10,12 +10,20 @@ import { showToast, showImagePreview } from 'vant'
 const router = useRouter()
 const records = ref<any[]>([])
 
-onMounted(async () => {
+const fetchRecords = async () => {
   try {
     records.value = await getFeedbackHistory()
   } catch (e) {
     showToast('加载反馈记录失败')
   }
+}
+
+onMounted(() => {
+  fetchRecords()
+})
+
+onActivated(() => {
+  fetchRecords()
 })
 
 const getStatusTag = (status: string) => {
